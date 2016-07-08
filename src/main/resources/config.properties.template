@@ -1,0 +1,38 @@
+﻿# NVCL data services configuration file.
+# fill in all values enclosed in < >
+# tsg.dbType is either oracle or sqlserver
+tsg.dbtype=<DBTYPE>
+# tsg.connectionString format depends on RDBMS and is not jdbc
+# for oracle the format is HOSTNAME:PORT/SERVICENAME
+# for sqlserver the format is HOSTNAME@DATABASENAME
+tsg.connectionString=<TSGCONNECTIONSTRING> 
+tsg.username=<DB_USERNAME>
+tsg.password=<DB_PASSWORD>
+# sysadmin.email will be used as the from address when sending file download links
+sysadmin.email=<SYSADMIN EMAIL>
+# webapp.url is the externally resolvable url of the NVCLData/DownloadServices
+webapp.url=http:\/\/<HOSTNAME>\/NVCLDataServices\/
+# download.url is the location of file downloads after they have been prepared and should map through your server to download.rootpath
+download.url=http:\/\/<HOSTNAME>\/NVCLPreparedDownloads\/
+download.rootpath=C:\\NVCL\\download\\
+# download.cachepath is a working area for data file preparation.
+download.cachepath=C:\\NVCL\\cache\\
+# tsg.scriptpath is another working area for data file preparation.
+tsg.scriptpath=C:\\NVCL\\script\\
+# tsg.exepath is the path to the TSG executable.
+tsg.exepath="C:\\Program Files\\The Spectral Geologist\\tsgeol7.exe"
+# msgTimetoLiveDays is the number of days data files will remain in cache before being cleaned up.
+msgTimetoLiveDays=30
+# smtp.enabled enables email notifications when data files are prepared.
+smtp.enabled=false
+# smtp.host is your email server's host name
+smtp.host=<email hostname>
+smtp.port=25
+smtp.username=<email username>
+smtp.password=<email password>
+# smtp.useauth enables authentication on the email server.
+smtp.useauth=false
+# smtp.enabledebug turns on email debuging, this can help with email server configuration issues
+smtp.enabledebug=false
+# geoserver.url is the internally resolvable url of your geoserver instance and usually should remain as localhost:8080...
+geoserver.url=http://localhost:8080/geoserver/wfs

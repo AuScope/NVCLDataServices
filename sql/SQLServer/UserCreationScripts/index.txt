@@ -1,0 +1,3 @@
+createNVCLAnalyst.sql  -  This script sets up analysts within the system and should be used whenever a new user is added
+createNVCLViewer.sql  -  This script sets up a TSG Viewer user which can be shared between all users with read only privilges (like a guest account)
+createWebService.sql - This script sets up a Web Service user to be used by the NVCLDataServices web application.

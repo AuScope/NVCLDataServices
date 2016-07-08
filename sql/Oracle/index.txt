@@ -1,0 +1,3 @@
+createTSs.sql  -  This script creates all the tablespaces required for the DB and creates the NVCL user it should be run under a DBA account
+createNVCLDB11g.sql  -  This script builds the entire NVCL schema (must be run after createTSs.sql)
+

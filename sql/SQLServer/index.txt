@@ -1,0 +1,2 @@
+createNVCLDB.sql			- This script creates the top level database object for an SQL Server 2005 NVCL database.
+createNVCLDBObjects.sql		- This script creates all the objects in the NVCL database.  createNVCLDB must have been run prior to executing this script.

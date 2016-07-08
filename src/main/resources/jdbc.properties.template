@@ -1,0 +1,26 @@
+# NVCLDataServices jdbc configuration file.
+# fill in all values enclosed in < >
+# jdbc.dbType is either oracle or sqlserver
+jdbc.dbType=<DBTYPE>
+# jdbc.driverClassName is either oracle.jdbc.OracleDriver or com.microsoft.sqlserver.jdbc.SQLServerDriver
+jdbc.driverClassName=<DRIVERNAME>
+# jdbc.url format depends on which RDBMS you're using
+# for oracle the format is jdbc:oracle:thin:@<HOSTNAME>:<PORT>:<SID>
+# for sqlserver the format is jdbc:sqlserver://<HOSTNAME>\<INSTANCE_NAME>:<PORT>;database=<DATABASE_NAME>;
+jdbc.url= <DATABASE_URL>
+jdbc.username=<DB USERNAME>
+jdbc.password=<DB PASSWORD>
+jdbc.maxActive=20
+jdbc.maxIdle=10
+jdbc.minIdle=0
+jdbc.maxWait=10000
+jdbc.minEvictableIdleTimeMillis=300000
+jdbc.timeBetweenEvictionRunsMillis=300000
+jdbc.numTestsPerEvictionRun=20
+jdbc.poolPreparedStatements=true
+jdbc.maxOpenPreparedStatements=100
+jdbc.testOnBorrow=true
+# jdbc.validationQuery is the default query for checking database connection status
+# for oracle use SELECT 1 from dual
+# for sqlserver use SELECT CURRENT_TIMESTAMP
+jdbc.validationQuery=<DB_Validation_Query>
