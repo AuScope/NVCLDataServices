@@ -36,3 +36,5 @@ smtp.useauth=false
 smtp.enabledebug=false
 # geoserver.url is the internally resolvable url of your geoserver instance and usually should remain as localhost:8080...
 geoserver.url=http://localhost:8080/geoserver/wfs
+# activemq normally runs on tcp://localhost:61616 but can be overriden here
+activeMQ.url=tcp://localhost:61616

@@ -98,7 +98,7 @@
 	</oxm:jaxb2-marshaller>
 
 	<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-		<property name="brokerURL" value="tcp://localhost:61616" />
+		<property name="brokerURL" value="${activeMQ.url:tcp://localhost:61616}" />
 	</bean>
 
 
