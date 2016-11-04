@@ -4,10 +4,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import org.auscope.nvcl.server.util.Utility;
 
 @XmlRootElement(name = "SpectralLog")
+@JsonRootName(value = "SpectralLog")
 @XmlType(propOrder={"logID", "logName","wavelengthUnits","sampleCount","script","wavelengthsasString","fwhmsString","tirqsString"})
 public class SpectralLogVo {
 	
@@ -50,6 +53,7 @@ public class SpectralLogVo {
 	}
 
 	@XmlElement(name="wavelengths")
+	@JsonIgnore
 	public String getWavelengthsasString() {
 		return Utility.floatArrayToString(this.wavelengths);
 	}
@@ -79,6 +83,7 @@ public class SpectralLogVo {
 		this.script = script;
 	}
 	@XmlElement(name="fwhm")
+	@JsonIgnore
 	public String getfwhmsString() {
 		return Utility.floatArrayToString(this.fwhm);
 	}
@@ -93,6 +98,7 @@ public class SpectralLogVo {
 	}
 
 	@XmlElement(name="tirq")
+	@JsonIgnore
 	public String gettirqsString() {
 		return Utility.floatArrayToString(this.tirq);
 	}

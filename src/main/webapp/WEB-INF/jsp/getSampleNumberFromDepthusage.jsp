@@ -16,6 +16,6 @@
   
   </table>
   <h3>Example Queries:</h3>
-  <p>A query for the nearest sample number to 201.5 metres down hole in the 6dd70215-fe38-457c-be42-3b165fd98c7 dataset  : getSampleNumberFromDepth.html?datasetid=6dd70215-fe38-457c-be42-3b165fd98c7&depth=201.5</p>
+  <p>A query for the nearest sample number to 201.5 metres down hole in the 6dd70215-fe38-457c-be42-3b165fd98c7 dataset  : getSampleNumberFromDepth.html?datasetid=6dd70215-fe38-457c-be42-3b165fd98c7&amp;depth=201.5</p>
   </body>
 </html>

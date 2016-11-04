@@ -5,13 +5,11 @@ import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.Session;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.vo.MessageVo;
-import org.auscope.nvcl.server.vo.ConfigVo;
 import org.springframework.jms.support.converter.MessageConversionException;
 import org.springframework.jms.support.converter.MessageConverter;
-
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 /*
  * This class perform message conversion through Spring's MessageConverter interface.

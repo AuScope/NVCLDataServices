@@ -5,9 +5,9 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.jms.Destination;
-import org.apache.logging.log4j.Logger;
+
 import org.apache.logging.log4j.LogManager;
-import org.auscope.nvcl.server.vo.ConfigVo;
+import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.vo.MessageVo;
 import org.auscope.nvcl.server.vo.UnitTestVo;
 import org.junit.AfterClass;

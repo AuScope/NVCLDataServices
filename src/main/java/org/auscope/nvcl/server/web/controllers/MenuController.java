@@ -99,22 +99,12 @@ import org.springframework.web.servlet.ModelAndView;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.drew.imaging.ImageProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 
 import au.com.bytecode.opencsv.CSVWriter;
-
-import com.drew.imaging.ImageMetadataReader;
-import com.drew.imaging.ImageProcessingException;
-import com.drew.imaging.jpeg.JpegMetadataReader;
-import com.drew.imaging.jpeg.JpegProcessingException;
-import com.drew.imaging.jpeg.JpegSegmentMetadataReader;
-import com.drew.metadata.Metadata;
-import com.drew.metadata.exif.ExifReader;
-import com.drew.metadata.iptc.IptcReader;
-import com.drew.metadata.jpeg.JpegCommentDirectory;
 
 /**
  * Controller that handles all {@link Menu}-related requests
@@ -1090,7 +1080,7 @@ public class MenuController {
 			} else {
 				response.setContentType("application/json");
 				response.setCharacterEncoding("UTF-8");
-				response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(scalarDetailList));
+				new ObjectMapper().writeValue(response.getOutputStream(),scalarDetailList);
 			}
 			return null;
 
@@ -1781,7 +1771,7 @@ public class MenuController {
 		int totalbytes = 0;
 		if (outputformat.equals("json")){
 			response.setContentType("application/json");
-			response.getWriter().write(new GsonBuilder().excludeFieldsWithoutExposeAnnotation().serializeNulls().create().toJson(spectraldata.getSpectralDataCollection()));
+			new ObjectMapper().writeValue(response.getOutputStream(),spectraldata.getSpectralDataCollection());
 		}
 		else {
 			for (Iterator<SpectralDataVo> it1 = spectraldata.getSpectralDataCollection().iterator(); it1.hasNext();) {
@@ -1837,9 +1827,9 @@ public class MenuController {
 
 		SpectralLogCollectionVo logList = nvclDataSvc.getSpectralLogCollection(datasetId);
 		if (outputformat.equals("json")) {
-			response.setContentType("application/json");
+			response.setContentType("application/json; charset=UTF-8");
 			response.setCharacterEncoding("UTF-8");
-			response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(logList));
+			new ObjectMapper().writeValue(response.getOutputStream(),logList );
 		} else {
 			response.setContentType("text/xml");
 			this.marshaller.marshal(logList, new StreamResult(response.getOutputStream()));
@@ -2049,10 +2039,12 @@ public class MenuController {
 					writer.writeNext(itemstring);
 				}
 				writer.close();
-			} else {
+			} 
+			else
+			{
 				response.setContentType("application/json");
 				response.setCharacterEncoding("UTF-8");
-				response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(ds));
+				new ObjectMapper().writeValue(response.getOutputStream(),ds);
 			}
 			break;
 
@@ -2078,7 +2070,7 @@ public class MenuController {
 			} else {
 				response.setContentType("application/json");
 				response.setCharacterEncoding("UTF-8");
-				response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(ds2));
+				new ObjectMapper().writeValue(response.getOutputStream(),ds2);
 			}
 			break;
 		}
@@ -2121,9 +2113,10 @@ public class MenuController {
 		if (sampleno != null) {
 			response.setContentType("application/json");
 			response.setCharacterEncoding("UTF-8");
-			JsonObject jo = new JsonObject();
-			jo.addProperty("sampleno", sampleno);
-			response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(jo));
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode jo = mapper.createObjectNode();
+			jo.put("sampleno", sampleno);
+			mapper.writeValue(response.getOutputStream(),jo);
 		}
 		return null;
 	}
@@ -2161,9 +2154,10 @@ public class MenuController {
 		if (datasetid != null) {
 			response.setContentType("application/json");
 			response.setCharacterEncoding("UTF-8");
-			JsonObject jo = new JsonObject();
-			jo.addProperty("datasetid", datasetid);
-			response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(jo));
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode jo = mapper.createObjectNode();
+			jo.put("datasetid", datasetid);
+			mapper.writeValue(response.getOutputStream(),jo);
 		}
 		return null;
 	}
@@ -2191,16 +2185,17 @@ public class MenuController {
 			for (Iterator<SpectralLogVo> it1 = speclogdetails.getSpectralLogCollection().iterator(); it1.hasNext();) {
 				SpectralLogVo speclog = it1.next();
 				if (speclog.getLogID().equals(speclogid)) {
-					response.setContentType("application/json");
-					response.setCharacterEncoding("UTF-8");
 					wavelengths+=wavelengths.length()>0?","+speclog.getWavelengthsasString():speclog.getWavelengthsasString();
 				}
 			}
 		}
 		if(wavelengths.length()>0){
-			JsonObject jo = new JsonObject();
-			jo.addProperty("wavelengths",wavelengths );
-			response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(jo));
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode jo = mapper.createObjectNode();
+			jo.put("wavelengths",wavelengths );
+			mapper.writeValue(response.getOutputStream(),jo);
 		}
 
 		return null;
@@ -2223,9 +2218,11 @@ public class MenuController {
 		Integer sampleno = nvclDataSvc.getSampleNumberFromDepth(datasetid, depth);
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
-		JsonObject jo = new JsonObject();
-		jo.addProperty("sampleno", sampleno);
-		response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(jo));
+
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode jo = mapper.createObjectNode();
+		jo.put("sampleno", sampleno);
+		mapper.writeValue(response.getOutputStream(),jo);
 
 		return null;
 	}
@@ -2238,7 +2235,8 @@ public class MenuController {
 		AlgorithmCollectionVo algcol = nvclDataSvc.getAlgorithmsCollection();
 		if (outputformat.equals("json")) {
 			response.setContentType("application/json");
-			response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(algcol));
+			new ObjectMapper().writeValue(response.getOutputStream(),algcol);
+			
 		} else {
 			response.setContentType("text/xml");
 			this.marshaller.marshal(algcol, new StreamResult(response.getOutputStream()));
@@ -2264,7 +2262,7 @@ public class MenuController {
 		if (classcol!=null){
 			if (outputformat.equals("json")) {
 				response.setContentType("application/json");
-				response.getWriter().write(new GsonBuilder().serializeNulls().create().toJson(classcol));
+				new ObjectMapper().writeValue(response.getOutputStream(),classcol);
 			} else {
 				response.setContentType("text/xml");
 				this.marshaller.marshal(classcol, new StreamResult(response.getOutputStream()));

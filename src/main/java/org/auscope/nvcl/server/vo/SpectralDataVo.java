@@ -6,8 +6,6 @@ import java.nio.ByteOrder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
-import com.google.gson.annotations.Expose;
-
 
 
 public class SpectralDataVo {
