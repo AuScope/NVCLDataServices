@@ -30,7 +30,7 @@
 						<td>
 						<c:choose>
 							<c:when test='${entry.resultfromcache==true}'>
-								This file was recovered from cache.  If you believe it is stale you can force the service to <a href="downloadwfs.html?boreholeid=${entry.boreholeid}&email=${param.email}&typename=${entry.typename}&forcerecreate=yes">regenerate it.</a>
+								This file was recovered from cache.  If you believe it is stale you can force the service to <a href="downloadwfs.html?boreholeid=${entry.boreholeid}&email=${param.email}&typename=${entry.featureTypeName}&forcerecreate=yes">regenerate it.</a>
 							</c:when>
 						</c:choose>
 						</td>

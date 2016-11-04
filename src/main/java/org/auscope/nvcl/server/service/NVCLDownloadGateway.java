@@ -8,6 +8,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MessageConversionException;
 import org.auscope.nvcl.server.service.SpringFrameworkJmsSender.ReferenceHolderMessagePostProcessor;
 import org.auscope.nvcl.server.vo.ConfigVo;
+import org.auscope.nvcl.server.vo.MessageVo;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -35,12 +36,12 @@ public class NVCLDownloadGateway {
 	 * @param configVo	ConfigVo object that consists of the configuration information
 	 * 					needed for trigger the tsg download using tsg exe program
 	 */ 
-	public String createTSGDownloadReqMsg(final ConfigVo configVo)   {
+	public String createTSGDownloadReqMsg(final MessageVo tsgreqmessage)   {
 		
 		
 		try {
 	        ReferenceHolderMessagePostProcessor messagePostProcessor = new ReferenceHolderMessagePostProcessor();
-	        this.jmsTemplate.convertAndSend(this.destination, configVo, messagePostProcessor);        	        
+	        this.jmsTemplate.convertAndSend(this.destination, tsgreqmessage, messagePostProcessor);        	        
 	        Message sentMessage = messagePostProcessor.getSentMessage();
 	        logger.debug("Generated JMSMessageID : " + sentMessage.getJMSMessageID());
 	        return sentMessage.getJMSMessageID();
@@ -64,12 +65,12 @@ public class NVCLDownloadGateway {
 	 * @param configVo	ConfigVo object that consists of the configuration information
 	 * 					needed for trigger the wfs download using HttpClient object
 	 */ 
-	public String createWFSDownloadReqMsg(final ConfigVo configVo)   {
+	public String createWFSDownloadReqMsg(final MessageVo wfsreqmessage)   {
 		
 		
 		try {
 	        ReferenceHolderMessagePostProcessor messagePostProcessor = new ReferenceHolderMessagePostProcessor();
-	        this.jmsTemplate.convertAndSend(this.destination, configVo, messagePostProcessor);        	        
+	        this.jmsTemplate.convertAndSend(this.destination, wfsreqmessage, messagePostProcessor);        	        
 	        Message sentMessage = messagePostProcessor.getSentMessage();
 	        logger.debug("Generated JMSMessageID : " + sentMessage.getJMSMessageID());
 	        return sentMessage.getJMSMessageID();

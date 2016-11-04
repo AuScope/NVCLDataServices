@@ -50,24 +50,25 @@ public class TSGDownloadRequestSvcTest {
     	System.out.println("start testing ProcessRequest() method....");
 		JmsTemplate jmsTemplate = (JmsTemplate) ctx.getBean("jmsTemplate");
 		Destination destination = (Destination) ctx.getBean("tsgReplyDestination");
+		MessageVo tsgreqessage = new MessageVo();
 		ConfigVo configVo = (ConfigVo) ctx.getBean("createConfig");
-		configVo.setRequestLS(true);
-		configVo.setTSGdatasetid("6dd70215-fe38-457c-be42-3b165fd98c7");
-		MessageVo messageVo = new MessageVo();
-		messageVo.setRequestorEmail("peter.warren@csiro.au");
-		messageVo.setScriptFileNameNoExt("scriptfiletest");
-		messageVo.setTsgScriptPath("C:\\NVCL\\TSG\\script\\");
-		messageVo.setTsgExePath("C:\\Program Files\\The Spectral Geologist\\tsgeol7.exe");
-		messageVo.setDownloadCachePath("C:\\NVCL\\cache\\");
-		messageVo.setDownloadURL("http://localhost:88/TSGDownload/");
-		messageVo.setDownloadRootPath("C:\\NVCL\\download\\");
+		tsgreqessage.setRequestLS(true);
+		tsgreqessage.settSGDatasetID("6dd70215-fe38-457c-be42-3b165fd98c7");
+
+		tsgreqessage.setRequestorEmail("peter.warren@csiro.au");
+		tsgreqessage.setScriptFileNameNoExt("scriptfiletest");
+		configVo.setTsgScriptPath("C:\\NVCL\\TSG\\script\\");
+		configVo.setTsgExePath("C:\\Program Files\\The Spectral Geologist\\tsgeol7.exe");
+		configVo.setDownloadCachePath("C:\\NVCL\\cache\\");
+		configVo.setDownloadURL("http://localhost:88/TSGDownload/");
+		configVo.setDownloadRootPath("C:\\NVCL\\download\\");
 		TSGDownloadRequestSvc tsgDownloadRequestSvc = new TSGDownloadRequestSvc();
 
 		tsgDownloadRequestSvc.setJmsTemplate(jmsTemplate);
 		tsgDownloadRequestSvc.setDestination(destination);
 		tsgDownloadRequestSvc.setMailSender((MailSender)ctx.getBean("mailSender"));
 		tsgDownloadRequestSvc.setConfig(configVo);
-		tsgDownloadRequestSvc.processRequest(messageVo);
+		tsgDownloadRequestSvc.processRequest(tsgreqessage);
 
 		System.out.println("message created... testing end ....");
 	}

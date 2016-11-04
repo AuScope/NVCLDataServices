@@ -16,7 +16,7 @@ import javax.jms.Session;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.auscope.nvcl.server.vo.JMSMessageVo;
+import org.auscope.nvcl.server.vo.MessageVo;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.SessionCallback;
 
@@ -31,14 +31,14 @@ public class NVCLDownloadQueueBrowser {
 	
 	private static final Logger logger = LogManager.getLogger(NVCLDownloadQueueBrowser.class);
 
-	public List<JMSMessageVo> browseQueueMessages(final String email, final Destination destination) {
+	public List<MessageVo> browseQueueMessages(final String email, final Destination destination) {
 	
 		
-		List<JMSMessageVo> msgList = (ArrayList<JMSMessageVo>) this.jmsTemplate.execute(new SessionCallback<List<JMSMessageVo>>() {
+		List<MessageVo> msgList = (ArrayList<MessageVo>) this.jmsTemplate.execute(new SessionCallback<List<MessageVo>>() {
 
-			public List<JMSMessageVo> doInJms(Session session) throws JMSException {
+			public List<MessageVo> doInJms(Session session) throws JMSException {
 				int count = 0;
-				List<JMSMessageVo> msgList = new ArrayList<JMSMessageVo>();
+				List<MessageVo> msgList = new ArrayList<MessageVo>();
 				logger.debug("browse message in : " + destination);						 
 				//QueueBrowser browser = session.createBrowser((Queue) destination);				
 				//String msgSelector = "JMSMessageID  = 'ID:WALLABY-KH-3623-1255588969815-0:0:1:4:1'";
@@ -46,7 +46,7 @@ public class NVCLDownloadQueueBrowser {
 				QueueBrowser browser = session.createBrowser((Queue)destination,msgSelector);		
 				Enumeration<?> messages = browser.getEnumeration();
 				while (messages.hasMoreElements()) {
-						JMSMessageVo jmsMsgVo = new JMSMessageVo();
+						MessageVo jmsMsgVo = new MessageVo();
 						count++;
 						Message message = (Message) messages.nextElement();
 						//logger.debug("Message " + count + " : " + message);
@@ -63,10 +63,10 @@ public class NVCLDownloadQueueBrowser {
 							jmsMsgVo.setStatus(mapMessage.getString("status"));
 							jmsMsgVo.setDescription(mapMessage.getString("description"));
 							jmsMsgVo.setResultfromcache(mapMessage.getBoolean("resultfromcache"));
-							jmsMsgVo.setTsgdatasetid(mapMessage.getString("Tsgdatasetid"));
+							jmsMsgVo.settSGDatasetID(mapMessage.getString("tsgdatasetid"));
 							jmsMsgVo.setRequestLS(mapMessage.getBoolean("requestLS"));
 							jmsMsgVo.setBoreholeid(mapMessage.getString("boreholeid"));
-							jmsMsgVo.setTypename(mapMessage.getString("typename"));
+							jmsMsgVo.setFeatureTypeName(mapMessage.getString("typename"));
 							
 						}
 						msgList.add(0,jmsMsgVo);

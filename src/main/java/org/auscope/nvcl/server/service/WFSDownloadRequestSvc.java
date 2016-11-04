@@ -40,14 +40,12 @@ public class WFSDownloadRequestSvc {
 	
 	private static final Logger logger = LogManager.getLogger(WFSDownloadRequestSvc.class);
 		
-	private static NVCLDownloadSvc nvclDownloadSvc = new NVCLDownloadSvc();
-	
 	public void processRequest(MessageVo messageVo) {
 		logger.debug("in processing WFSDownload Request...");
 		logger.debug("Check if requested boreholeid exists in download dir before download process start ........");
-		String donwloadURL		= messageVo.getDownloadURL();
-		String downloadRootPath = messageVo.getDownloadRootPath();
-		String fileName 		= messageVo.getBoreholeId();
+		String donwloadURL		= config.getDownloadURL();
+		String downloadRootPath = config.getDownloadRootPath();
+		String fileName 		= messageVo.getBoreholeid();
 		File dir = new File(downloadRootPath);
 		File fullpath = new File(dir, fileName + ".zip");
 		logger.debug("fullpath : " + fullpath);
@@ -96,19 +94,19 @@ public class WFSDownloadRequestSvc {
 
 		//set all of the url parameters
 		NameValuePair request  = new NameValuePair("request","GetFeature");
-		NameValuePair typeName = new NameValuePair("typeName",messageVo.getTypeName());
+		NameValuePair typeName = new NameValuePair("typeName",messageVo.getFeatureTypeName());
 		NameValuePair version = new NameValuePair("version","1.1.0");
-		NameValuePair boreholeId = new NameValuePair("featureid",messageVo.getBoreholeId()); 	
+		NameValuePair boreholeId = new NameValuePair("featureid",messageVo.getBoreholeid()); 	
 		
 		HttpClient client = new HttpClient();
 		GetMethod method = new GetMethod(config.getGeoserverUrl());
 		method.setQueryString(new NameValuePair[]{request,typeName,boreholeId,version});
 		
-		String fileName 			= messageVo.getBoreholeId();
+		String fileName 			= messageVo.getBoreholeid();
 		//String downloadCache 		= messageVo.getDownloadCache();
-		String downloadCachePath 	= messageVo.getDownloadCachePath();
-		String downloadRootPath  	= messageVo.getDownloadRootPath();
-		String downloadURL 			= messageVo.getDownloadURL();
+		String downloadCachePath 	= config.getDownloadCachePath();
+		String downloadRootPath  	= config.getDownloadRootPath();
+		String downloadURL 			= config.getDownloadURL();
 			
 		try {
 			int statusCode = client.executeMethod(method);
@@ -182,9 +180,9 @@ public class WFSDownloadRequestSvc {
 	        if(messageVo.getStatus().equals("Success")){
 	        	String msgtext;
 	        	msg.setSubject("NVCL Download ready");
-	        	msgtext="This is an automated email from the National Virtual Core Library Download Service.\n\nThe Observations and Measurements representation of dataset with ID :" + messageVo.getBoreholeId() + " is ready to download here: " + messageVo.getDescription()+" This file will remain available for download for "+ this.config.getMsgTimetoLiveDays() +" days.";
+	        	msgtext="This is an automated email from the National Virtual Core Library Download Service.\n\nThe Observations and Measurements representation of dataset with ID :" + messageVo.getBoreholeid() + " is ready to download here: " + messageVo.getDescription()+" This file will remain available for download for "+ this.config.getMsgTimetoLiveDays() +" days.";
 	        	if(messageVo.getResultfromcache()){
-	        		msgtext+="\n\nThis file was recovered from cache.  If you believe it is stale you can force the service to regenerate it by clicking this link: "+config.getWebappURL()+"downloadwfs.html?boreholeid="+messageVo.getBoreholeId()+"&email="+messageVo.getRequestorEmail()+"&typename="+messageVo.getTypeName()+"&forcerecreate=yes .  Note: this can take some time and may not be possible if you or another user is currenly downloading the cached file";
+	        		msgtext+="\n\nThis file was recovered from cache.  If you believe it is stale you can force the service to regenerate it by clicking this link: "+config.getWebappURL()+"downloadwfs.html?boreholeid="+messageVo.getBoreholeid()+"&email="+messageVo.getRequestorEmail()+"&typename="+messageVo.getFeatureTypeName()+"&forcerecreate=yes .  Note: this can take some time and may not be possible if you or another user is currenly downloading the cached file";
 	        	}
 	        	msgtext+="\n\n If you have any comments, suggestions or issues with the download please reply to this email."; 
 	        	msg.setText(msgtext);
@@ -192,7 +190,7 @@ public class WFSDownloadRequestSvc {
 	        else{
 	        	msg.setSubject("NVCL Download preparation failed");
 	        	msg.setBcc(config.getSysAdminEmail());
-	        	msg.setText("This is an automated email from the National Virtual Core Library Download Service.\n\nYour request for dataset "+messageVo.getBoreholeId()+" has failed.  Please reply to this email for support.");
+	        	msg.setText("This is an automated email from the National Virtual Core Library Download Service.\n\nYour request for dataset "+messageVo.getBoreholeid()+" has failed.  Please reply to this email for support.");
 	        }
 	        logger.debug("Sending result email");
 		
@@ -214,6 +212,11 @@ public class WFSDownloadRequestSvc {
 	private ConfigVo config;
 	public void setConfig(ConfigVo config) {
 			this.config = config;
+	}
+	
+	private NVCLDownloadSvc nvclDownloadSvc;
+	public void setNvclDownloadSvc(NVCLDownloadSvc nvclDownloadSvc) {
+		this.nvclDownloadSvc = nvclDownloadSvc;
 	}
 	
 	//Injects JmsTemplate

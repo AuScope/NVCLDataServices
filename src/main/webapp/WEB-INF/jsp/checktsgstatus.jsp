@@ -26,11 +26,11 @@
 				<td>${entry.status}</td>
 				<c:choose>
 					<c:when test='${entry.status=="Success"}'>
-						<td><a href="${entry.description}">${entry.tsgdatasetid}${entry.requestLS ? '' : '_NoLS'}.zip</a></td>
+						<td><a href="${entry.description}">${entry.tSGDatasetID}${entry.requestLS ? '' : '_NoLS'}.zip</a></td>
 						<td>
 						<c:choose>
 							<c:when test='${entry.resultfromcache==true}'>
-								This file was recovered from cache.  If you believe it is stale you can force the service to <a href="downloadtsg.html?datasetid=${entry.tsgdatasetid}&email=${param.email}&linescan=${entry.requestLS ? 'yes' : 'no'}&forcerecreate=yes">regenerate it.</a>
+								This file was recovered from cache.  If you believe it is stale you can force the service to <a href="downloadtsg.html?datasetid=${entry.tSGDatasetID}&email=${param.email}&linescan=${entry.requestLS ? 'yes' : 'no'}&forcerecreate=yes">regenerate it.</a>
 							</c:when>
 						</c:choose>
 						</td>

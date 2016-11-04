@@ -20,8 +20,17 @@ public class UnitTestVo {
     private String testLogIdImagery;
     private String[] testLogIdList;
     private String testDomainlogId;
+    private String requestorEmail;
 
-    public String getTestDatasetId() {
+    public String getRequestorEmail() {
+		return requestorEmail;
+	}
+
+	public void setRequestorEmail(String requestorEmail) {
+		this.requestorEmail = requestorEmail;
+	}
+
+	public String getTestDatasetId() {
         return this.testDatasetId;
     }
 

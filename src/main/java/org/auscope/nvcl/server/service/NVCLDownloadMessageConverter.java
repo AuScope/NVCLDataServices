@@ -52,19 +52,13 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 		MapMessage mapMessage = (MapMessage) message;
 		MessageVo messageVo = new MessageVo();
 		if ( mapMessage.getString("requestType").equals("TSG") ) {
-			messageVo.setTsgExePath(mapMessage.getString("tsgExePath"));
-			messageVo.setTsgScriptPath(mapMessage.getString("scriptPath"));
 			messageVo.setScriptFileNameNoExt(mapMessage.getString("scriptFileNameNoExt"));
+			messageVo.settSGDatasetID(mapMessage.getString("tsgdatasetid"));
 			messageVo.setRequestLS(mapMessage.getBoolean("requestLS"));
 		} else if  ( mapMessage.getString("requestType").equals("WFS") ) {
-			//messageVo.setServiceUrl(mapMessage.getString("serviceUrl"));
-			messageVo.setBoreholeId(mapMessage.getString("boreholeId"));
-			messageVo.setTypeName(mapMessage.getString("typeName"));
+			messageVo.setBoreholeid(mapMessage.getString("boreholeId"));
+			messageVo.setFeatureTypeName(mapMessage.getString("typeName"));
 		}
-		messageVo.setDownloadCachePath(mapMessage.getString("downloadCachePath"));
-		//messageVo.setDownloadCache(mapMessage.getString("downloadCache"));		
-		messageVo.setDownloadRootPath(mapMessage.getString("downloadRootPath"));
-		messageVo.setDownloadURL(mapMessage.getString("downloadURL"));
 		messageVo.setRequestorEmail(message.getJMSCorrelationID());
 		return messageVo;
 	}
@@ -80,47 +74,33 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 		
 		logger.debug("Converting object (" + object + ") to message ... !");
 		
-		if (!(object instanceof ConfigVo) && !(object instanceof MessageVo)) {
-			throw new MessageConversionException("Object is neither a ConfigVo or MessageVo");
+		if ( !(object instanceof MessageVo)) {
+			throw new MessageConversionException("Object must be of type MessageVo");
+		}
+	
+		MessageVo messageVo = (MessageVo) object;
+		MapMessage message = session.createMapMessage();
+		message.setJMSCorrelationID(messageVo.getRequestorEmail());
+		message.setString("status", messageVo.getStatus());
+		message.setString("description", messageVo.getDescription());
+		message.setBoolean("resultfromcache", messageVo.getResultfromcache());
+		message.setString("tsgdatasetid", messageVo.gettSGDatasetID());
+		message.setBoolean("requestLS", messageVo.getRequestLS());
+		message.setString("boreholeid",  messageVo.getBoreholeid());
+		message.setString("typename",  messageVo.getFeatureTypeName());
+		
+		if ( messageVo.getRequestType().equals("TSG") ) {
+			message.setString("description", "Request for dataset with ID: " + messageVo.getScriptFileNameNoExt() );
+			message.setString("requestType", "TSG");
+			message.setString("scriptFileNameNoExt", messageVo.getScriptFileNameNoExt());
+		} else if ( messageVo.getRequestType().equals("WFS") ) {
+			message.setString("description", "Request for O and M data with ID: " +messageVo.getBoreholeid() );
+			message.setString("requestType","WFS");
+			message.setString("boreholeId",messageVo.getBoreholeid());
 		}
 		
-		if (object instanceof ConfigVo) {
-			//creating request message
-			ConfigVo configVo = (ConfigVo) object;
-			MapMessage message = session.createMapMessage();
-			message.setJMSCorrelationID(configVo.getRequestorEmail());
-			message.setString("downloadCachePath", configVo.getDownloadCachePath());
-			//message.setString("downloadCache", configVo.getDownloadCache());			
-			message.setString("downloadRootPath", configVo.getDownloadRootPath());
-			message.setString("downloadURL", configVo.getDownloadURL());
-			if ( configVo.getRequestType().equals("TSG") ) {
-				message.setString("description", "Request for dataset with ID: " + configVo.getScriptFileNameNoExt() );
-				message.setString("requestType", "TSG");
-				message.setString("tsgExePath", configVo.getTsgExePath());
-				message.setString("scriptPath", configVo.getTsgScriptPath());
-				message.setString("scriptFileNameNoExt", configVo.getScriptFileNameNoExt());
-				message.setBoolean("requestLS", configVo.getRequestLS());
-			} else if ( configVo.getRequestType().equals("WFS") ) {
-				message.setString("description", "Request for O and M data with ID: " +configVo.getBoreholeID() );
-				message.setString("requestType","WFS");
-				message.setString("boreholeId",configVo.getBoreholeID());
-				message.setString("typeName",configVo.getTypeName());
-			}
-			return message;
-		} else {
-			//creating reply message
-			MessageVo messageVo = (MessageVo) object;
-			MapMessage message = session.createMapMessage();
-			message.setJMSCorrelationID(messageVo.getRequestorEmail());
-			message.setString("status", messageVo.getStatus());
-			message.setString("description", messageVo.getDescription());
-			message.setBoolean("resultfromcache", messageVo.getResultfromcache());
-			message.setString("Tsgdatasetid", messageVo.getTSGDatasetID());
-			message.setBoolean("requestLS", messageVo.getRequestLS());
-			message.setString("boreholeid",  messageVo.getBoreholeId());
-			message.setString("typename",  messageVo.getTypeName());
-			return message;
-		}
+		return message;
+
 	
 	}
 	

@@ -42,6 +42,7 @@
 		<property name="testLogIdType2" value="${test.LogIdType2}" />
 		<property name="testLogIdList" value="${test.LogIdList}" />
 		<property name="testDomainlogId" value="${test.DomainlogId}" />
+		<property name="requestorEmail" value="${test.requestorEmail}" />
 	</bean>
 
 	<bean id="dataSource" destroy-method="close"
@@ -71,7 +72,7 @@
 	<bean id="downSampledFloatDataDao" class="org.auscope.nvcl.server.dao.DownSampledFloatDataDao" />
 
 	<bean id="domainDataDao" class="org.auscope.nvcl.server.dao.DomainDataDao" />
-	
+
 	<bean id="logExtentsDao" class="org.auscope.nvcl.server.dao.LogExtentsDao" />
 
 	<bean id="nvclDataSvc" class="org.auscope.nvcl.server.service.NVCLDataSvc" />
@@ -131,11 +132,16 @@
 	<bean id="nvclDownloadMessageConverter"
 		class="org.auscope.nvcl.server.service.NVCLDownloadMessageConverter" />
 
+	<bean id="nvclDownloadSvc" class="org.auscope.nvcl.server.service.NVCLDownloadSvc">
+		<property name="config" ref="createConfig" />
+	</bean>
+
 	<bean id="tsgDownloadRequestSvc" class="org.auscope.nvcl.server.service.TSGDownloadRequestSvc">
 		<property name="jmsTemplate" ref="jmsTemplate" />
 		<property name="destination" ref="tsgReplyDestination" />
 		<property name="mailSender" ref="mailSender" />
 		<property name="config" ref="createConfig" />
+		<property name="nvclDownloadSvc" ref="nvclDownloadSvc" />
 	</bean>
 
 	<bean id="wfsDownloadRequestSvc" class="org.auscope.nvcl.server.service.WFSDownloadRequestSvc">
@@ -143,6 +149,7 @@
 		<property name="destination" ref="wfsReplyDestination" />
 		<property name="mailSender" ref="mailSender" />
 		<property name="config" ref="createConfig" />
+		<property name="nvclDownloadSvc" ref="nvclDownloadSvc" />
 	</bean>
 
 	<bean id="nvclDownloadQueueBrowser"
@@ -202,6 +209,7 @@
 			<map>
 				<entry key="days" value="${msgTimetoLiveDays:31}" />
 				<entry key="downloadfolderpath" value="${download.rootpath}" />
+				<entry key="cachefolderpath" value="${download.cachepath}" />
 			</map>
 		</property>
 	</bean>
@@ -211,14 +219,17 @@
 		<property name="jobDetail" ref="CleanUpDownloadFolder" />
 		<!-- run every morning at 6 AM -->
 		<property name="cronExpression" value="0 0 6 * * ?" />
+		<!-- run every 5 mins -->
+		<!-- <property name="cronExpression" value="0 0/5 * * * ?" /> -->
+		
 	</bean>
 
 	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
-	<property name="quartzProperties">
-            <props>
-	<prop key="org.quartz.threadPool.threadCount">1</prop>
-	</props>
-	</property>
+		<property name="quartzProperties">
+			<props>
+				<prop key="org.quartz.threadPool.threadCount">1</prop>
+			</props>
+		</property>
 		<property name="triggers">
 			<list>
 				<ref bean="cronTrigger" />

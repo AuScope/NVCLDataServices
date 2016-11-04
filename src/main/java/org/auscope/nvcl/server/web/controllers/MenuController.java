@@ -8,11 +8,9 @@ import java.awt.Graphics2D;
 import java.awt.Menu;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
@@ -21,7 +19,6 @@ import java.nio.FloatBuffer;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -77,6 +74,7 @@ import org.auscope.nvcl.server.vo.LogCollectionVo;
 import org.auscope.nvcl.server.vo.LogDetailsVo;
 import org.auscope.nvcl.server.vo.LogExtentsVo;
 import org.auscope.nvcl.server.vo.MaskDataVo;
+import org.auscope.nvcl.server.vo.MessageVo;
 import org.auscope.nvcl.server.vo.ScannedBoreholeVo;
 import org.auscope.nvcl.server.vo.SpectralDataCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralDataVo;
@@ -162,11 +160,15 @@ public class MenuController {
 	@Qualifier(value = "nvclDataSvc")
 	private NVCLDataSvc nvclDataSvc;
 
+	
+	@Autowired
+	@Qualifier(value = "nvclDownloadSvc")
+	private NVCLDownloadSvc nvclDownloadSvc;
+	
 	@Autowired
 	@Qualifier(value = "marshaller")
 	private Jaxb2Marshaller marshaller;
 
-	private NVCLDownloadSvc nvclDownloadSvc;
 
 	@RequestMapping("/")
 	public String index(HttpServletRequest request, HttpServletResponse response) {
@@ -1368,9 +1370,9 @@ public class MenuController {
 			HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
 		TsgParamVo tsgParamVo = new TsgParamVo();
-
+		MessageVo tsgreqmessage = new MessageVo();
 		// set TSG as requestType to ConfigVo
-		configVo.setRequestType("TSG");
+		tsgreqmessage.setRequestType("TSG");
 
 		// url parameters validation start
 
@@ -1382,7 +1384,7 @@ public class MenuController {
 		}
 
 		// set requestor email into ConfigVo
-		configVo.setRequestorEmail(email);
+		tsgreqmessage.setRequestorEmail(email);
 
 		// mandatory field : validate mandatory field datasetid
 
@@ -1398,10 +1400,10 @@ public class MenuController {
 
 		if (!Utility.stringIsBlankorNull(linescan) && linescan.toLowerCase().equals("no")) {
 			linescan = "no";
-			configVo.setRequestLS(false);
+			tsgreqmessage.setRequestLS(false);
 		} else {
 			linescan = "yes";
-			configVo.setRequestLS(true);
+			tsgreqmessage.setRequestLS(true);
 		}
 
 		logger.debug("linescan = " + linescan);
@@ -1424,8 +1426,8 @@ public class MenuController {
 		// create
 		// script file
 		logger.debug("Start generating script file...");
-		nvclDownloadSvc = new NVCLDownloadSvc();
-		String scriptFileNameNoExt = nvclDownloadSvc.createScriptFile(configVo, tsgParamVo);
+
+		String scriptFileNameNoExt = nvclDownloadSvc.createScriptFile(tsgParamVo);
 
 		if (deletecache.equals("yes")) {
 			File cachedfile = new File(configVo.getDownloadRootPath() + scriptFileNameNoExt + ".zip");
@@ -1446,13 +1448,13 @@ public class MenuController {
 			logger.error(errMsg);
 			return new ModelAndView("error_page", "errmsg", errMsg);
 		}
-		configVo.setScriptFileNameNoExt(scriptFileNameNoExt);
-		configVo.setTSGdatasetid(datasetid);
+		tsgreqmessage.setScriptFileNameNoExt(scriptFileNameNoExt);
+		tsgreqmessage.settSGDatasetID(datasetid);
 		logger.debug("Script file created successfully ...");
 
 		logger.debug("Start create JMS message ...");
 		nvclDownloadGateway.setDestination(tsgReqDestination);
-		String messageID = nvclDownloadGateway.createTSGDownloadReqMsg(configVo);
+		String messageID = nvclDownloadGateway.createTSGDownloadReqMsg(tsgreqmessage);
 
 		if (messageID == null) {
 			logger.error("Failed creating JMS message in queue ...");
@@ -1504,8 +1506,9 @@ public class MenuController {
 			@RequestParam(value = "forcerecreate", required = false, defaultValue = "no") String deletecache,
 			HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-		// set WFS as requestType to ConfigVo
-		configVo.setRequestType("WFS");
+		MessageVo wfsreqmessage = new MessageVo();
+		// set WFS as requestType
+		wfsreqmessage.setRequestType("WFS");
 
 		// url parameters validation start
 
@@ -1516,7 +1519,7 @@ public class MenuController {
 			return new ModelAndView("downloadwfsusage", "errmsg", errMsg);
 		}
 		// set requestor email into ConfigVo
-		configVo.setRequestorEmail(email);
+		wfsreqmessage.setRequestorEmail(email);
 
 		// validate mandatory field : Borehole Identifier
 
@@ -1525,9 +1528,8 @@ public class MenuController {
 			return new ModelAndView("downloadwfsusage", "errmsg", errMsg);
 		}
 
-		// set boreholeid into ConfigVo which later will be transfered to
-		// MessageVo and use as file name for the O&M downloaded
-		configVo.setBoreholeID(boreholeid);
+		// set boreholeid to use as file name for the O&M download
+		wfsreqmessage.setBoreholeid(boreholeid);
 
 		// validate mandatory field : type name
 
@@ -1549,11 +1551,11 @@ public class MenuController {
 		}
 
 		// Set url parameters to both configVo
-		configVo.setTypeName(typeName);
+		wfsreqmessage.setFeatureTypeName(typeName);
 
 		logger.debug("Start create JMS message ...");
 		nvclDownloadGateway.setDestination(wfsReqDestination);
-		String messageID = nvclDownloadGateway.createWFSDownloadReqMsg(configVo);
+		String messageID = nvclDownloadGateway.createWFSDownloadReqMsg(wfsreqmessage);
 		String adminEmail = configVo.getSysAdminEmail();
 		// String webappURL = configVo.getWebappURL();
 
@@ -1616,7 +1618,7 @@ public class MenuController {
 		logger.debug("jmsTemplate : " + jmsTemplate);
 		logger.debug("tsgReqDestination : " + tsgReqDestination);
 		logger.debug("tsgReplyDestination : " + tsgReplyDestination);
-		nvclDownloadSvc = new NVCLDownloadSvc();
+
 		Map<String, Object> msgMap = nvclDownloadSvc.browseMessage(email, jmsTemplate, tsgReqDestination,
 				tsgReplyDestination);
 		return new ModelAndView("checktsgstatus", "msgMap", msgMap);
@@ -1664,7 +1666,7 @@ public class MenuController {
 		logger.debug("jmsTemplate : " + jmsTemplate);
 		logger.debug("wfsReqDestination : " + wfsReqDestination);
 		logger.debug("wfsReplyDestination : " + wfsReplyDestination);
-		nvclDownloadSvc = new NVCLDownloadSvc();
+
 		Map<String, Object> msgMap = nvclDownloadSvc.browseMessage(email, jmsTemplate, wfsReqDestination,
 				wfsReplyDestination);
 		return new ModelAndView("checkwfsstatus", "msgMap", msgMap);

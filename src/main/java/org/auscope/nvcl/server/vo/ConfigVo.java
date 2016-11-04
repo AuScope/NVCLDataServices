@@ -25,14 +25,14 @@ public class ConfigVo {
 		private Boolean sendEmails;
 		private int msgTimetoLiveDays;
 		//extra field to be use for creating request queue message
-		private String requestorEmail;
-		private String requestType;
+		//private String requestorEmail;
+		//private String requestType;
 		//private String serviceUrl;
-		private String typeName;
-		private String boreholeid;
-		private String tSGdatasetid;
-		private String scriptFileNameNoExt;
-		private Boolean requestLS;
+		//private String typeName;
+		//private String boreholeid;
+		//private String tSGdatasetid;
+		//private String scriptFileNameNoExt;
+		//private Boolean requestLS;
 		
 		public String getJdbcDbType() {
 		  return jdbc_dbtype;
@@ -138,7 +138,7 @@ public class ConfigVo {
 			this.sendEmails = sendEmails;
 		}
 
-		public String getRequestorEmail() {
+		/*public String getRequestorEmail() {
 			return requestorEmail;
 		}
 	 
@@ -184,7 +184,7 @@ public class ConfigVo {
 	 
 		public void setScriptFileNameNoExt(String scriptFileNameNoExt) {
 			this.scriptFileNameNoExt = scriptFileNameNoExt;
-		}
+		}*/
 		
 		public void displayConfig() {
 			System.out.println("jdbc.dbtype=" + this.jdbc_dbtype);
@@ -208,13 +208,13 @@ public class ConfigVo {
 		public void setMsgTimetoLiveDays(int msgTimetoLiveDays) {
 			this.msgTimetoLiveDays = msgTimetoLiveDays;
 		}
-		public Boolean getRequestLS(){
+		/*public Boolean getRequestLS(){
 			return this.requestLS;
 		}
 		
 		public void setRequestLS(Boolean requestLS)
 		{
 			this.requestLS = requestLS;
-		}
+		}*/
 
 }

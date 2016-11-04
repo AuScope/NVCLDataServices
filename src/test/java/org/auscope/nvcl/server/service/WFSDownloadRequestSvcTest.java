@@ -4,6 +4,7 @@ import javax.jms.Destination;
 
 import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.MessageVo;
+import org.auscope.nvcl.server.vo.UnitTestVo;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,26 +48,26 @@ public class WFSDownloadRequestSvcTest {
 	public void testProcessRequest() throws Exception {
 
     	System.out.println("start testing ProcessRequest() method....");
-
+    	UnitTestVo testconfig = (UnitTestVo) ctx.getBean("unittestVo");
 		ConfigVo configVo = (ConfigVo) ctx.getBean("createConfig");
-		configVo.setScriptFileNameNoExt("scriptfiletest");
-		configVo.setRequestorEmail("florence.tan@csiro.au");
+		configVo.setDownloadCachePath("C:\\NVCL\\cache\\");
+		configVo.setDownloadURL("http://localhost:80/NVCLDownload/");
+		configVo.setDownloadRootPath("C:\\NVCL\\download\\");
 		JmsTemplate jmsTemplate = (JmsTemplate) ctx.getBean("jmsTemplate");
 		Destination destination = (Destination) ctx.getBean("wfsReplyDestination");
-		MessageVo messageVo = new MessageVo();
-		messageVo.setRequestorEmail("florence.tan@csiro.au");
-		messageVo.setTypeName("gsml:Borehole");
-		messageVo.setDownloadCachePath("C:\\NVCL\\cache\\");
-		messageVo.setDownloadURL("http://localhost:80/NVCLDownload/");
-		messageVo.setDownloadRootPath("C:\\NVCL\\download\\");
-		messageVo.setBoreholeId("PIRSA_DH_NO_141126");
+		MessageVo wfsreqessage = new MessageVo();
+		wfsreqessage.setRequestorEmail(testconfig.getRequestorEmail());
+		wfsreqessage.setFeatureTypeName("gsml:Borehole");
+		wfsreqessage.setScriptFileNameNoExt("scriptfiletest");
+		wfsreqessage.setRequestorEmail(testconfig.getRequestorEmail());
+		wfsreqessage.setBoreholeid("PIRSA_DH_NO_141126");
 		WFSDownloadRequestSvc wfsDownloadRequestSvc = new WFSDownloadRequestSvc();
 
 		wfsDownloadRequestSvc.setJmsTemplate(jmsTemplate);
 		wfsDownloadRequestSvc.setDestination(destination);
 		wfsDownloadRequestSvc.setMailSender((MailSender)ctx.getBean("mailSender"));
 		wfsDownloadRequestSvc.setConfig(configVo);
-		wfsDownloadRequestSvc.processRequest(messageVo);
+		wfsDownloadRequestSvc.processRequest(wfsreqessage);
 
 		System.out.println("message created... testing end ....");
 	}

@@ -39,15 +39,12 @@ import org.springframework.mail.SimpleMailMessage;
 public class TSGDownloadRequestSvc {
 	
 	private static final Logger logger = LogManager.getLogger(TSGDownloadRequestSvc.class);
-
-	private static NVCLDownloadSvc nvclDownloadSvc = new NVCLDownloadSvc();
-	
 	
 	public void processRequest(MessageVo messageVo) {
 		logger.debug("in TSGDonwloadRequestSvc.processRequest...");
 		logger.debug("Check if requested dataset exists in download dir before download process start ........");
-		String donwloadURL		= messageVo.getDownloadURL();
-		String downloadRootPath = messageVo.getDownloadRootPath();
+		String donwloadURL		= config.getDownloadURL();
+		String downloadRootPath = config.getDownloadRootPath();
 		String fileName 		= messageVo.getScriptFileNameNoExt();
 		File dir = new File(downloadRootPath);
 		File fullpath = new File(dir, fileName + ".zip");
@@ -57,14 +54,14 @@ public class TSGDownloadRequestSvc {
 		if (!fullpath.exists()) { 
 			logger.debug("File does not exists, proceed to actual download...");
 			messageVo.setResultfromcache(false);
-			messageVo.setTSGDatasetID(config.getTSGdatasetid());
+			//messageVo.setTSGDatasetID(config.getTSGdatasetid());
 			messageVo = exeRequest(messageVo);
 		} else {
 			fullpath.setLastModified(System.currentTimeMillis());
 			messageVo.setStatus("Success");
 			messageVo.setDescription(donwloadURL + fileName + ".zip" );
 			messageVo.setResultfromcache(true);
-			messageVo.setTSGDatasetID(config.getTSGdatasetid());
+			//messageVo.setTSGDatasetID(config.getTSGdatasetid());
 			logger.debug("File exists, skip download... create reply message....");
 		}
 
@@ -101,14 +98,14 @@ public class TSGDownloadRequestSvc {
 	private MessageVo exeRequest(MessageVo messageVo) {
 		logger.debug("Start TSGDownload process ........");			
 		int exitVal = nvclDownloadSvc.execTSGDownload(
-				messageVo.getTsgExePath(), 
-				messageVo.getTsgScriptPath()+messageVo.getScriptFileNameNoExt()+".txt");
+				config.getTsgExePath(), 
+				config.getTsgScriptPath()+messageVo.getScriptFileNameNoExt()+".txt");
 		//exit value 0 = success 
 		if (exitVal == 0 ) {		
-			String downloadCachePath = messageVo.getDownloadCachePath();
+			String downloadCachePath = config.getDownloadCachePath();
 			String fileName 		 = messageVo.getScriptFileNameNoExt();
-			String downloadRootPath  = messageVo.getDownloadRootPath();
-			String downloadURL		 = messageVo.getDownloadURL();
+			String downloadRootPath  = config.getDownloadRootPath();
+			String downloadURL		 = config.getDownloadURL();
 			// zip the folder that consists the downloaded file
 			File foldertocompress = new File (downloadCachePath+fileName);
 			int zipFolder = nvclDownloadSvc.zipFolder(downloadCachePath,fileName);
@@ -154,9 +151,9 @@ public class TSGDownloadRequestSvc {
 	        if(messageVo.getStatus().equals("Success")){
 	        	String msgtext;
 	        	msg.setSubject("NVCL Download ready");
-	        	msgtext="This is an automated email from the National Virtual Core Library Download Service.\n\nThe TSG dataset you requested :" + messageVo.getScriptFileNameNoExt() + " is ready for download.  " + messageVo.getDownloadURL()+messageVo.getScriptFileNameNoExt()+".zip .  This file will remain available for download for "+ this.config.getMsgTimetoLiveDays() +" days.\n\nTo view the content of these files you will need \"The Spectral Geologist Viewer\" available at http://www.thespectralgeologist.com ";
+	        	msgtext="This is an automated email from the National Virtual Core Library Download Service.\n\nThe TSG dataset you requested :" + messageVo.getScriptFileNameNoExt() + " is ready for download.  " + config.getDownloadURL()+messageVo.getScriptFileNameNoExt()+".zip .  This file will remain available for download for "+ this.config.getMsgTimetoLiveDays() +" days.\n\nTo view the content of these files you will need \"The Spectral Geologist Viewer\" available at http://www.thespectralgeologist.com ";
 	        	if(messageVo.getResultfromcache()){
-	        		msgtext+="\n\nThis file was recovered from cache.  If you believe it is stale you can force the service to regenerate it by clicking this link: "+config.getWebappURL()+"downloadtsg.html?datasetid="+messageVo.getTSGDatasetID()+"&email="+messageVo.getRequestorEmail()+"&linescan="+(messageVo.getRequestLS()?"yes":"no")+"&forcerecreate=yes .  Note: this can take some time and may not be possible if you or another user is currenly downloading the cached file";
+	        		msgtext+="\n\nThis file was recovered from cache.  If you believe it is stale you can force the service to regenerate it by clicking this link: "+config.getWebappURL()+"downloadtsg.html?datasetid="+messageVo.gettSGDatasetID()+"&email="+messageVo.getRequestorEmail()+"&linescan="+(messageVo.getRequestLS()?"yes":"no")+"&forcerecreate=yes .  Note: this can take some time and may not be possible if you or another user is currenly downloading the cached file";
 	        	}
 	        	msgtext+="\n\n If you have any comments, suggestions or issues with the download please reply to this email.";
 	        	msg.setText(msgtext);
@@ -164,7 +161,7 @@ public class TSGDownloadRequestSvc {
 	        else{
 	        	msg.setSubject("NVCL Download preparation failed");
 	        	msg.setBcc(config.getSysAdminEmail());
-	        	msg.setText("This is an automated email from the National Virtual Core Library Download Service.\n\nYour request for TSG dataset "+messageVo.getTSGDatasetID()+" has failed.  Please reply to this email for support.");
+	        	msg.setText("This is an automated email from the National Virtual Core Library Download Service.\n\nYour request for TSG dataset "+messageVo.gettSGDatasetID()+" has failed.  Please reply to this email for support.");
 	        }
 	        logger.debug("Sending result email");
 			
@@ -188,6 +185,11 @@ public class TSGDownloadRequestSvc {
 			this.config = config;
 	}
 	
+	private NVCLDownloadSvc nvclDownloadSvc;
+	public void setNvclDownloadSvc(NVCLDownloadSvc nvclDownloadSvc) {
+		this.nvclDownloadSvc = nvclDownloadSvc;
+	}
+
 	//Injects JmsTemplate
 	private JmsTemplate jmsTemplate;
 	public void setJmsTemplate(JmsTemplate jmsTemplate) {
