@@ -33,7 +33,7 @@
 		<div class="carousel-inner" role="listbox">
 			<c:forEach var="entry" items="${msgMap['images']}" varStatus = "status">
 			<div class="item ${msgMap['sampleno']==entry.sampleNo ? 'active' : ''}">
-				<img ${(((msgMap['sampleno']-entry.sampleNo)>0 ? (msgMap['sampleno']-entry.sampleNo) : (entry.sampleNo - msgMap['sampleno'])) <4) ? 'src' : 'lazy-load-src'}="${entry.URL}" class="caroimage" alt="${entry.sampleNo}">
+				<img ${(((msgMap['sampleno']-entry.sampleNo)>0 ? (msgMap['sampleno']-entry.sampleNo) : (entry.sampleNo - msgMap['sampleno'])) <2) ? 'src' : 'lazyloadsrc'}="${entry.URL}" class="caroimage" alt="${entry.sampleNo}">
 			</div>
 		</c:forEach>
 		</div>
@@ -70,11 +70,11 @@
 	    for (; i<=lastindex;i++){
 	    	var $item = $($itemlist[i]);
 		    var $img = $item.find('img')
-		    var src = $img.attr('lazy-load-src');
+		    var src = $img.attr('lazyloadsrc');
 
 		    if (typeof src !== "undefined" && src != "") {
 		    	$img.attr('src', src)
-		    	$img.attr('lazy-load-src', '');
+		    	$img.attr('lazyloadsrc', '');
 		    }
 		    $item = $item.next('.item');
 	    }
