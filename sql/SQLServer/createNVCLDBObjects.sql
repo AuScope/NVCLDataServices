@@ -1187,35 +1187,44 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+CREATE FUNCTION [dbo].[GETDOMAINDATAFUNC] 
+(
+	@v_domainlog_id varchar(max)
+)
+RETURNS 
+@Temp TABLE
+       (samplenumber   integer,
+        startvalue     numeric(18,5),
+        endvalue       numeric(18,5),
+        samplename     varchar(4000))
+AS
+BEGIN
+	 DECLARE
+         @subdomid varchar(64)
+
+      SELECT @subdomid = DOMAINLOGS.ISSUBDOMAINOFLOG_ID
+      FROM dbo.DOMAINLOGS
+      WHERE DOMAINLOGS.LOG_ID = @v_domainlog_id
+
+      IF (@subdomid IS NULL)
+        insert into @Temp SELECT samplenumber,startvalue,endvalue,samplename FROM DOMAINLOGDATA WHERE LOG_ID=@v_domainlog_id ORDER BY samplenumber
+      ELSE 
+         insert into @Temp SELECT subdom.samplenumber,min(maindom.startvalue) as startvalue,max(maindom.endvalue) as endvalue,subdom.samplename FROM dbo.GETDOMAINDATAFUNC(@subdomid) maindom inner join domainlogdata subdom on maindom.samplenumber BETWEEN subdom.startvalue ANd subdom.endvalue WHERE subdom.log_id=@v_domainlog_id Group BY subdom.samplenumber,subdom.samplename ORDER by subdom.samplenumber
+	
+	RETURN 
+END
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 CREATE PROCEDURE [dbo].[GETDOMAINDATA]
    @v_domainlog_id varchar(max)
 AS 
    
    BEGIN
-   	 DECLARE
-         @subdomid varchar(64), @subsubdomid varchar (64)
-
-	  SET NOCOUNT ON;
-
-      SELECT @subdomid = DOMAINLOGS.ISSUBDOMAINOFLOG_ID
-      FROM dbo.DOMAINLOGS
-      WHERE DOMAINLOGS.LOG_ID = @v_domainlog_id;
-
-	   SELECT @subsubdomid = DOMAINLOGS.ISSUBDOMAINOFLOG_ID
-      FROM dbo.DOMAINLOGS
-      WHERE DOMAINLOGS.LOG_ID = @subdomid;
-
-	  if (@subsubdomid is not null) RAISERROR ( 'Domains cannot have more than 1 level of sub domaining.', 18,1);
-	  ELSE 
-		  BEGIN
-		  IF (@subdomid IS NULL)
-			SELECT samplenumber,startvalue,endvalue,samplename FROM DOMAINLOGDATA WHERE LOG_ID=@v_domainlog_id ORDER BY samplenumber
-		  ELSE 
-			SELECT subdom.samplenumber,min(maindom.startvalue) as startvalue,max(maindom.endvalue) as endvalue,subdom.samplename FROM (SELECT samplenumber,startvalue,endvalue,samplename FROM DOMAINLOGDATA WHERE LOG_ID=@subdomid) maindom inner join domainlogdata subdom on maindom.samplenumber BETWEEN subdom.startvalue ANd subdom.endvalue WHERE subdom.log_id=@v_domainlog_id Group BY subdom.samplenumber,subdom.samplename ORDER by subdom.samplenumber
-	  END
-
+       SELECT * FROM dbo.GETDOMAINDATAFUNC(@v_domainlog_id) order by samplenumber
    END
-
 GO
 SET ANSI_NULLS ON
 GO
@@ -2612,7 +2621,7 @@ SET ANSI_PADDING ON
 GO
 CREATE TABLE [dbo].[PLSDATA](
 	[PLS_ID] [varchar](64) NOT NULL,
-	[DATSET_ID] [varchar](64) NOT NULL,
+	[DATASET_ID] [varchar](64) NOT NULL,
 	[PLSNAME] [varchar](4000) NOT NULL,
 	[PLSDATA] [varbinary](max) NOT NULL,
  CONSTRAINT [PK_PLSD] PRIMARY KEY CLUSTERED 
