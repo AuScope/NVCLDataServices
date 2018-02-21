@@ -1,11 +1,11 @@
 
 <%@ include file="include.jsp" %>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%-- <%@ page contentType="text/html;charset=UTF-8" language="java" %> --%>
 
-<html>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>Spectral Data Plot</title>
+<!-- <html> -->
+<!-- <head> -->
+<!-- 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> -->
+<!-- 	<title>Spectral Data Plot</title> -->
 
 <script	src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"	type="text/javascript"></script>
 <script src="script/d3.min.js"></script>
@@ -59,35 +59,39 @@ $.ajaxTransport("+*", function(options, originalOptions, jqXHR){
 function drawgraph(k,wavelengths) {
 	return function(result){
 	var data = [];
-	var floats = new Float32Array(result);
-	var spectracount = result.byteLength/(4*wavelengths.length);
+
+	//var floats = new Float32Array(result);
+	var spectracount = result.length// result.byteLength/(4*wavelengths.length);
 	var palette = new Rickshaw.Color.Palette( { scheme: 'munin' } );
 	for (var j=0;j<spectracount;j++)
 	{
 		var d1 =[];
 		
-		for (var i = 0; i < wavelengths.length; i++) {
-			d1.push({x:parseFloat(wavelengths[i]), y:floats[(j*wavelengths.length)+i]});
+		for (var i = 0; i < result[j].floatspectraldata.length; i++) {
+			d1.push({x:parseInt(wavelengths[i]), y: result[j].floatspectraldata[i]});
 		}
 		data.push({data:d1,name:"Reflectance Sample "+((j-Math.floor(spectracount/2))>0? "+"+ (j-Math.floor(spectracount/2)):(j-Math.floor(spectracount/2))) ,color:palette.color()});
 	}
 	var graph = new Rickshaw.Graph( {
-		element: document.getElementById("chart"+k),
-		width: 1460,
-		height: 800,
+		element: document.getElementById("chart"+${msgMap['startSampleNo']}+"_"+k),
+		width: ${msgMap['width']},
+		height: ${msgMap['height']},
 		renderer: 'line',
+		padding: {top: 0.05, left: 0.05, right: 0.05, bottom: 0.05},
 		series: data,
 		min: 'auto'
 	} );
 
 	var y_axis = new Rickshaw.Graph.Axis.Y( {
-		graph: graph
+		graph: graph,
+		tickFormat:d3.format('.2f')
 	} );
 	var x_axis = new Rickshaw.Graph.Axis.X( {
-        graph: graph
+        graph: graph,
+        tickFormat:d3.format('.0f')
     } );
 	var legend = new Rickshaw.Graph.Legend( {
-        element: document.querySelector("#legend"+k),
+        element: document.querySelector("#legend"+${msgMap['startSampleNo']}+"_"+k),
         graph: graph
     } );
 	var shelving = new Rickshaw.Graph.Behavior.Series.Toggle( {
@@ -108,29 +112,22 @@ function drawgraph(k,wavelengths) {
 		$.ajaxSetup({
 		    async: false
 		});
-		var qd = {};
-		location.search.substr(1).split("&").forEach(function(item) {var k = item.split("=")[0], v = item.split("=")[1]; v = v && decodeURIComponent(v); (k in qd) ? qd[k].push(v) : qd[k] = [v]})
 		
-		var specids = qd.speclogid[0].split(",");
+		var specids= ${msgMap['logId']};
+
 		var k;
 		for (k=0; k<specids.length;k++)
 		{
 
 			var wavelengths;
-			$('body').append("<div id=\"chart_container"+k+"\" class=\"chart_container\"><div id=\"chart"+k+"\" class=\"chart\"></div><div id=\"legend"+k+"\" class=\"legend\"></div></div>");
+			$('#plotspectra'+${msgMap['startSampleNo']}).append("<div id=\"chart_container"+${msgMap['startSampleNo']}+"_"+k+"\" class=\"chart_container\"><div id=\"chart"+${msgMap['startSampleNo']}+"_"+k+"\" class=\"chart\"></div><div id=\"legend"+${msgMap['startSampleNo']}+"_"+k+"\" class=\"legend\"></div></div>");
 			
 			$.getJSON("getSpectralLogSamplingPoints.html?speclogid="+specids[k],function(specwvldata) {
 				wavelengths = specwvldata["wavelengths"].split(",");
+
+				$.getJSON("getspectraldata.html?speclogid="+specids[k]+"&startsampleno="+${msgMap['startSampleNo']}+"&endsampleno="+${msgMap['endSampleNo']}+"&outputformat=json", drawgraph(k,wavelengths));
+ 			});
 			
-			$.ajax({
-					url: "getspectraldata.html?speclogid="+specids[k]+"&startsampleno="+qd.startsampleno+"&endsampleno="+qd.endsampleno,
-					type: "GET",
-					crossDomain: true,
-					responseType:"arraybuffer",
-					dataType:"arraybuffer",
-					processData: false,
-					success: drawgraph(k,wavelengths)});
-			});
 		}
 	});
 
@@ -139,16 +136,19 @@ function drawgraph(k,wavelengths) {
 .chart_container
 {
 	position: relative;
-    width: 1460px;
+    width: ${msgMap['width']}px;
 }
 .legend
 {
 position:absolute;
 top:10;
 right:10;
+display:none;
 }
 </style>
-</head>
-<body>
+<div id="plotspectra${msgMap['startSampleNo']}"></div>
+
+<!-- </head>
+<body style="overflow:hidden">
 </body>
-</html>
+</html>-->

@@ -77,3 +77,31 @@ table.NVCLDSTable thead {
 
 }
 
+.floatingGraph {
+	position: absolute;
+	z-index: 99;
+	width:500px;
+/*	height:416px; */
+	background:white;
+	overflow: hidden;
+	display:none;
+}
+
+.circle
+  {
+    border-radius: 50%;
+    width: 26px;
+    height: 26px; 
+    background:green;
+    position:absolute;
+  }
+  
+.flabel-center{
+  text-align: center;
+  vertical-align: middle;
+  position: relative;
+  line-height: 26px; 
+  font-size:1em;
+}  
+
+

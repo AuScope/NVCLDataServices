@@ -1780,6 +1780,7 @@ public class MenuController {
 				totalbytes += spectralDataVo.getSpectraldata().length;
 			}
 			response.setContentLength(totalbytes);
+			response.setContentType("APPLICATION/OCTET-STREAM");
 		}
 
 		return null;
@@ -2125,7 +2126,9 @@ public class MenuController {
 	public ModelAndView plotspectra(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "speclogid")  List<String> logId,
 			@RequestParam(required = false, value = "startsampleno", defaultValue = "0") Integer startSampleNo,
-			@RequestParam(required = false, value = "endsampleno", defaultValue = "0") Integer endSampleNo)
+			@RequestParam(required = false, value = "endsampleno", defaultValue = "0") Integer endSampleNo,
+			@RequestParam(required = false, value = "height", defaultValue = "800") Integer height,
+			@RequestParam(required = false, value = "width", defaultValue = "1460") Integer width)
 			throws ServletException, IOException, SQLException, ImageProcessingException {
 
 		for (Iterator<String> it = logId.iterator(); it.hasNext();) {
@@ -2138,7 +2141,20 @@ public class MenuController {
 		if (startSampleNo == null || startSampleNo < 0)
 			startSampleNo = 0;
 
-		return new ModelAndView("plotspectra");
+		String logidstring;
+		
+		logidstring ="['"+logId.get(0)+"'";
+		if (logId.size()>1) logidstring+=",'"+logId.get(1)+"'";
+		logidstring+="]";
+		
+		Map<String, Object> msgMap = new HashMap<String, Object>();
+		msgMap.put("startSampleNo", startSampleNo);
+		msgMap.put("endSampleNo", endSampleNo);
+		msgMap.put("logId",logidstring);
+		msgMap.put("height",height);
+		msgMap.put("width",width);
+		
+		return new ModelAndView("plotspectra", "msgMap", msgMap);
 	}
 
 	@RequestMapping("/getDatasetID.html")
