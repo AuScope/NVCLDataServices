@@ -4,13 +4,9 @@
 <head>
 <title>NVCL Data Services : Image Carousel Service</title>
 <link rel="stylesheet" href="style/style.css" type="text/css" />
-<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"> -->
-<!-- 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script> -->
+
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<!-- 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css"> -->
-<!-- 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"> -->
 <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
-<!-- <script	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" type="text/javascript"></script> -->
 
 <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
@@ -216,15 +212,13 @@
 								plotspeccontainer.remove();
 							}
 							$('<div id="marker'+counter+'" style="px;background:'+colors[counter%7]+'" class="circle"><div class="flabel-center">'+counter+'</div></div><div id="plot'+counter+'container" class="floatingGraph" ><div onmousedown="dragstart(event);" style="width:100%;background:'+colors[counter%7]+';text-align:center;" >Move<div style="float:right;"><span onclick=closeplot('+counter+'); class="m-1"><i class="fa fa-window-close fa-lg" style="margin:3px"></i></span></div></div>'+plothtml+'</div>').appendTo($('#plotcontainer'))
-							//$("#iframeplots"+specsamplenumber).attr('src',"plotspectra.html?speclogid="+allspectra+"&startsampleno="+Math.max((specsamplenumber-4),0)+"&endsampleno="+(specsamplenumber+4)+"&width=500&height=400");
-							//$("#iframeplots"+specsamplenumber).css({width:'100%',height:'100%'});
-				
+
 							$("#marker"+counter).css({left:(event.pageX-13),top:(event.pageY-13)});
 							$("#plot"+counter+"container").css({top: event.pageY, left: event.pageX, position:'absolute'});
 							$("#plot"+counter+"container").css({display:'block'});
 							
 							});
-						//window.location.href = "plotspectra.html?speclogid="+allspectra+"&startsampleno="+Math.max((specsamplenumber-4),0)+"&endsampleno="+(specsamplenumber+4);
+						
 					});
 	    	});
 	    	});
