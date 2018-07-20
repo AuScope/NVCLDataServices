@@ -32,7 +32,7 @@
     </table>
 	<p>Click on the urls for more details, including usage instructions of each interface.</p>
 	<p>Click <a href="https://twiki.auscope.org/wiki/CoreLibrary/WebServicesDevelopment">here</a> for more detail information about NVCL Web Services Development.</p>
-	<p>Version 2.0.3</p>
+	<p>Version 2.0.4</p>
 
 
   </body>
