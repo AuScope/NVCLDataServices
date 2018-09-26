@@ -2815,7 +2815,7 @@ BEGIN
 
 	SET NOCOUNT ON;
 
-	INSERT INTO PLSDATA (PLS_ID,DATSET_ID,PLSNAME,PLSDATA) VALUES (@v_plsid,@v_dsid,@v_plsname,@v_plsdata)  
+	INSERT INTO PLSDATA (PLS_ID,DATASET_ID,PLSNAME,PLSDATA) VALUES (@v_plsid,@v_dsid,@v_plsname,@v_plsdata)  
 
 END
 GO
