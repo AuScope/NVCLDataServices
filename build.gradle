@@ -1,5 +1,12 @@
-assert hasProperty('OTNUsername'): "Set the property 'OTNUsername' in your your gradle.properties to download the OJDBC jar from Oracle's secured repository"
-assert hasProperty('OTNPassword'): "Set the property 'OTNPassword' in your your gradle.properties to download the OJDBC jar from Oracle's secured repository"
+
+def OTNUser = hasProperty('OTNUsername') ? OTNUsername : System.getenv('OTNUsername')
+def OTNPass = hasProperty('OTNPassword') ? OTNPassword : System.getenv('OTNPassword')
+
+
+assert OTNUser: "Set the property 'OTNUsername' in your your gradle.properties or system environment to download the OJDBC jar from Oracle's secured repository"
+assert OTNPass: "Set the property 'OTNPassword' in your your gradle.properties or system environment to download the OJDBC jar from Oracle's secured repository"
+
+
 
 buildscript {
     repositories {
@@ -30,8 +37,8 @@ repositories {
        url "https://www.oracle.com/content/secure/maven/content"
 
        credentials {
-         username = OTNUsername
-         password = OTNPassword
+         username = OTNUser
+         password = OTNPass
        }
     }
 }
