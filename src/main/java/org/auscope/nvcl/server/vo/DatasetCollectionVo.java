@@ -8,9 +8,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "DatasetCollection")
 public class DatasetCollectionVo {
 
-	private ArrayList<DatasetVo> DatasetCollection;
+	private ArrayList<DatasetVo> DatasetCollection = new ArrayList<DatasetVo>();
 
-	protected DatasetCollectionVo() {
+	public DatasetCollectionVo() {
 	}
 
 	public DatasetCollectionVo(ArrayList<DatasetVo> datasetCollection) {

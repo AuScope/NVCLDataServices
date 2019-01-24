@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -31,32 +32,29 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.methods.GetMethod;
+import com.drew.imaging.ImageProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.service.NVCLDataSvc;
 import org.auscope.nvcl.server.service.NVCLDownloadGateway;
 import org.auscope.nvcl.server.service.NVCLDownloadSvc;
+import org.auscope.nvcl.server.util.CustomRestTemplate;
 import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.AlgorithmCollectionVo;
 import org.auscope.nvcl.server.vo.AveragedFloatDataVo;
 import org.auscope.nvcl.server.vo.BinnedClassDataVo;
+import org.auscope.nvcl.server.vo.BoreholeFeatureCollectionVo;
+import org.auscope.nvcl.server.vo.BoreholeViewVo;
 import org.auscope.nvcl.server.vo.ClassDataVo;
 import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
 import org.auscope.nvcl.server.vo.ConfigVo;
@@ -75,7 +73,6 @@ import org.auscope.nvcl.server.vo.LogDetailsVo;
 import org.auscope.nvcl.server.vo.LogExtentsVo;
 import org.auscope.nvcl.server.vo.MaskDataVo;
 import org.auscope.nvcl.server.vo.MessageVo;
-import org.auscope.nvcl.server.vo.ScannedBoreholeVo;
 import org.auscope.nvcl.server.vo.SpectralDataCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralDataVo;
 import org.auscope.nvcl.server.vo.SpectralLogCollectionVo;
@@ -90,19 +87,19 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-
-import com.drew.imaging.ImageProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
+import org.springframework.web.util.UriComponentsBuilder;
 
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -139,38 +136,21 @@ public class MenuController {
 	private Destination tsgReplyDestination;
 
 	@Autowired
-	@Qualifier(value = "wfsRequestDestination")
-	private Destination wfsReqDestination;
-
-	@Autowired
-	@Qualifier(value = "wfsReplyDestination")
-	private Destination wfsReplyDestination;
-
-	@Autowired
 	@Qualifier(value = "nvclDataSvc")
 	private NVCLDataSvc nvclDataSvc;
 
-	
 	@Autowired
 	@Qualifier(value = "nvclDownloadSvc")
 	private NVCLDownloadSvc nvclDownloadSvc;
-	
+
 	@Autowired
 	@Qualifier(value = "marshaller")
 	private Jaxb2Marshaller marshaller;
-
 
 	@RequestMapping("/")
 	public String index(HttpServletRequest request, HttpServletResponse response) {
 
 		return "index";
-	}
-
-	@RequestMapping("/monitorJVM.html")
-	public ModelAndView monitorJVM() {
-		logger.info("Returning monitorJVM view");
-		ModelAndView mav = new ModelAndView("monitorJVM");
-		return mav;
 	}
 
 	/**
@@ -191,17 +171,15 @@ public class MenuController {
 	}
 
 	/**
-	 * Handling request when getDatasetCollection.html is called. Validate the
-	 * URL parameter, get the list of dataset id and dataset name from DATASETS
-	 * table and display the list as an xml output
+	 * Handling request when getDatasetCollection.html is called. Validate the URL
+	 * parameter, get the list of dataset id and dataset name from DATASETS table
+	 * and display the list as an xml output
 	 *
-	 * @param request
-	 *            holeIdentifier (String): mandatory parameter for retrieving
-	 *            the list of dataset id and name that associate with this
-	 *            holeIdentifier
-	 * @param response
-	 *            response the request with a list of logs id and name in xml
-	 *            format
+	 * @param request  holeIdentifier (String): mandatory parameter for retrieving
+	 *                 the list of dataset id and name that associate with this
+	 *                 holeIdentifier
+	 * @param response response the request with a list of logs id and name in xml
+	 *                 format
 	 * @return datasetCollection a StringBuffer that hold a list of xml tag
 	 * @throws ServletException
 	 * @throws IOException
@@ -211,7 +189,8 @@ public class MenuController {
 	 */
 	@RequestMapping("/getDatasetCollection.html")
 	public ModelAndView datasetCollectionHandler(HttpServletRequest request, HttpServletResponse response,
-			@RequestParam(required = false, value = "holeidentifier") String holeIdentifier) throws ServletException,
+			@RequestParam(required = false, value = "holeidentifier") String holeIdentifier,
+			@RequestParam(required = false, value = "headersonly", defaultValue="no") String headersonly) throws ServletException,
 			IOException, SQLException, ParserConfigurationException, TransformerException {
 
 		// mandatory field : holeIdentifier - validate if holeIdentifier is null
@@ -224,13 +203,14 @@ public class MenuController {
 		logger.debug("processing list of dataset and name ...");
 
 		DatasetCollectionVo datasetList = nvclDataSvc.getDatasetCollection(holeIdentifier);
-
-		for (Iterator<DatasetVo> it2 = datasetList.getDatasetCollection().iterator(); it2.hasNext();) {
-			DatasetVo dataset = it2.next();
-			dataset.setSpectralLogCollection(nvclDataSvc.getSpectralLogCollection(dataset.getDatasetID()));
-			dataset.setImageLogCollection(nvclDataSvc.getImageLogCollection(dataset.getDatasetID()));
-			dataset.setLogCollection(nvclDataSvc.getLogCollection(dataset.getDatasetID()));
-			dataset.setProfLogCollection(nvclDataSvc.getProfLogCollection(dataset.getDatasetID()));
+		if (!headersonly.equals("yes")) {
+			for (Iterator<DatasetVo> it2 = datasetList.getDatasetCollection().iterator(); it2.hasNext();) {
+				DatasetVo dataset = it2.next();
+				dataset.setSpectralLogCollection(nvclDataSvc.getSpectralLogCollection(dataset.getDatasetID()));
+				dataset.setImageLogCollection(nvclDataSvc.getImageLogCollection(dataset.getDatasetID()));
+				dataset.setLogCollection(nvclDataSvc.getLogCollection(dataset.getDatasetID()));
+				dataset.setProfLogCollection(nvclDataSvc.getProfLogCollection(dataset.getDatasetID()));
+			}
 		}
 		response.setContentType("text/xml");
 
@@ -1099,210 +1079,208 @@ public class MenuController {
 			@RequestParam(required = false, value = "triggertsgdownloads", defaultValue = "false") Boolean triggerdownloads)
 			throws ServletException, IOException, Exception {
 
-		NameValuePair getrequest = new NameValuePair("request", "GetFeature");
-		NameValuePair typeName = new NameValuePair("typeName", "nvcl:ScannedBoreholeCollection");
-		NameValuePair version = new NameValuePair("version", "1.1.0");
+		if (!serviceurl.startsWith("http")) serviceurl = "http://" + serviceurl;
 
-		HttpClient client = new HttpClient();
-		GetMethod method = new GetMethod("http://" + serviceurl);
-		method.setQueryString(new NameValuePair[] { getrequest, typeName, version });
-		int statusCode = client.executeMethod(method);
+		UriComponentsBuilder WFSbuilder = UriComponentsBuilder.fromHttpUrl(serviceurl)
+		.queryParam("request", "GetFeature")
+		.queryParam("typeName", "gsmlp:BoreholeView")
+		.queryParam("version", "1.1.0")
+		.queryParam("CQL_FILTER","nvclCollection=true");
+		
 
+		CustomRestTemplate client = new CustomRestTemplate();
+		
+		logger.info("requesting: " + WFSbuilder.toUriString());
+
+		ResponseEntity<FeatureCollectionVo> WFSresponse = client.exchange(new URI(WFSbuilder.toUriString()), HttpMethod.GET, null, FeatureCollectionVo.class);
+		
+		if ( WFSresponse.getStatusCode().value() == 302 || WFSresponse.getStatusCode().value()==301){
+			HttpHeaders headers = WFSresponse.getHeaders();
+			URI location = headers.getLocation();
+			WFSresponse = client.exchange(location, HttpMethod.GET, null, FeatureCollectionVo.class);
+		}
+
+		String hostwgeoserver = serviceurl.substring(0, serviceurl.lastIndexOf('/'));
+		String hostname = hostwgeoserver.substring(0, hostwgeoserver.lastIndexOf('/'));
+
+		UriComponentsBuilder DSbuilder = UriComponentsBuilder.fromHttpUrl(hostname + "/NVCLDataServices/getDatasetCollection.html")
+						.queryParam("holeidentifier", "all")
+						.queryParam("headersonly","yes");
+
+		ResponseEntity<DatasetCollectionVo> DSresponse = client.exchange(DSbuilder.toUriString(),HttpMethod.GET, null, DatasetCollectionVo.class);
+
+		if ( DSresponse.getStatusCode().value() == 301 || DSresponse.getStatusCode().value() == 302){
+			HttpHeaders headers = DSresponse.getHeaders();
+			URI location = headers.getLocation();
+			DSresponse = client.exchange(location,HttpMethod.GET, null, DatasetCollectionVo.class);
+		}
+
+		FeatureCollectionVo scannedboreholes=new FeatureCollectionVo();
+		FeatureCollectionVo invalidboreholes=new FeatureCollectionVo();
 		int totaldatasets = 0;
-		FeatureCollectionVo validuris = new FeatureCollectionVo();
-		FeatureCollectionVo invaliduris = new FeatureCollectionVo();
-		if (statusCode == HttpStatus.SC_OK) {
-			FeatureCollectionVo scannedboreholes = null;
-			if (serviceurl.contains("www.mrt.tas.gov.au")) {
-				// mrt have an old version of the scannedborehole collection
-				// config so some xslt is required.
-				String xslt = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:wfs=\"http://www.opengis.net/wfs\" xmlns:gml=\"http://www.opengis.net/gml\" xmlns:nvcl=\"http://www.auscope.org/nvcl\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" >"
-						+ "<xsl:template match=\"/\"><wfs:FeatureCollection><xsl:attribute name=\"numberOfFeatures\"><xsl:value-of select=\"count(wfs:FeatureCollection/gml:featureMembers/nvcl:ScannedBoreholeCollection/nvcl:scannedBorehole)\" /></xsl:attribute><gml:featureMembers><xsl:for-each select=\"wfs:FeatureCollection/gml:featureMembers/nvcl:ScannedBoreholeCollection/nvcl:scannedBorehole\">"
-						+ "<nvcl:ScannedBoreholeCollection><nvcl:scannedBorehole><xsl:attribute name=\"xlink:href\"><xsl:value-of select=\"@xlink:href\" />"
-						+ "</xsl:attribute><xsl:attribute name=\"xlink:title\"><xsl:value-of select=\"@xlink:title\" /></xsl:attribute></nvcl:scannedBorehole></nvcl:ScannedBoreholeCollection>"
-						+ "</xsl:for-each></gml:featureMembers></wfs:FeatureCollection></xsl:template></xsl:stylesheet>";
-
-				TransformerFactory factory = TransformerFactory.newInstance();
-
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				StreamResult resultstream = new StreamResult(baos);
-				Transformer transformer = factory.newTransformer(new StreamSource(new StringReader(xslt)));
-				transformer.transform(new StreamSource(method.getResponseBodyAsStream()), resultstream);
-				StreamSource prossessedxml = new StreamSource(new StringReader(baos.toString()));
-				scannedboreholes = (FeatureCollectionVo) marshaller.unmarshal(prossessedxml);
-			} else
-				scannedboreholes = (FeatureCollectionVo) marshaller.unmarshal(new StreamSource(method
-						.getResponseBodyAsStream()));
-			totaldatasets = scannedboreholes.getFeatures();
-			for (int i = 0; i < scannedboreholes.getscannedboreholeCollection().size(); i++) {
-				ScannedBoreholeVo borehole = scannedboreholes.getscannedboreholeCollection().get(i);
-				try {
-					String BoreholeID = borehole.getBoreholevo().getURI()
-							.substring(borehole.getBoreholevo().getURI().lastIndexOf('/') + 1);
-					String hostwgeoserver = serviceurl.substring(0, serviceurl.lastIndexOf('/'));
-					String hostname = hostwgeoserver.substring(0, hostwgeoserver.lastIndexOf('/'));
-					GetMethod DSIDLookup = new GetMethod("http://" + hostname
-							+ "/NVCLDataServices/getDatasetCollection.html");
-					DSIDLookup.setQueryString(new NameValuePair[] { new NameValuePair("holeidentifier", BoreholeID) });
-					if (client.executeMethod(DSIDLookup) == HttpStatus.SC_OK) {
-						DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-						Document document = builder.parse(DSIDLookup.getResponseBodyAsStream());
-						XPath xpath = XPathFactory.newInstance().newXPath();
-
-						NodeList listDatasets = document.getElementsByTagName("Dataset");
-						for (int datasetsindex = 0; datasetsindex < listDatasets.getLength(); datasetsindex++) {
-							if (xpath.evaluate("DatasetName", listDatasets.item(datasetsindex)).equals(
-									borehole.getBoreholevo().getTitle())) {
-								String datasetid = (String) xpath.evaluate("DatasetID",
-										listDatasets.item(datasetsindex));
-								borehole.setdSID(datasetid);
-								break;
-							}
-						}
+		if (WFSresponse.getStatusCode() == HttpStatus.OK && DSresponse.getStatusCode() == HttpStatus.OK) {
+			scannedboreholes = WFSresponse.getBody();
+			int totalboreholes = scannedboreholes.getBoreholeViewCollection().size();
+			DatasetCollectionVo datasets = DSresponse.getBody();
+			totaldatasets = datasets.getDatasetCollection().size();
+			logger.info("found " + totalboreholes + " boreholes and " + totaldatasets + " datasets");
+			/*for (int i = 0; i < totalboreholes; i++) {
+				BoreholeViewVo borehole = scannedboreholes.getBoreholeViewCollection().get(i);
+				String BoreholeID = borehole.getIdentifier().substring(borehole.getIdentifier().lastIndexOf('/') + 1);
+				List<DatasetVo> datasetscopy = (List<DatasetVo>)datasets.getDatasetCollection().clone();
+				for(DatasetVo dataset : datasetscopy) {
+					if (borehole.getIdentifier().equals(dataset.getBoreholeURI())) {
+						borehole.getDatasets().getDatasetCollection().add(dataset);
+						datasets.getDatasetCollection().remove(dataset);
 					}
-					DSIDLookup.releaseConnection();
-					GetMethod URILookup = new GetMethod();
-					URILookup.setURI(new URI(borehole.getBoreholevo().getURI(), false));
-					URILookup.setFollowRedirects(true);
-					if (client.executeMethod(URILookup) == HttpStatus.SC_OK) {
-
-						DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-						Document document = builder.parse(URILookup.getResponseBodyAsStream());
-						XPath xpath = XPathFactory.newInstance().newXPath();
-
-						String boreholename = (String) xpath.evaluate(
-								"FeatureCollection//featureMembers//Borehole//name[2]//text()", document,
-								XPathConstants.STRING);
-						String latlong = (String) xpath
-								.evaluate(
-										"FeatureCollection//featureMembers//Borehole//collarLocation//BoreholeCollar//location//Point//pos//text()",
-										document, XPathConstants.STRING);
-						String features = (String) xpath.evaluate("FeatureCollection//@numberOfFeatures", document,
-								XPathConstants.STRING);
-						int featurecount = Integer.parseInt(features);
-						String[] latlongs = latlong.split(" ");
-						borehole.setName(boreholename);
-						if (((String) xpath
-								.evaluate(
-										"FeatureCollection//featureMembers//Borehole//collarLocation//BoreholeCollar//location//Point//@srsName",
-										document, XPathConstants.STRING))
-								.equals("http://www.opengis.net/gml/srs/epsg.xml#8311")) {
-							borehole.setLat(latlongs[1]);
-							borehole.setLon(latlongs[0]);
-						} else {
-							borehole.setLat(latlongs[0]);
-							borehole.setLon(latlongs[1]);
-						}
-						if (featurecount == 1) {
-							validuris.getscannedboreholeCollection().add(borehole);
-						} else {
-							invaliduris.getscannedboreholeCollection().add(borehole);
-						}
-					} else {
-						invaliduris.getscannedboreholeCollection().add(borehole);
+				}
+			}*/
+			for (int k=0;k < datasets.getDatasetCollection().size();k++){
+				DatasetVo dataset = datasets.getDatasetCollection().get(k);
+				boolean found = false;
+				for (int i = 0; i < scannedboreholes.getBoreholeViewCollection().size(); i++) {
+					BoreholeViewVo borehole = scannedboreholes.getBoreholeViewCollection().get(i);
+					if (borehole.getIdentifier().equals(dataset.getBoreholeURI())) {
+						borehole.getDatasets().getDatasetCollection().add(dataset);
+						found=true;
+						break;
 					}
-					URILookup.releaseConnection();
-					if (triggerdownloads && Utility.isAlphanumericOrHyphen(borehole.getdSID()) && i >= 191 && i < 220) {
-						GetMethod triggerTSGDownload = new GetMethod("http://" + hostname
-								+ "/NVCLDownloadServices/downloadtsg.html");
-						triggerTSGDownload.setQueryString(new NameValuePair[] {
-								new NameValuePair("datasetid", borehole.getdSID()),
-								new NameValuePair("email", "peter.warren@csiro.au") });
-						client.executeMethod(triggerTSGDownload);
-						triggerTSGDownload.releaseConnection();
+				}
+				if (found !=true){
+					BoreholeViewVo invalidborehole = new BoreholeViewVo();
+					invalidborehole.setIdentifier(dataset.getBoreholeURI());
+					DatasetCollectionVo dscol = new DatasetCollectionVo();
+					dscol.getDatasetCollection().add(dataset);
+					invalidborehole.setDatasets(dscol);
+					ResponseEntity<BoreholeFeatureCollectionVo> DirectBoreholeResponse =client.exchange(dataset.getBoreholeURI(), HttpMethod.GET, null, BoreholeFeatureCollectionVo.class);
+					if (DirectBoreholeResponse.getStatusCode()== HttpStatus.OK ){
+						BoreholeFeatureCollectionVo boreholecol = DirectBoreholeResponse.getBody();
+						if (boreholecol.getBoreholeCollection()!=null && boreholecol.getBoreholeCollection().size() >0) {
+							scannedboreholes.getBoreholeViewCollection().add(invalidborehole);
+						}
+						else invalidboreholes.getBoreholeViewCollection().add(invalidborehole);
 					}
-				} catch (Exception ex) {
-					invaliduris.getscannedboreholeCollection().add(borehole);
+					else invalidboreholes.getBoreholeViewCollection().add(invalidborehole);
 				}
 			}
+
 		}
+		FeatureCollectionVo boreholesWithMissingDatasets=new FeatureCollectionVo();
 		StringBuilder alltables = new StringBuilder();
-		if (invaliduris.getscannedboreholeCollection().size() > 0) {
+		if (invalidboreholes.getBoreholeViewCollection().size() > 0) {
 			StringBuilder invalidboreholestable = new StringBuilder();
-			Collections.sort(invaliduris.getscannedboreholeCollection());
+			Collections.sort(invalidboreholes.getBoreholeViewCollection());
 			invalidboreholestable
-					.append("<h2>Datasets with Invalid URIs</h2><table class=\"boreholetable\"><tr><th>Dataset Name</th><th>Borehole URI</th><th>Status</th><th>DataSet ID</th></tr>");
-			for (int i = 0; i < invaliduris.getscannedboreholeCollection().size(); i++) {
-				ScannedBoreholeVo borehole = invaliduris.getscannedboreholeCollection().get(i);
-				invalidboreholestable.append("<tr><td>");
-				invalidboreholestable.append(borehole.getBoreholevo().getTitle());
-				invalidboreholestable.append("</td><td><a href=\"");
-				invalidboreholestable.append(borehole.getBoreholevo().getURI());
-				invalidboreholestable.append("\">");
-				invalidboreholestable.append(borehole.getBoreholevo().getURI());
-				invalidboreholestable.append("</a></td><td>INVALID</td><td>");
-				invalidboreholestable.append(borehole.getdSID());
-				invalidboreholestable.append("</td></tr>");
+					.append("<h2>Datasets with Invalid URIs</h2><table class=\"boreholetable\"><tr><th>Dataset Name</th><th>Invalid URI</th><th>Status</th><th>Dataset ID</th></tr>");
+			for (int i = 0; i < invalidboreholes.getBoreholeViewCollection().size(); i++) {
+				BoreholeViewVo borehole = invalidboreholes.getBoreholeViewCollection().get(i);
+				for (int j = 0; borehole.getDatasets() != null
+						&& j < borehole.getDatasets().getDatasetCollection().size(); j++) {
+					DatasetVo dataset = borehole.getDatasets().getDatasetCollection().get(j);
+					int rowspan = borehole.getDatasets().getDatasetCollection().size();
+					invalidboreholestable.append("<tr><td>");
+					invalidboreholestable.append(dataset.getDatasetName());
+					invalidboreholestable.append("</td>");
+					if (j == 0) {
+						invalidboreholestable.append("<td rowspan=\"");
+						invalidboreholestable.append(rowspan);
+						invalidboreholestable.append("\"><a href=\"");
+						invalidboreholestable.append(borehole.getIdentifier());
+						invalidboreholestable.append("\">");
+						invalidboreholestable.append(borehole.getIdentifier());
+						invalidboreholestable.append("</a></td>");
+						invalidboreholestable.append("<td rowspan=\"");
+						invalidboreholestable.append(rowspan);
+						invalidboreholestable.append("\">INVALID</td>");
+					}
+					invalidboreholestable.append("<td>");
+					invalidboreholestable.append(dataset.getDatasetID());
+					invalidboreholestable.append("</td></tr>");
+				}
 			}
 			invalidboreholestable.append("</table>");
 			alltables.append(invalidboreholestable);
 		}
-		int duplicates = 0;
-		if (validuris.getscannedboreholeCollection().size() > 0) {
+		int duplicates = 0,validboreholeURIs=0;
+
+		if (scannedboreholes!=null && scannedboreholes.getBoreholeViewCollection().size() > 0) {
 			StringBuilder validboreholestable = new StringBuilder();
-			String lastboreholeuri = "";
-			Collections.sort(validuris.getscannedboreholeCollection());
+			StringBuilder missingDataboreholestable = new StringBuilder();
+			Collections.sort(scannedboreholes.getBoreholeViewCollection());
 			validboreholestable
 					.append("<h2>Datasets with Valid URIs</h2><table class=\"boreholetable\"><tr><th>Dataset Name</th><th>Borehole URI</th><th>Status</th><th>Borehole Name</th><th>Lat</th><th>Long</th><th>DataSet ID</th></tr>");
-			for (int i = 0; i < validuris.getscannedboreholeCollection().size(); i++) {
-				ScannedBoreholeVo borehole = validuris.getscannedboreholeCollection().get(i);
-				validboreholestable.append("<tr><td>");
-				validboreholestable.append(borehole.getBoreholevo().getTitle());
-				validboreholestable.append("</td>");
-				int rowspan;
-				for (rowspan = 1; (i + rowspan) < validuris.getscannedboreholeCollection().size()
-						&& borehole
-								.getBoreholevo()
-								.getURI()
-								.compareTo(
-										validuris.getscannedboreholeCollection().get(i + rowspan).getBoreholevo()
-												.getURI()) == 0; rowspan++)
-					;
-				if (borehole.getBoreholevo().getURI().compareTo(lastboreholeuri) != 0) {
-					validboreholestable.append("<td rowspan=\"");
-					validboreholestable.append(rowspan);
-					validboreholestable.append("\"><a href=\"");
-					validboreholestable.append(borehole.getBoreholevo().getURI());
-					validboreholestable.append("\">");
-					validboreholestable.append(borehole.getBoreholevo().getURI());
-					validboreholestable.append("</a></td>");
-					validboreholestable.append("<td rowspan=\"");
-					validboreholestable.append(rowspan);
-					validboreholestable.append("\">VALID</td><td rowspan=\"");
-					validboreholestable.append(rowspan);
-					validboreholestable.append("\">");
-					validboreholestable.append(borehole.getName());
-					validboreholestable.append("</td><td rowspan=\"");
-					validboreholestable.append(rowspan);
-					validboreholestable.append("\">");
-					validboreholestable.append(borehole.getLat());
-					validboreholestable.append("</td><td rowspan=\"");
-					validboreholestable.append(rowspan);
-					validboreholestable.append("\">");
-					validboreholestable.append(borehole.getLon());
-					validboreholestable.append("</td>");
-					duplicates = duplicates + rowspan - 1;
+			missingDataboreholestable.append("<h2>Boreholes with Missing NVCL Datasets</h2><table class=\"boreholetable\"><tr><th>Borehole URI</th><th>Status</th></tr>");
+			for (int i = 0; i < scannedboreholes.getBoreholeViewCollection().size(); i++) {
+				BoreholeViewVo borehole = scannedboreholes.getBoreholeViewCollection().get(i);
+				if (borehole.getDatasets() == null || borehole.getDatasets().getDatasetCollection().size()==0){
+					boreholesWithMissingDatasets.getBoreholeViewCollection().add(borehole);
+					missingDataboreholestable.append("<tr><td>");
+					missingDataboreholestable.append(borehole.getIdentifier());
+					missingDataboreholestable.append("</td><td>MISSING</td></tr>");
 				}
-				validboreholestable.append("<td>");
-				validboreholestable.append(borehole.getdSID());
-				validboreholestable.append("</td></tr>");
-				lastboreholeuri = borehole.getBoreholevo().getURI();
+				for(int j=0; borehole.getDatasets() != null && j< borehole.getDatasets().getDatasetCollection().size();j++)
+				{
+					DatasetVo dataset = borehole.getDatasets().getDatasetCollection().get(j);
+					int rowspan= borehole.getDatasets().getDatasetCollection().size();
+					String lat="",lon="";
+					validboreholeURIs++;
+					if (borehole.getShape()!=null && borehole.getShape().size()>0){
+						lat=borehole.getShape().get(0).getLat();
+						lon=borehole.getShape().get(0).getLon();
+					}
+					validboreholestable.append("<tr><td>");
+					validboreholestable.append(dataset.getDatasetName());
+					validboreholestable.append("</td>");
+					if (j==0) {
+						validboreholestable.append("<td rowspan=\"");
+						validboreholestable.append(rowspan);
+						validboreholestable.append("\"><a href=\"");
+						validboreholestable.append(borehole.getIdentifier());
+						validboreholestable.append("\">");
+						validboreholestable.append(borehole.getIdentifier());
+						validboreholestable.append("</a></td>");
+						validboreholestable.append("<td rowspan=\"");
+						validboreholestable.append(rowspan);
+						validboreholestable.append("\">VALID</td><td rowspan=\"");
+						validboreholestable.append(rowspan);
+						validboreholestable.append("\">");
+						validboreholestable.append(borehole.getName());
+						validboreholestable.append("</td><td rowspan=\"");
+						validboreholestable.append(rowspan);
+						validboreholestable.append("\">");
+						validboreholestable.append(lat);
+						validboreholestable.append("</td><td rowspan=\"");
+						validboreholestable.append(rowspan);
+						validboreholestable.append("\">");
+						validboreholestable.append(lon);
+						validboreholestable.append("</td>");
+						duplicates = duplicates + rowspan - 1;
+					}
+					validboreholestable.append("<td>");
+					validboreholestable.append(dataset.getDatasetID());
+					validboreholestable.append("</td></tr>");
+				}
 			}
 			validboreholestable.append("</table>");
+			missingDataboreholestable.append("</table>");
 			alltables.append(validboreholestable);
+			alltables.append(missingDataboreholestable);
 		}
 		StringBuilder summary = new StringBuilder();
 		summary.append("<h2>Summary</h2><table class=\"summarytable\"><tr><td>Total Hylogger Datasets :</td><td>");
 		summary.append(totaldatasets);
 		summary.append("</td></tr>");
 		summary.append("<tr><td>Valid Borehole URIs :</td><td>");
-		summary.append(validuris.getscannedboreholeCollection().size());
+		summary.append(validboreholeURIs);
 		summary.append("  (");
-		summary.append(validuris.getscannedboreholeCollection().size() - duplicates);
+		summary.append(validboreholeURIs - duplicates);
 		summary.append(" unique)");
 		summary.append("</td></tr>");
 		summary.append("<tr><td>Invalid Borehole URIs :</td><td>");
-		summary.append(invaliduris.getscannedboreholeCollection().size());
+		summary.append(invalidboreholes.getBoreholeViewCollection().size());
+		summary.append("</td></tr>");
+		summary.append("<tr><td>Boreholes with Missing NVCL Data :</td><td>");
+		summary.append(boreholesWithMissingDatasets.getBoreholeViewCollection().size());
 		summary.append("</td></tr>");
 		summary.append("</table>");
 
@@ -1422,24 +1400,22 @@ public class MenuController {
 		if (deletecache.equals("yes")) {
 			File cachedfile = new File(configVo.getDownloadRootPath() + scriptFileNameNoExt + ".zip");
 			if (cachedfile.exists() && !cachedfile.delete()) {
-				logger.error("Force recreate dataset was called by a client but the file exists and couldn't be deleted.  Probably in use.");
-				Map<String, String> msgMap = new HashMap<String, String>();
-				msgMap.put("status", "CacheClearFail");
-				msgMap.put("adminEmail", configVo.getSysAdminEmail());
-				return new ModelAndView("downloadtsg", "msgMap", msgMap);
+				String errMsg ="Existing file couldn't be deleted.  Its probably in use. email "+ configVo.getSysAdminEmail() + "for support";
+				logger.error(errMsg);
+				return new ModelAndView("error_page", "errmsg", errMsg);
 			}
-
 		}
 
-		String adminEmail = configVo.getSysAdminEmail();
 		if (scriptFileNameNoExt.equals("fail")) {
-			String errMsg = "Error occured while creating script file, please report " + "this problem to : "
-					+ adminEmail;
+			String errMsg = "Error occured while creating script file. email "+ configVo.getSysAdminEmail() + "for support";
 			logger.error(errMsg);
 			return new ModelAndView("error_page", "errmsg", errMsg);
 		}
 		tsgreqmessage.setScriptFileNameNoExt(scriptFileNameNoExt);
 		tsgreqmessage.settSGDatasetID(datasetid);
+		String boreholeURI = nvclDataSvc.getBoreholeHoleURIbyDatasetId(datasetid);
+		tsgreqmessage.setBoreholeid(boreholeURI);
+
 		logger.debug("Script file created successfully ...");
 
 		logger.debug("Start create JMS message ...");
@@ -1447,12 +1423,9 @@ public class MenuController {
 		String messageID = nvclDownloadGateway.createTSGDownloadReqMsg(tsgreqmessage);
 
 		if (messageID == null) {
-			logger.error("Failed creating JMS message in queue ...");
-			// return to request page
-			Map<String, String> msgMap = new HashMap<String, String>();
-			msgMap.put("status", "fail");
-			msgMap.put("adminEmail", adminEmail);
-			return new ModelAndView("downloadtsg", "msgMap", msgMap);
+			String errMsg = "Failed to enqueue job. email "+ configVo.getSysAdminEmail() + "for support";
+			logger.error(errMsg);
+			return new ModelAndView("error_page", "errmsg", errMsg);
 		}
 
 		logger.debug("JMS message created successfully ... ");
@@ -1464,104 +1437,6 @@ public class MenuController {
 
 	}
 
-	/**
-	 * Handling request when downloadwfs.html is called. The following tasks
-	 * will be handled: 1) Validate the URL parameters, set default parameter
-	 * value 2) Create new message JMS request queue 5) Back to user request
-	 * page with new message ID created and link to check status of request
-	 * 
-	 * @param request
-	 *            input url parameters :
-	 *            <ul>
-	 *            <li>email (String) : User's email address, mandatory field.
-	 *            Set to as JMS message header Correlation ID field which later
-	 *            as key for checking user request status
-	 *            <li>boreholeid (String) : Borehole identifier - use as zip
-	 *            file name and filter feature id
-	 *            <li>wfsurl (String) : WFS url
-	 *            <li>typename (String) : Feature type name
-	 *            </ul>
-	 * 
-	 * @param response
-	 *            response the request with a message containing new queue
-	 *            message id created and link to check download request status
-	 * @return out A message
-	 * @throws ServletException
-	 * @throws IOException
-	 */
-	@RequestMapping("/downloadwfs.html")
-	public ModelAndView downloadwfsHandler(@RequestParam(value = "email", required = false) String email,
-			@RequestParam(value = "boreholeid", required = false) String boreholeid,
-			@RequestParam(value = "typename", required = false) String typeName,
-			@RequestParam(value = "forcerecreate", required = false, defaultValue = "no") String deletecache,
-			HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-		MessageVo wfsreqmessage = new MessageVo();
-		// set WFS as requestType
-		wfsreqmessage.setRequestType("WFS");
-
-		// url parameters validation start
-
-		// validate mandatory field : requestor's email
-
-		if (!Utility.ValidateEmail(email)) {
-			String errMsg = "A valid email address must be provided for this service to function.";
-			return new ModelAndView("downloadwfsusage", "errmsg", errMsg);
-		}
-		// set requestor email into ConfigVo
-		wfsreqmessage.setRequestorEmail(email);
-
-		// validate mandatory field : Borehole Identifier
-
-		if (Utility.stringIsBlankorNull(boreholeid)) {
-			String errMsg = "A valid boreholeid must be provided for this service to function.";
-			return new ModelAndView("downloadwfsusage", "errmsg", errMsg);
-		}
-
-		// set boreholeid to use as file name for the O&M download
-		wfsreqmessage.setBoreholeid(boreholeid);
-
-		// validate mandatory field : type name
-
-		if (Utility.stringIsBlankorNull(typeName)) {
-			typeName = "sa:SamplingFeatureCollection";
-		}
-
-		// validate recreate datafile option. This option overrides the built in
-		// caching and forces the service to recreate the datafile.
-		if (!Utility.stringIsBlankorNull(deletecache) && deletecache.toLowerCase().equals("yes")) {
-			File cachedfile = new File(configVo.getDownloadRootPath() + boreholeid + ".zip");
-			if (cachedfile.exists() && !cachedfile.delete()) {
-				logger.error("Force recreate dataset was called by a client but the file exists and couldn't be deleted.  Probably in use.");
-				Map<String, String> msgMap = new HashMap<String, String>();
-				msgMap.put("status", "CacheClearFail");
-				msgMap.put("adminEmail", configVo.getSysAdminEmail());
-				return new ModelAndView("downloadwfs", "msgMap", msgMap);
-			}
-		}
-
-		// Set url parameters to both configVo
-		wfsreqmessage.setFeatureTypeName(typeName);
-
-		logger.debug("Start create JMS message ...");
-		nvclDownloadGateway.setDestination(wfsReqDestination);
-		String messageID = nvclDownloadGateway.createWFSDownloadReqMsg(wfsreqmessage);
-		String adminEmail = configVo.getSysAdminEmail();
-		// String webappURL = configVo.getWebappURL();
-
-		if (messageID == null) {
-			logger.error("Failed creating JMS message in queue ...");
-			// return to request page
-			Map<String, String> msgMap = new HashMap<String, String>();
-			msgMap.put("status", "fail");
-			msgMap.put("adminEmail", adminEmail);
-			return new ModelAndView("downloadwfs", "msgMap", msgMap);
-		}
-
-		logger.debug("JMS message created successfully ... ");
-		return new ModelAndView("redirect:checkwfsstatus.html?email=" + email);
-
-	}
 
 	/**
 	 * Handling request when checktsgstatus.html is called. The following tasks
@@ -1589,14 +1464,11 @@ public class MenuController {
 	 */
 	@RequestMapping("/checktsgstatus.html")
 	public ModelAndView checkTsgStatusHandler(@RequestParam(value = "email", required = false) String email,
+			@RequestParam(value = "outputformat", required = false) String outputformat,
 			HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
 		// url parameter validation
-		// mandatory field : validate if email null or empty or missing, if
-		// true, redirect to
-		// error_page.jsp with error message
-		// String email = null;
-		// email = request.getParameter("email");
+		// mandatory field : validate if email null or empty or missing
 		if (!Utility.ValidateEmail(email)) {
 			String errMsg = "A valid email address must be provided for this service to function.";
 			return new ModelAndView("checktsgusage", "errmsg", errMsg);
@@ -1611,58 +1483,18 @@ public class MenuController {
 
 		Map<String, Object> msgMap = nvclDownloadSvc.browseMessage(email, jmsTemplate, tsgReqDestination,
 				tsgReplyDestination);
-		return new ModelAndView("checktsgstatus", "msgMap", msgMap);
-
-	}
-
-	/**
-	 * Handling request when checkwfsstatus.html is called. The following tasks
-	 * will be handled: 1) Validate the URL parameters 2) Retrieve message from
-	 * JMS queue (both request and reply queue) to determine the status of the
-	 * user's request: a) If the message is available in request queue, tsg
-	 * dataset download still in progress b) If the message is not in request
-	 * queue and in reply queue, tsg dataset download completed. Check link to
-	 * download from the message body. follow dataset id name .....
-	 * 
-	 * @param request
-	 *            input url parameters :
-	 *            <ul>
-	 *            <li>email (String) : user's email address, mandatory field.
-	 *            Use as key to retrieve messages from the request and reply
-	 *            queue
-	 *            </ul>
-	 * 
-	 * @param response
-	 *            response the request with an message output which consists of
-	 *            the status of the request(s) if there is any
-	 * @return out A message
-	 * @throws ServletException
-	 * @throws IOException
-	 */
-	@RequestMapping("/checkwfsstatus.html")
-	public ModelAndView checkWfsStatusHandler(@RequestParam(value = "email", required = false) String email,
-			HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-		// url parameter validation
-		// mandatory field : validate if email null or empty or missing
-
-		if (!Utility.ValidateEmail(email)) {
-			String errMsg = "A valid email address must be provided for this service to function.";
-			return new ModelAndView("checkwfsusage", "errmsg", errMsg);
+				msgMap.put("adminEmail", this.configVo.getSysAdminEmail());
+		if(outputformat != null && outputformat.equals("json")){
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+			new ObjectMapper().writeValue(response.getOutputStream(),msgMap);
+			return null;
 		}
-
-		// Retrieve messages from request and reply JMS queue
-		logger.debug("email : " + email);
-		logger.debug("jmsTemplate : " + jmsTemplate);
-		logger.debug("wfsReqDestination : " + wfsReqDestination);
-		logger.debug("wfsReplyDestination : " + wfsReplyDestination);
-
-		Map<String, Object> msgMap = nvclDownloadSvc.browseMessage(email, jmsTemplate, wfsReqDestination,
-				wfsReplyDestination);
-		return new ModelAndView("checkwfsstatus", "msgMap", msgMap);
+		else return new ModelAndView("checktsgstatus", "msgMap", msgMap);
 
 	}
 
+	
 	@RequestMapping("/imageCarousel.html")
 	public ModelAndView imageCarousel(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String imglogId,
@@ -1739,6 +1571,11 @@ public class MenuController {
 			@RequestParam(required = false, value = "outputformat", defaultValue = "binary") String outputformat)
 			throws ServletException, IOException, SQLException {
 
+		// validate if speclogid is not null or empty or missing, if true, redirect
+		if (speclogId == null || speclogId.size() <=0) {
+			String errMsg = "one or more speclogIds  must be provided.";
+			return new ModelAndView("getspectraldatausage", "errmsg", errMsg);
+		}		
 
 		for (Iterator<String> it = speclogId.iterator(); it.hasNext();) {
 			String speclogid = it.next();
@@ -2150,7 +1987,7 @@ public class MenuController {
 		Map<String, Object> msgMap = new HashMap<String, Object>();
 		msgMap.put("startSampleNo", startSampleNo);
 		msgMap.put("endSampleNo", endSampleNo);
-		msgMap.put("logId",logidstring);
+		msgMap.put("logId",logId);
 		msgMap.put("height",height);
 		msgMap.put("width",width);
 		
@@ -2287,3 +2124,4 @@ public class MenuController {
 		return null;
 	}
 }
+

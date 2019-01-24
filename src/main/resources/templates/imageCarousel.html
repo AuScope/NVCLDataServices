@@ -1,0 +1,278 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>NVCL Data Services : Image Carousel Service</title>
+	<link rel="stylesheet" href="style/style.css" type="text/css" />
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+	 crossorigin="anonymous">
+	<link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
+
+	<script src="script/d3.min.js"></script>
+	<script src="script/rickshaw.min.js"></script>
+	<link rel="stylesheet" href="style/rickshaw.min.css">
+
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+	 crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+	 crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+	 crossorigin="anonymous"></script>
+
+
+</head>
+
+<body class="CarouselBody" style="overflow-y: scroll;overflow-x: hidden;">
+
+	<div id="myCarousel" class="carousel" data-interval="false" data-wrap="false">
+
+		<div class="carousel-inner" role="listbox">
+			<div th:each="entry : ${msgMap['images']}" class="carousel-item" th:attrappend="class=${msgMap['sampleno']==entry.sampleNo ? ' active' : ''}">
+				<img th:attr="${(((msgMap['sampleno']-entry.sampleNo)>0 ? (msgMap['sampleno']-entry.sampleNo) : (entry.sampleNo - msgMap['sampleno'])) <2) ? 'src' : 'lazyloadsrc'}=${entry.URL}"
+				 class="caroimage" th:alt="${entry.sampleNo}">
+			</div>
+		</div>
+
+		<!-- Left and right controls -->
+		<a class="left carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">
+			<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+			<span class="sr-only">Previous</span>
+		</a>
+		<a class="right carousel-control-next" href="#myCarousel" role="button" data-slide="next">
+			<span class="carousel-control-next-icon" aria-hidden="true"></span>
+			<span class="sr-only">Next</span>
+		</a>
+	</div>
+	<br>
+	<div id="plotcontainer"></div>
+
+	<script>
+		var colors = ['lightblue', 'lightcoral', 'lightcyan', 'lightgray', 'lightgreen', 'lightpink', 'lightyellow'];
+		var dragging = false;
+		var dragoriginx = 0;
+		var dragoriginy = 0;
+		var dragorigintop = 0;
+		var dragoriginleft = 0;
+		var movingdiv = null;
+		var counter = 0;
+		var zindex = 99;
+
+		checkprevnext = function () {
+			var $this = $("#myCarousel");
+			//	$this.children('.carousel-control').show();
+			if ($('#myCarousel .carousel-inner .carousel-item:first').hasClass('active')) {
+				$this.children('.carousel-control-prev').hide();
+			}
+			else $this.children('.carousel-control-prev').show();
+			if ($('#myCarousel .carousel-inner .carousel-item:last').hasClass('active')) {
+				$this.children('.carousel-control-next').hide();
+			}
+			else $this.children('.carousel-control-next').show();
+			$activeItem = $('.active.carousel-item', this);
+
+			$itemlist = $('.carousel-item', this);
+
+
+			var i = Math.max($activeItem.index() - 3, 0);
+			var lastindex = $activeItem.index() + 3
+
+			for (; i <= lastindex; i++) {
+				var $item = $($itemlist[i]);
+				var $img = $item.find('img')
+				var src = $img.attr('lazyloadsrc');
+
+				if (typeof src !== "undefined" && src != "") {
+					$img.attr('src', src)
+					$img.attr('lazyloadsrc', '');
+				}
+				$item = $item.next('.carousel-item');
+			}
+
+		};
+
+		checkprevnext();
+
+
+		function dragstart(ev) {
+			dragging = true;
+			if (!ev) ev = window.event;
+			var div = ev.target.parentNode;
+			movingdiv = div
+			dragoriginx = ev.clientX;
+			dragoriginy = ev.clientY;
+			dragoriginleft = parseInt(div.style.left);
+			dragorigintop = parseInt(div.style.top);
+			window.onmousemove = dragmove;
+			window.onmouseup = dragstop;
+			if (ev.stopPropagation) {
+				ev.stopPropagation();
+				ev.preventDefault();
+			}
+			else {
+				ev.cancelBubble = true;
+				ev.returnValue = false;
+			}
+		}
+
+		function dragmove(ev) {
+			if (dragging == false) return;
+			if (!ev) ev = window.event;
+			ev.cancelBubble = true;
+			if (ev.stopPropagation) ev.stopPropagation();
+			var div = movingdiv;
+			div.style.left = dragoriginleft + ev.clientX - dragoriginx + "px";
+			div.style.top = dragorigintop + ev.clientY - dragoriginy + "px";
+			zindex++;
+			div.style.zIndex = zindex;
+		}
+
+		function dragstop(ev) {
+			dragging = false;
+			document.onmousemove = null;
+			document.onmouseup = null;
+			movingdiv = null;
+		}
+
+		function closeplot(counter) {
+			//var div = ev.srcElement.parentNode.parentNode.parentNode;
+			$('#plot' + counter + 'container').remove();
+			$("#marker" + counter).remove();
+		}
+
+		function clearmap() {
+			$('#plotcontainer').empty();
+		}
+
+		$("#myCarousel").on("slid.bs.carousel", "", checkprevnext);
+		$("#myCarousel").on("slid.bs.carousel", "", clearmap);
+
+		function drawgraph(k, wavelengths, startSampleNo, endSampleNo, width, height) {
+			return function (result) {
+				var data = [];
+
+				//var floats = new Float32Array(result);
+				var spectracount = result.length// result.byteLength/(4*wavelengths.length);
+				var palette = new Rickshaw.Color.Palette({ scheme: 'munin' });
+				for (var j = 0; j < spectracount; j++) {
+					var d1 = [];
+
+					for (var i = 0; i < result[j].floatspectraldata.length; i++) {
+						d1.push({ x: parseInt(wavelengths[i]), y: result[j].floatspectraldata[i] });
+					}
+					data.push({ data: d1, name: "Reflectance Sample " + ((j - Math.floor(spectracount / 2)) > 0 ? "+" + (j - Math.floor(spectracount / 2)) : (j - Math.floor(spectracount / 2))), color: palette.color() });
+				}
+				var graph = new Rickshaw.Graph({
+					element: document.getElementById("chart" + startSampleNo + "_" + k),
+					width: width,
+					height: height,
+					renderer: 'line',
+					padding: { top: 0.05, left: 0.05, right: 0.05, bottom: 0.05 },
+					series: data,
+					min: 'auto'
+				});
+
+				var y_axis = new Rickshaw.Graph.Axis.Y({
+					graph: graph,
+					tickFormat: d3.format('.2f')
+				});
+				var x_axis = new Rickshaw.Graph.Axis.X({
+					graph: graph,
+					tickFormat: d3.format('.0f')
+				});
+				var legend = new Rickshaw.Graph.Legend({
+					element: document.querySelector("#legend" + startSampleNo + "_" + k),
+					graph: graph
+				});
+				var shelving = new Rickshaw.Graph.Behavior.Series.Toggle({
+					graph: graph,
+					legend: legend
+				});
+				var hoverDetail = new Rickshaw.Graph.HoverDetail({
+					graph: graph,
+					xFormatter: function (x, y) {
+						return x.toString();
+					}
+				});
+				graph.render();
+			}
+		}
+
+		function buildPlots(specidsStr, startSampleNo, endSampleNo, width, height) {
+
+			var specids = specidsStr.split(",");
+
+			specids.forEach(function (speclogid, k) {
+
+				$('#plotspectra' + startSampleNo).append("<div id=\"chart_container" + startSampleNo + "_" + k + "\" class=\"chart_container\"><div id=\"chart" + startSampleNo + "_" + k + "\" class=\"chart\"></div><div id=\"legend" + startSampleNo + "_" + k + "\" class=\"legend\"></div></div>");
+
+				$.getJSON("getSpectralLogSamplingPoints.html?speclogid=" + speclogid, function (specwvldata) {
+					var wavelengths = specwvldata["wavelengths"].split(",");
+
+					$.getJSON("getspectraldata.html?speclogid=" + speclogid + "&startsampleno=" + startSampleNo + "&endsampleno=" + endSampleNo + "&outputformat=json", drawgraph(k, wavelengths, startSampleNo, endSampleNo, width, height));
+				});
+
+			});
+		}
+
+		showspectra = function (event) {
+			var $this = $('#myCarousel .carousel-inner .active.carousel-item img');
+			var parentOffset = $this.parent().offset();
+			var offset = $this.offset();
+			var x = Math.round(event.pageX - offset.left);
+			var y = Math.round(event.pageY - offset.top);
+			var height = Math.round($this.height());
+			var width = Math.round($this.width());
+			var src = $this.prop('src');
+			var logidindex = src.indexOf('logid=');
+			var logid = src.slice(logidindex);
+			var andpos = logid.indexOf('&');
+			var graphwidth = 500;
+			var graphheight = 300;
+			logid = logid.substr(0, andpos);
+			var traysamplenumber = src.slice(src.indexOf('sampleno='));
+			traysamplenumber = traysamplenumber.substr(9, traysamplenumber.length);
+			$.getJSON("trayImageSampleLocate.html?" + logid + "&sampleno=" + traysamplenumber + "&pixelx=" + x + "&pixely=" + y + "&imgwidth=" + width + "&imgheight=" + height, function (data) {
+				var specsamplenumber = data["sampleno"];
+				$.getJSON("getDatasetID.html?" + logid, function (dsdata) {
+					var dsid = dsdata["datasetid"];
+					$.getJSON("getspectrallogs.html?datasetid=" + dsid + "&outputformat=json", function (speclogsdata) {
+						var swirspectra = "";
+						var tirspectra = "";
+						$.each(speclogsdata["SpectralLogCollection"], function (key, value) {
+							if (value["logName"] == "Reflectance") {
+								swirspectra = value["logID"];
+							}
+							else if (value["logName"] == "Base Refl") {
+								tirspectra = value["logID"];
+							}
+						});
+						var allspectra = swirspectra + (tirspectra.length > 0 ? "," + tirspectra : "");
+						counter++;
+						if ($("#plotspectra" + Math.max((specsamplenumber - 1), 0)).length != 0) {
+							var plotspecwid = "#plotspectra" + Math.max((specsamplenumber - 1), 0);
+							var plotspeccontainer = $(plotspecwid).parents(".floatingGraph");
+							var currentcounter = plotspeccontainer.attr('id').replace("plot", "").replace("container", "");
+							$("#marker" + currentcounter).remove();
+							plotspeccontainer.remove();
+						}
+						$('<div id="marker' + counter + '" style="px;background:' + colors[counter % 7] + '" class="circle"><div class="flabel-center">' + counter + '</div></div><div id="plot' + counter + 'container" class="floatingGraph" ><div onmousedown="dragstart(event);" style="width:100%;background:' + colors[counter % 7] + ';text-align:center;" >Drag to move<div style="float:right;"><span onclick=closeplot(' + counter + '); class="m-1"><i class="fa fa-window-close fa-lg" style="margin:3px"></i></span></div></div><div id="plotspectra' + (specsamplenumber - 1) + '"></div></div>').appendTo($('#plotcontainer'))
+						buildPlots(allspectra, specsamplenumber - 1, specsamplenumber + 1, graphwidth, graphheight);
+						$(".chart_container").css({ position: "relative", width: graphwidth });
+						$("#marker" + counter).css({ left: (event.pageX - 13), top: (event.pageY - 13) });
+						$("#plot" + counter + "container").css({ top: event.pageY, left: event.pageX, position: 'absolute' });
+						$("#plot" + counter + "container").css({ display: 'block' });
+
+					});
+				});
+			});
+		};
+
+		$(".caroimage").on("click", "", showspectra);
+
+		$(window).resize(function () { clearmap(); });
+
+	</script>
+</body>
+
+</html>

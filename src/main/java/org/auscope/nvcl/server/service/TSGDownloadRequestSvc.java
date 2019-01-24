@@ -74,7 +74,7 @@ public class TSGDownloadRequestSvc {
 	        this.jmsTemplate.setTimeToLive(((long)this.config.getMsgTimetoLiveDays())*86400000);
 	        this.jmsTemplate.setExplicitQosEnabled(true);
 	        this.jmsTemplate.convertAndSend(this.destination, messageVo, messagePostProcessor);
-		    Message sentMessage = messagePostProcessor.getSentMessage();		    
+			Message sentMessage = messagePostProcessor.getSentMessage();   
 		    logger.debug("Generated JMSMessageID" + sentMessage.getJMSMessageID());
 		    logger.debug("Generated JMSCorrelationID" + sentMessage.getJMSCorrelationID());
 

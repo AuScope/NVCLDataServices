@@ -24,7 +24,7 @@ public class NVCLDownloadGateway {
    
 	
 	/** 
-	 * The createWFSDownloadReqMsg method create new message in the specified destination by 
+	 * The createTSGDownloadReqMsg method create new message in the specified destination by 
 	 * call up JmsTemplate's convertAndSend() method which will automatically calls 
 	 * the NVCLDownloadMessageConverter.toMessage() method that convert the java object 
 	 * into message before sending the message to the destination.
@@ -52,36 +52,6 @@ public class NVCLDownloadGateway {
 		return null;		
 	}
 	
-	/** 
-	 * The createWFSDownloadReqMsg method create new message in the specified destination by 
-	 * call up JmsTemplate's convertAndSend() method which will automatically calls 
-	 * the NVCLDownloadMessageConverter.toMessage() method that convert the java object 
-	 * into message before sending the message to the destination.
-	 * 
-	 * Note : NVCLDownloadMessageConverter has been auto wired into JmsTemplate in 
-	 *        applicationContext.xml
-	 * 
-	 * @param configVo	ConfigVo object that consists of the configuration information
-	 * 					needed for trigger the wfs download using HttpClient object
-	 */ 
-	public String createWFSDownloadReqMsg(final MessageVo wfsreqmessage)   {
-		
-		
-		try {
-	        ReferenceHolderMessagePostProcessor messagePostProcessor = new ReferenceHolderMessagePostProcessor();
-	        this.jmsTemplate.convertAndSend(this.destination, wfsreqmessage, messagePostProcessor);        	        
-	        Message sentMessage = messagePostProcessor.getSentMessage();
-	        logger.debug("Generated JMSMessageID : " + sentMessage.getJMSMessageID());
-	        return sentMessage.getJMSMessageID();
-		} catch (JMSException jmse) {
-			logger.error("JMSException : " + jmse);
-		} catch (MessageConversionException  mce) {
-			logger.error("MessageConversionException : " + mce);
-		}
-		return null;
-			
-	}
-
     
 	//Injects JmsTemplate
 	private JmsTemplate jmsTemplate;

@@ -209,6 +209,17 @@ public class NVCLDataSvc {
     public DatasetCollectionVo getDatasetCollectionbyDatasetId(String datasetId) {
     	return nvclDataSvcDao.getDatasetCollectionbyDatasetId(datasetId);
     }
+
+    /**
+     * Get the boreholeURI from datasets table by datasetid
+     *
+     * @param datasetId
+     *            datasetID is the identifier of a nvcl dataset.
+     * @return boreholeURI
+     */
+    public String getBoreholeHoleURIbyDatasetId(String datasetId){
+        return nvclDataSvcDao.getBoreholeHoleURIbyDatasetId(datasetId);
+    }
     /**
      * Getting the log id and log name from logs table base on the dataset id
      *

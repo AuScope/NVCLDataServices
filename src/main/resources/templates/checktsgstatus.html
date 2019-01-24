@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>NVCL Download Services : TSG file Download Requests Status Page</title>
+	<link rel="stylesheet" href="style/style.css" type="text/css" />
+</head>
+
+<body class="NVCLDSBody">
+	<h2 class="NVCLDSh2">NVCL Download Services : TSG file Download Requests Status Page</h2>
+
+	<table class="NVCLDSTable">
+		<thead>
+			<tr>
+				<th>Timestamp</th>
+				<th>Status</th>
+				<th>Details</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+
+			<tr th:each="entry : ${msgMap['request']}" class="${rowStyle}">
+				<td th:text="${entry.JMSTimestamp}">timestamp</td>
+				<td>Queued</td>
+				<td th:text="${entry.description}">description</td>
+				<td></td>
+			</tr>
+
+			<tr th:each="entry : ${msgMap['reply']}" class="${rowStyle}">
+				<td th:text="${entry.JMSTimestamp}">timestamp</td>
+				<td th:text="${entry.status}">status</td>
+				<td th:unless="${entry.status!='Success'}"><a th:href="${entry.description}" th:text="${entry.tSGDatasetID+(entry.requestLS ? '.zip' : '_NoLS.zip')}">link</a> Scan of <span th:text="${entry.boreholeid}"></span></td>
+				<td th:unless="${entry.resultfromcache!=true}">
+					This file was recovered from cache. If you believe it is stale you can force the service to <a th:href="${'downloadtsg.html?datasetid='+entry.tSGDatasetID+'&email='+entry.JMSCorrelationID+'&linescan='+(entry.requestLS ? 'yes' : 'no') +'&forcerecreate=yes'}">regenerate
+						it.</a>
+				</td>
+				<td th:unless="${entry.resultfromcache==true}" th:text="${entry.description}">description</td>
+				<td></td>
+			</tr>
+
+		</tbody>
+	</table>
+
+	<div>
+		<p>Having trouble? email <a th:href="${'mailto:'+msgMap['adminEmail']}" >support</a></p>
+	</div>
+
+</body>
+
+</html>

@@ -7,9 +7,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
-public class CleanUpDownloadFolderJob extends QuartzJobBean {
+@Configuration
+@EnableScheduling
+public class CleanUpDownloadFolderJob {
 
 	private static final Logger logger = LogManager.getLogger(CleanUpDownloadFolderJob.class);
 
@@ -17,22 +23,26 @@ public class CleanUpDownloadFolderJob extends QuartzJobBean {
 	private String downloadfolderpath;
 	private String cachefolderpath;
 
+    @Value("${download.cachepath}")
 	public void setCachefolderpath(String cachefolderpath) {
 		this.cachefolderpath = cachefolderpath;
 	}
-
+	
+    @Value("${msgTimetoLiveDays}") 
 	public void setDays(long days) {
 		this.days = days;
 	}
 
+    @Value("${download.rootpath}")
 	public void setDownloadfolderpath(String downloadfolderpath) {
 		this.downloadfolderpath = downloadfolderpath;
 	}
 
-	@Override
-	protected void executeInternal(JobExecutionContext arg0) throws JobExecutionException {
+
+	@Scheduled(cron="0 0 1 * * ?")
+	protected void executeInternal() throws JobExecutionException {
 		int filescleaned = 0;
-		logger.debug("Download Folder cleaner running");
+		logger.info("Download Folder cleaner running" + this.cachefolderpath + "   " + this.days + "   " + this.downloadfolderpath);
 		File downloadsFolder = new File(this.downloadfolderpath);
 		if (downloadsFolder.exists()) {
 			for (File listFile : downloadsFolder.listFiles()) {

@@ -11,6 +11,7 @@ public class ProfLogCollectionVo {
 	private ArrayList<ProfLogVo> ProfLogCollection;
 
 	protected ProfLogCollectionVo() {
+		ProfLogCollection = new ArrayList<ProfLogVo>();
 	}
 
 	public ProfLogCollectionVo(ArrayList<ProfLogVo> profLogCollection) {

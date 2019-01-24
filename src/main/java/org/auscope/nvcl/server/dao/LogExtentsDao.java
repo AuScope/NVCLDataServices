@@ -4,7 +4,7 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.vo.LogExtentsVo;

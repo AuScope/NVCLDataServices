@@ -9,7 +9,7 @@ import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.core.SqlReturnResultSet;
 import org.springframework.jdbc.object.StoredProcedure;
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.vo.AveragedFloatDataVo;

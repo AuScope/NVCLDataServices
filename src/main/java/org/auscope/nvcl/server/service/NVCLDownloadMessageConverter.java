@@ -49,14 +49,12 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 		}
 		MapMessage mapMessage = (MapMessage) message;
 		MessageVo messageVo = new MessageVo();
-		if ( mapMessage.getString("requestType").equals("TSG") ) {
-			messageVo.setScriptFileNameNoExt(mapMessage.getString("scriptFileNameNoExt"));
-			messageVo.settSGDatasetID(mapMessage.getString("tsgdatasetid"));
-			messageVo.setRequestLS(mapMessage.getBoolean("requestLS"));
-		} else if  ( mapMessage.getString("requestType").equals("WFS") ) {
-			messageVo.setBoreholeid(mapMessage.getString("boreholeId"));
-			messageVo.setFeatureTypeName(mapMessage.getString("typeName"));
-		}
+
+		messageVo.setScriptFileNameNoExt(mapMessage.getString("scriptFileNameNoExt"));
+		messageVo.settSGDatasetID(mapMessage.getString("tsgdatasetid"));
+		messageVo.setRequestLS(mapMessage.getBoolean("requestLS"));
+		messageVo.setBoreholeid(mapMessage.getString("boreholeid"));
+
 		messageVo.setRequestorEmail(message.getJMSCorrelationID());
 		return messageVo;
 	}
@@ -80,22 +78,17 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 		MapMessage message = session.createMapMessage();
 		message.setJMSCorrelationID(messageVo.getRequestorEmail());
 		message.setString("status", messageVo.getStatus());
-		message.setString("description", messageVo.getDescription());
+		if(messageVo.getStatus().equals("Success"))	message.setString("description", messageVo.getDescription());
+		else message.setString("description", "Request for dataset with ID: " + messageVo.getScriptFileNameNoExt());
 		message.setBoolean("resultfromcache", messageVo.getResultfromcache());
 		message.setString("tsgdatasetid", messageVo.gettSGDatasetID());
 		message.setBoolean("requestLS", messageVo.getRequestLS());
 		message.setString("boreholeid",  messageVo.getBoreholeid());
 		message.setString("typename",  messageVo.getFeatureTypeName());
 		
-		if ( messageVo.getRequestType().equals("TSG") ) {
-			message.setString("description", "Request for dataset with ID: " + messageVo.getScriptFileNameNoExt() );
-			message.setString("requestType", "TSG");
-			message.setString("scriptFileNameNoExt", messageVo.getScriptFileNameNoExt());
-		} else if ( messageVo.getRequestType().equals("WFS") ) {
-			message.setString("description", "Request for O and M data with ID: " +messageVo.getBoreholeid() );
-			message.setString("requestType","WFS");
-			message.setString("boreholeId",messageVo.getBoreholeid());
-		}
+		message.setString("requestType", "TSG");
+		message.setString("scriptFileNameNoExt", messageVo.getScriptFileNameNoExt());
+		
 		
 		return message;
 

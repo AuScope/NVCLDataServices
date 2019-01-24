@@ -11,6 +11,8 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import org.auscope.nvcl.server.vo.AlgorithmCollectionVo;
 import org.auscope.nvcl.server.vo.ClassDataVo;
 import org.auscope.nvcl.server.vo.ClassificationVo;
@@ -115,7 +117,7 @@ public class NVCLDataSvcDao {
      */
 
     public ImageLogCollectionVo getImageLogCollection(String datasetId) {
-        String sql = "select log_id, logname, "+ (((org.apache.commons.dbcp.BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount from logs where dataset_id=? and logtype=3 "
+        String sql = "select log_id, logname, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount from logs where dataset_id=? and logtype=3 "
                 + "order by case logname when 'Mosaic' then 1 when 'Tray Thumbnail Images' "
                 + "then 2 when 'Tray Images' then 3 when 'Imagery' then 4 when 'holeimg' "
                 + "then 5 else 6 end, logname";
@@ -286,6 +288,31 @@ public class NVCLDataSvcDao {
     	return new DatasetCollectionVo( (ArrayList<DatasetVo>) this.jdbcTemplate.query(sql, mapper, datasetId));	
 
     }
+
+        /**
+     * Getting the hole URI from Datasets table by datasetID
+     *
+     * @param datasetID
+     *            datasetID is the identifier of a nvcl dataset.
+     * @return List a List of DatasetCollectionVo value object consists of
+     *         datasetID and datasetName.
+     *
+     */
+
+    public String getBoreholeHoleURIbyDatasetId(String datasetId) {
+    	String sql;
+
+        RowMapper<String> mapper = new RowMapper<String>() {
+            public String mapRow(ResultSet rs, int rowNum)
+                    throws SQLException {
+                String boreholeURI = rs.getString("HOLEDATASOURCENAME")+rs.getString("HOLEIDENTIFIER");
+                return boreholeURI;
+            }
+        };
+        sql= "select HOLEDATASOURCENAME, HOLEIDENTIFIER  from publisheddatasets where dataset_ID= ?";
+    	return this.jdbcTemplate.query(sql, mapper, datasetId).get(0);	
+
+    }
     
     /**
      * Getting the sample number from IMAGELOGDATA table
@@ -447,7 +474,7 @@ public class NVCLDataSvcDao {
 	}
 
 	public SpectralLogCollectionVo getSpectralLogs(String datasetId) {
-		String sql = "select logs.LOG_ID,logs.LOGNAME, "+ (((org.apache.commons.dbcp.BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
+		String sql = "select logs.LOG_ID,logs.LOGNAME, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
 		RowMapper<SpectralLogVo> mapper = new RowMapper<SpectralLogVo>(){
 			public SpectralLogVo mapRow(ResultSet rs, int rowNum)
 			throws SQLException {
@@ -488,7 +515,7 @@ public class NVCLDataSvcDao {
 	}
 
 	public ProfLogCollectionVo getProfLogs(String datasetId) {
-		String sql = "select logs.LOG_ID, logs.LOGNAME, "+ (((org.apache.commons.dbcp.BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, PROFLOGS.FLOATSPERSAMPLE, PROFLOGS.MINVAL, PROFLOGS.MAXVAL from logs inner join PROFLOGS on logs.log_id=PROFLOGS.LOG_ID where logs.dataset_id=? and logtype =4";
+		String sql = "select logs.LOG_ID, logs.LOGNAME, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, PROFLOGS.FLOATSPERSAMPLE, PROFLOGS.MINVAL, PROFLOGS.MAXVAL from logs inner join PROFLOGS on logs.log_id=PROFLOGS.LOG_ID where logs.dataset_id=? and logtype =4";
 		RowMapper<ProfLogVo> mapper = new RowMapper<ProfLogVo>(){
 			public ProfLogVo mapRow(ResultSet rs, int rowNum)
 			throws SQLException {

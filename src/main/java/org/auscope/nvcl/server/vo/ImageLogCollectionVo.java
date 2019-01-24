@@ -11,6 +11,7 @@ public class ImageLogCollectionVo {
 	private ArrayList<ImageLogVo> imageLogCollection;
 
 	protected ImageLogCollectionVo() {
+		imageLogCollection = new ArrayList<ImageLogVo>();
 	}
 
 	public ImageLogCollectionVo(ArrayList<ImageLogVo> imageLogCollection) {

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.auscope.nvcl.server.vo.ScannedBoreholeVo;
+import org.auscope.nvcl.server.vo.BoreholeViewVo;
 
 /**
  * This utility program provides useful method for validating the URL parameters
@@ -100,10 +100,10 @@ public class Utility {
 
     }
 
-    public static boolean boreholeURIAlreadySeen(int listindex, ArrayList<ScannedBoreholeVo> boreholes){
+    public static boolean boreholeURIAlreadySeen(int listindex, ArrayList<BoreholeViewVo> boreholes){
     	for(int i=listindex-1;i>=0;i--)
     	{
-    		if (boreholes.get(listindex).getBoreholevo().getURI().equals(boreholes.get(i).getBoreholevo().getURI())) return true;
+    		if (boreholes.get(listindex).getIdentifier().equals(boreholes.get(i).getIdentifier())) return true;
     	}
     	return false;
     }

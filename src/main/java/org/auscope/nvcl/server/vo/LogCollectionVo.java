@@ -11,6 +11,7 @@ public class LogCollectionVo {
 	private ArrayList<LogVo> LogCollection;
 
 	protected LogCollectionVo() {
+		LogCollection= new ArrayList<LogVo>();
 	}
 
 	public LogCollectionVo(ArrayList<LogVo> logCollection) {

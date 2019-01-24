@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>NVCL Data Services : Scalar Tray Map Service</title>
+<link rel="stylesheet" href="style/style.css" type="text/css"/>
+</head>
+
+
+<body >
+
+	
+<img class="pixelated" th:src="${'/gettraymap.html?logid='+msgMap['logid']+'&trayindex='+msgMap['trayindex']}" th:style="${'width:'+msgMap['width']+';height:'+msgMap['height']+';image-rendering:-moz-crisp-edges'}">
+			
+	
+</body>
+</html>

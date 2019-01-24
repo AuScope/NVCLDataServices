@@ -97,38 +97,6 @@ public class NVCLDownloadSvc {
 
 
 
-	/**
-	 * Creating a script file with file name base on : datasetiddd.txt
-	 * 
-	 * @param	MessageVo		Message value object containing the useful configuration info
-	 * @param	in				downloaded xml file as BufferedReader
-	 * @return	String 			borehole id use as file name 
-	 */
-	public String createXmlFile(MessageVo messageVo, BufferedReader in, String fileName) {
-
-		String dir = null;
-		PrintWriter wfsGsmlOutput = null;
-		String instring = null;
-		try {
-			dir = config.getDownloadCachePath();
-			fileName = fileName + ".xml";
-			wfsGsmlOutput = new PrintWriter(new File(dir,fileName));
-			while ((instring = in.readLine()) != null) {
-				wfsGsmlOutput.println(instring);
-			}
-			wfsGsmlOutput.flush();
-			wfsGsmlOutput.close();
-			in.close();
-		} catch (IOException e) {
-			logger.error("createXmlFile generating IOException  : " + e);
-			fileName = "fail";
-		} catch (Exception e) {
-			logger.error("createXmlFile generating exception : " + e);
-			fileName = "fail";
-		}	    	
-		return fileName;
-	}
-
 
 
 	/**

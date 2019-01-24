@@ -13,6 +13,7 @@ public class SpectralLogCollectionVo {
 	private ArrayList<SpectralLogVo> SpectralLogCollection;
 
 	protected SpectralLogCollectionVo() {
+		SpectralLogCollection = new ArrayList<SpectralLogVo>();
 	}
 
 	public SpectralLogCollectionVo(ArrayList<SpectralLogVo> spectralLogCollection) {

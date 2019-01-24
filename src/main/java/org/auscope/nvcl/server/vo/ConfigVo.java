@@ -1,5 +1,13 @@
 package org.auscope.nvcl.server.vo;
 
+import org.springframework.stereotype.*;
+
+import java.io.File;
+
+import javax.validation.constraints.NotBlank;
+
+import org.springframework.beans.factory.annotation.*;
+
 /**
  * This Config Value Object class set the configuration info from config.properties 
  * and allow getting the values thru getter and setter method.
@@ -7,32 +15,37 @@ package org.auscope.nvcl.server.vo;
  * @author Florence Tan
  */
 
+@Component
 public class ConfigVo {
 
 		//Spring will populate these fields through Dependency Injection.
-	    private String jdbc_dbtype;
+		@Value("${tsg.dbtype}")
+		private String jdbc_dbtype;
+
+		@Value("${tsg.connectionString}")
 		private String jdbc_url;
+		@Value("${tsg.username}")
 		private String jdbc_username;
-		private String jdbc_password;		
+		@Value("${tsg.password}")
+		private String jdbc_password;
+		@Value("${sysadmin.email}")	
 		private String sysadmin_email;
+		@Value("${webapp.url}")
 		private String webappurl;
+		@Value("${download.url}")
 		private String download_url;
+
 		private String download_rootpath;
+
 		private String download_cachepath;
-		private String geoserverUrl;
+
 		private String tsg_scriptpath;
+		@Value("${tsg.exepath}")
 		private String tsg_exepath;
+		@Value("${smtp.enabled}")
 		private Boolean sendEmails;
+		@Value("${msgTimetoLiveDays}")
 		private int msgTimetoLiveDays;
-		//extra field to be use for creating request queue message
-		//private String requestorEmail;
-		//private String requestType;
-		//private String serviceUrl;
-		//private String typeName;
-		//private String boreholeid;
-		//private String tSGdatasetid;
-		//private String scriptFileNameNoExt;
-		//private Boolean requestLS;
 		
 		public String getJdbcDbType() {
 		  return jdbc_dbtype;
@@ -93,33 +106,43 @@ public class ConfigVo {
 		public String getDownloadRootPath() {
 			return download_rootpath;
 		}
-	 
-		public void setDownloadRootPath(String download_rootpath) {
+		
+		@NotBlank
+		@Value("${download.rootpath}")
+		public void setDownloadRootPath(String download_rootpath) throws Exception {
 			this.download_rootpath = download_rootpath;
+			File dir = new File(this.download_rootpath);
+			if (!dir.exists()) {
+				if (dir.mkdirs()!=true) throw new Exception("download.rootpath property not set correctly or could not create folder");
+			}
 		}		
 		
 		public String getDownloadCachePath() {
 			return download_cachepath;
 		}
-	 
-		public void setDownloadCachePath(String download_cachepath) {
+
+		@NotBlank
+		@Value("${download.cachepath}")
+		public void setDownloadCachePath(String download_cachepath) throws Exception {
 			this.download_cachepath = download_cachepath;
-		}
-		
-		public String getGeoserverUrl() {
-			return geoserverUrl;
-		}
-	 
-		public void setGeoserverUrl(String geoserverUrl) {
-			this.geoserverUrl = geoserverUrl;
+			File dir = new File(this.download_cachepath);
+			if (!dir.exists()) {
+				if (dir.mkdirs()!=true) throw new Exception("download.cachepath property not set correctly or could not create folder");
+			}
 		}
 		
 		public String getTsgScriptPath() {
 			return tsg_scriptpath;
 		}
-	 
-		public void setTsgScriptPath(String tsg_scriptpath) {
+
+		@NotBlank
+		@Value("${tsg.scriptpath}")
+		public void setTsgScriptPath(String tsg_scriptpath) throws Exception {
 			this.tsg_scriptpath = tsg_scriptpath;
+			File dir = new File(this.tsg_scriptpath);
+			if (!dir.exists()) {
+				if (dir.mkdirs()!=true) throw new Exception("tsg.scriptpath property not set correctly or could not create folder");
+			}
 		}
 		
 		public String getTsgExePath() {
@@ -138,53 +161,6 @@ public class ConfigVo {
 			this.sendEmails = sendEmails;
 		}
 
-		/*public String getRequestorEmail() {
-			return requestorEmail;
-		}
-	 
-		public void setRequestorEmail(String requestorEmail) {
-			this.requestorEmail = requestorEmail;
-		}
-		
-		public String getRequestType() {
-			return requestType;
-		}
-	 
-		public void setRequestType(String requestType) {
-			this.requestType = requestType;
-		}
-		
-		public String getTypeName() {
-			return typeName;
-		}
-	 
-		public void setTypeName(String typeName) {
-			this.typeName = typeName;
-		}
-		
-		public String getBoreholeID() {
-			return boreholeid;
-		}
-	 
-		public void setBoreholeID(String boreholeid) {
-			this.boreholeid = boreholeid;
-		}
-
-		public String getTSGdatasetid() {
-			return tSGdatasetid;
-		}
-	 
-		public void setTSGdatasetid(String tSGdatasetid) {
-			this.tSGdatasetid = tSGdatasetid;
-		}
-		
-		public String getScriptFileNameNoExt() {
-			return scriptFileNameNoExt;
-		}
-	 
-		public void setScriptFileNameNoExt(String scriptFileNameNoExt) {
-			this.scriptFileNameNoExt = scriptFileNameNoExt;
-		}*/
 		
 		public void displayConfig() {
 			System.out.println("jdbc.dbtype=" + this.jdbc_dbtype);
@@ -208,13 +184,5 @@ public class ConfigVo {
 		public void setMsgTimetoLiveDays(int msgTimetoLiveDays) {
 			this.msgTimetoLiveDays = msgTimetoLiveDays;
 		}
-		/*public Boolean getRequestLS(){
-			return this.requestLS;
-		}
-		
-		public void setRequestLS(Boolean requestLS)
-		{
-			this.requestLS = requestLS;
-		}*/
 
 }

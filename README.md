@@ -9,9 +9,7 @@ Use the build scripts in the sql folder to create a NVCL database and create a u
 
 ### Active MQ
 
-You will need a running active MQ installation available from http://activemq.apache.org/ . For testing you can use the binary application but for production the Web Application (.war) will likely be easier to control as you can simply include it in your application container parallel to this package.
-
-By Default the NVCLDataServices assume that activeMQ will be running on localhost and using the default activeMQ ports.  If not you will need to override the activeMQ.url setting in the config.properties file described bellow.
+An external Active MQ broker is no longer required as the embeded broker is now used by default.  You can override it by specifying a broker url in the application.properties file if you like.
 
 ### The Spectral Geologist
 
@@ -27,33 +25,21 @@ Note for non-windows servers: WINE will need to be installed and the above will 
 
 ## Configuring
 
-To configure you will need to edit the two properties files config.properties and jdbc.properties to set the runtime properties.  Template files have been provided with details of the expected content.  Copy them and remove the .template extension.
+To configure you will need to edit the properties file application.properties to set the runtime properties.  A template file has been provided with details of the expected content.
 
-You will also need to download an appropriate jdbc driver depending on the database used (ojdbc*.jar for oracle or sqljdbc*.jar for MS SQL Server) available from the database vendors.  
+If you want to use an Oracle database as your data source you will need to register with Oracle's OTN and place your credentials in gradle.properties file to download the jdbc driver from Oracles secure repository.  
 
-If you're debugging with jetty-maven-plugin you will need to inject the driver into your maven cache. e.g.
-
-    mvn install:install-file -Dfile=sqljdbc4.jar -DgroupId=com.microsoft.sqlserver -DartifactId=sqljdbc4 -Dversion=3.0 -Dpackaging=JAR
-
-and uncomment the correct project dependency from the pom.xml file.
-
-Alternatively, If you're deploying the package to a servlet container you will need to ensure your driver is on the class path of the container or application.
 
 ## Building the package
-Maven is used for building. To clean and build the .war file run:
+Gradle is used for building. To clean and build the .jar file run:
 
-    mvn -Dall clean package 
-
-To create eclipse configuration files:
-
-    mvn -Dall clean package eclipse:clean eclipse:eclipse -DskipTests=true
-
+    gradlew build 
 
 ## Running
 
-For debug purposes you can run the package with jetty-maven-plugin by calling
+For debug purposes you can call the "Debug NVCLDataServices" launch configuration from VSCode.  Or directly call:
 
-    mvn jetty:run
+    java -jar ../build/libs/NVCLDataServices-2.1.0.jar
 
 ## License
 
@@ -61,4 +47,4 @@ This software is licensed under the CSIRO Open Source Software License Agreement
 
 ## More Information
 
-For more information please refer to the full system deployment instructions https://twiki.auscope.org/wiki/CoreLibrary/DeployingNVCLCustodianSystems .
+For more information please refer to the full system deployment instructions https://confluence.csiro.au/display/AusGRID/Deploying+NVCL+Data+Custodian+Systems.

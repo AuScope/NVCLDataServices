@@ -10,25 +10,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(namespace = "http://www.opengis.net/wfs",name = "FeatureCollection")
 public class FeatureCollectionVo {
 
-	private ArrayList<ScannedBoreholeVo> scannedboreholeCollection;
+	private ArrayList<BoreholeViewVo> boreholeViewCollection;
 	private int features;
 
 	public FeatureCollectionVo() {
-		this.scannedboreholeCollection = new ArrayList<ScannedBoreholeVo>();
+		this.boreholeViewCollection = new ArrayList<BoreholeViewVo>();
 	}
 
-	public FeatureCollectionVo(ArrayList<ScannedBoreholeVo> scannedboreholeCollection) {
-		this.scannedboreholeCollection = scannedboreholeCollection;
+	public FeatureCollectionVo(ArrayList<BoreholeViewVo> boreholeViewCollection) {
+		this.boreholeViewCollection = boreholeViewCollection;
 	}
 
     @XmlElementWrapper(namespace = "http://www.opengis.net/gml",name = "featureMembers")
-	@XmlElement(namespace = "http://www.auscope.org/nvcl",name = "ScannedBoreholeCollection")
-	public void setscannedboreholeCollection(ArrayList<ScannedBoreholeVo> scannedboreholeCollection)  {
-		this.scannedboreholeCollection=scannedboreholeCollection;
+	@XmlElement(namespace = "http://xmlns.geosciml.org/geosciml-portrayal/4.0",name = "BoreholeView")
+	public void setBoreholeViewCollection(ArrayList<BoreholeViewVo> boreholeViewCollection)  {
+		this.boreholeViewCollection=boreholeViewCollection;
 	}
 
-   	public ArrayList<ScannedBoreholeVo> getscannedboreholeCollection() {
-   		return scannedboreholeCollection;
+   	public ArrayList<BoreholeViewVo> getBoreholeViewCollection() {
+   		return boreholeViewCollection;
    	}
 
 	public int getFeatures() {
