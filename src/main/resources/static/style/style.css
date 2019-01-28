@@ -112,12 +112,12 @@ table.NVCLDSTable thead {
 }
 
 .carousel-control-prev {
-width:5%;
+width:5% !important;
 }
 
 .carousel-control-next {
-width:5%;
-right:-10%;
+width:5% !important;
+right:-10% !important;
 }
 
 .caroimage {
