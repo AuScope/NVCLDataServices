@@ -80,7 +80,7 @@ public class DownSampledClassDataDao extends StoredProcedure {
         Boolean mintThreshParamPresent=false;
         ResultSet rs = dataSource.getConnection().getMetaData().getProcedureColumns(null, null,SQL , null);
         while (rs.next()) {
-        	if(rs.getString("COLUMN_NAME")!=null && rs.getString("COLUMN_NAME").toLowerCase().equals(MINTHRESHOLD.toLowerCase())) mintThreshParamPresent=true;
+            if(rs.getString("COLUMN_NAME")!=null && rs.getString("COLUMN_NAME").toLowerCase().contains(MINTHRESHOLD.toLowerCase())) mintThreshParamPresent=true;
         }
         declareParameter(new SqlParameter(LOGID, Types.VARCHAR));
         declareParameter(new SqlParameter(STARTDEPTH, Types.FLOAT));
