@@ -20,6 +20,7 @@
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
 	 crossorigin="anonymous"></script>
 
+	<script src="script/ResizeSensor.js"></script>
 
 </head>
 
@@ -49,6 +50,7 @@
 
 	<script>
 		var colors = ['lightblue', 'lightcoral', 'lightcyan', 'lightgray', 'lightgreen', 'lightpink', 'lightyellow'];
+		var sampletext = ["Previous Sample", "Selected Sample", "Next Sample"];
 		var dragging = false;
 		var dragoriginx = 0;
 		var dragoriginy = 0;
@@ -147,7 +149,19 @@
 		$("#myCarousel").on("slid.bs.carousel", "", checkprevnext);
 		$("#myCarousel").on("slid.bs.carousel", "", clearmap);
 
-		function drawgraph(k, wavelengths, startSampleNo, endSampleNo, width, height) {
+		var hexDigits = new Array
+        ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); 
+
+		function rgb2hex(rgb) {
+ 			rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+ 			return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+		}
+
+		function hex(x) {
+  			return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
+ 		}
+
+		function drawgraph(k, wavelengths, startSampleNo, endSampleNo, width, height,counter) {
 			return function (result) {
 				var data = [];
 
@@ -160,7 +174,12 @@
 					for (var i = 0; i < result[j].floatspectraldata.length; i++) {
 						d1.push({ x: parseInt(wavelengths[i]), y: result[j].floatspectraldata[i] });
 					}
-					data.push({ data: d1, name: "Reflectance Sample " + ((j - Math.floor(spectracount / 2)) > 0 ? "+" + (j - Math.floor(spectracount / 2)) : (j - Math.floor(spectracount / 2))), color: palette.color() });
+					var dataname="";
+					if (spectracount < 3 && startSampleNo==0){
+						dataname=sampletext[j+1];
+					}
+					else dataname=sampletext[j];
+					data.push({ data: d1, name: dataname , color: palette.color() });
 				}
 				var graph = new Rickshaw.Graph({
 					element: document.getElementById("chart" + startSampleNo + "_" + k),
@@ -174,7 +193,8 @@
 
 				var y_axis = new Rickshaw.Graph.Axis.Y({
 					graph: graph,
-					tickFormat: d3.format('.2f')
+					tickFormat: d3.format('.2f'),
+					
 				});
 				var x_axis = new Rickshaw.Graph.Axis.X({
 					graph: graph,
@@ -190,26 +210,82 @@
 				});
 				var hoverDetail = new Rickshaw.Graph.HoverDetail({
 					graph: graph,
+					formatter: function(series, x, y) {
+                		var content = '<span><span style="border: 1px solid rgb(204, 204, 204); display: inline-block; width: 12px; height: 12px; margin: 0px 4px; background-color: '+series.color+';"></span>' + series.name +' : '+  d3.round(y,2)+'</span>';
+                		$('#plot' + counter + 'container .LSImageSlice').each(function() {
+							if (rgb2hex($(this).css("border-left-color"))!=series.color) $(this).fadeTo(0, 0.5);
+							else $(this).fadeTo(0, 1);
+						});
+                		return content;
+            		},
+					onHide : function() {
+						$('#plot' + counter + 'container .LSImageSlice').each(function() {
+							$(this).fadeTo(0, 1);
+						});
+					},
 					xFormatter: function (x, y) {
 						return x.toString();
 					}
+				});
+				var resizegraph = function() {
+					var newwidth = $('#plot' + counter + 'container').width();
+					var newheight =  $('#plot' + counter + 'container').height();
+					var imgsliceheight=$('#plot' + counter + 'container'+' .LSImageSlice').first().height();
+					if (typeof imgsliceheight !== "undefined" && imgsliceheight>0) {
+						graph.configure({
+							width: newwidth - 20 - imgsliceheight*5,
+							height: (newheight-24)/2 - 20
+						});
+						graph.render();
+					}
+				}
+				new ResizeSensor($('#plot' + counter + 'container'), function(){ 
+					resizegraph();
 				});
 				graph.render();
 			}
 		}
 
-		function buildPlots(specidsStr, startSampleNo, endSampleNo, width, height) {
+		function resizewindow(plotcontainer) {
+			var plotcontainerwidth = plotcontainer.width();
+			var plotcontainerheight =  plotcontainer.height();
+			if (plotcontainerwidth > (plotcontainerheight-24)*1.3333) plotcontainerwidth = (plotcontainerheight-24)*1.3333;
+			else plotcontainerheight = (plotcontainerwidth/1.333)+24;
+			plotcontainer.width(plotcontainerwidth+'px');
+			plotcontainer.height(plotcontainerheight+'px');
+			plotcontainer.find('.LSImageSlice').each(function(index) {
+				if ($(this).height()==0) setTimeout(resizewindow,500,plotcontainer);
+				else {
+					$(this).height('');
+					$(this).height(Math.ceil($(this).height()));
+					if (index ==0) plotcontainer.find('.plotspectracontainer').first().css({ left: ($(this).height()*5) +'px'});
+				}
+			});
+		}
+
+		function buildPlots(specidsStr, startSampleNo, endSampleNo, width, height, LSimageID,counter,maxsampleno) {
 
 			var specids = specidsStr.split(",");
-
+			var imgslices = $('<div id="imgSlicesRotatedDiv'+startSampleNo+'" class="imgSlicesRotatedDiv"></div>');
+			var imglink = $('<a href="./mosaic.html?logid='+LSimageID+'&startsampleno='+Math.max((startSampleNo - 2), 0)+'&endsampleno='+(endSampleNo+2)+'&width=1" target="_blank" ></a>');
+			for (var i=Math.max(startSampleNo-1,0);i<=Math.min(endSampleNo+1,maxsampleno);i++) {
+				var bordercolor = '#FFFFFF';
+				if (i==startSampleNo) bordercolor = '#00cc00';
+				else if (i==startSampleNo+1) bordercolor = '#0066b3';
+				else if (i==startSampleNo+2) bordercolor = '#ff8000';
+				imglink.append('<img class="LSImageSlice" style="border-color:'+bordercolor+';" src="Display_Tray_Thumb.html?logid='+LSimageID+'&sampleno='+i +'" >');
+			}
+			imgslices.append(imglink);
+			$('#plotspectra' + startSampleNo).append(imgslices);
+			$('#plotspectra' + startSampleNo).append('<div id="plotspectra'+startSampleNo+'div" class="plotspectracontainer"></div>');			
 			specids.forEach(function (speclogid, k) {
 
-				$('#plotspectra' + startSampleNo).append("<div id=\"chart_container" + startSampleNo + "_" + k + "\" class=\"chart_container\"><div id=\"chart" + startSampleNo + "_" + k + "\" class=\"chart\"></div><div id=\"legend" + startSampleNo + "_" + k + "\" class=\"legend\"></div></div>");
+				$('#plotspectra'+startSampleNo+'div').append("<div id=\"chart_container" + startSampleNo + "_" + k + "\" class=\"chart_container\"><div id=\"chart" + startSampleNo + "_" + k + "\" class=\"chart\"></div><div id=\"legend" + startSampleNo + "_" + k + "\" class=\"legend\"></div></div>");
 
 				$.getJSON("getSpectralLogSamplingPoints.html?speclogid=" + speclogid, function (specwvldata) {
 					var wavelengths = specwvldata["wavelengths"].split(",");
 
-					$.getJSON("getspectraldata.html?speclogid=" + speclogid + "&startsampleno=" + startSampleNo + "&endsampleno=" + endSampleNo + "&outputformat=json", drawgraph(k, wavelengths, startSampleNo, endSampleNo, width, height));
+					$.getJSON("getspectraldata.html?speclogid=" + speclogid + "&startsampleno=" + startSampleNo + "&endsampleno=" + endSampleNo + "&outputformat=json", drawgraph(k, wavelengths, startSampleNo, endSampleNo, width, height,counter));
 				});
 
 			});
@@ -227,24 +303,33 @@
 			var logidindex = src.indexOf('logid=');
 			var logid = src.slice(logidindex);
 			var andpos = logid.indexOf('&');
-			var graphwidth = 500;
-			var graphheight = 300;
 			logid = logid.substr(0, andpos);
 			var traysamplenumber = src.slice(src.indexOf('sampleno='));
 			traysamplenumber = traysamplenumber.substr(9, traysamplenumber.length);
 			$.getJSON("trayImageSampleLocate.html?" + logid + "&sampleno=" + traysamplenumber + "&pixelx=" + x + "&pixely=" + y + "&imgwidth=" + width + "&imgheight=" + height, function (data) {
 				var specsamplenumber = data["sampleno"];
+				var specsamplenumber = Math.max(specsamplenumber,1);
 				$.getJSON("getDatasetID.html?" + logid, function (dsdata) {
 					var dsid = dsdata["datasetid"];
-					$.getJSON("getspectrallogs.html?datasetid=" + dsid + "&outputformat=json", function (speclogsdata) {
+					$.getJSON("getDatasetCollection.html?datasetid=" + dsid + "&outputformat=json", function (speclogsdata) {
 						var swirspectra = "";
 						var tirspectra = "";
-						$.each(speclogsdata["SpectralLogCollection"], function (key, value) {
+						var LSimageID = "";
+						var maxsampleno=0;
+						$.each(speclogsdata.datasetCollection[0].spectralLogCollection.SpectralLogCollection, function (key, value) {
 							if (value["logName"] == "Reflectance") {
 								swirspectra = value["logID"];
+								if(typeof value["sampleCount"] !== "undefined")	maxsampleno = Math.max(value["sampleCount"]-1,maxsampleno);
 							}
 							else if (value["logName"] == "Base Refl") {
 								tirspectra = value["logID"];
+								if(typeof value["sampleCount"] !== "undefined")	maxsampleno = Math.max(value["sampleCount"]-1,maxsampleno);
+							}
+						});
+						$.each(speclogsdata.datasetCollection[0].imageLogCollection.imageLogCollection, function (key, value) {
+							if (value["logName"] == "Imagery") {
+								LSimageID = value["logID"];
+								if(typeof value["sampleCount"] !== "undefined")	maxsampleno = Math.max(value["sampleCount"]-1,maxsampleno);
 							}
 						});
 						var allspectra = swirspectra + (tirspectra.length > 0 ? "," + tirspectra : "");
@@ -256,13 +341,21 @@
 							$("#marker" + currentcounter).remove();
 							plotspeccontainer.remove();
 						}
-						$('<div id="marker' + counter + '" style="px;background:' + colors[counter % 7] + '" class="circle"><div class="flabel-center">' + counter + '</div></div><div id="plot' + counter + 'container" class="floatingGraph" ><div onmousedown="dragstart(event);" style="width:100%;background:' + colors[counter % 7] + ';text-align:center;" >Drag to move<div style="float:right;"><span onclick=closeplot(' + counter + '); class="m-1"><i class="fa fa-window-close fa-lg" style="margin:3px"></i></span></div></div><div id="plotspectra' + (specsamplenumber - 1) + '"></div></div>').appendTo($('#plotcontainer'))
-						buildPlots(allspectra, specsamplenumber - 1, specsamplenumber + 1, graphwidth, graphheight);
-						$(".chart_container").css({ position: "relative", width: graphwidth });
+						$('<div id="marker' + counter + '" style="px;background:' + colors[counter % 7] + '" class="circle"><div class="flabel-center">' + counter + '</div></div><div id="plot' + counter + 'container" class="floatingGraph" ><div onmousedown="dragstart(event);" style="width:100%;background:' + colors[counter % 7] + ';text-align:center;" >Drag to move<div style="float:right;"><span onclick=closeplot(' + counter + '); class="m-1"><i class="fa fa-window-close fa-lg" style="margin:3px"></i></span></div></div><div id="plotspectra' + (specsamplenumber - 1) + '" style="height: 600px"></div></div>').appendTo($('#plotcontainer'));
+						var graphwidth = 540;
+						var graphheight = 280;
+						var parentcontainer = $('#plot' + counter + 'container');
+						var parentcontainerwidth = parentcontainer.width();
+						var parentcontainerheight =  parentcontainer.height();
+						graphwidth = parentcontainerwidth*0.68 - 20;
+						graphheight = (parentcontainerheight-24)/2 - 20;
+						new ResizeSensor(parentcontainer, function(){
+							resizewindow(parentcontainer);
+						});
+						buildPlots(allspectra, specsamplenumber - 1, Math.min(specsamplenumber + 1,maxsampleno), graphwidth, graphheight, LSimageID,counter,maxsampleno);
+						//$(".chart_container").css({ position: "relative", width: graphwidth });
 						$("#marker" + counter).css({ left: (event.pageX - 13), top: (event.pageY - 13) });
-						$("#plot" + counter + "container").css({ top: event.pageY, left: event.pageX, position: 'absolute' });
-						$("#plot" + counter + "container").css({ display: 'block' });
-
+						$("#plot" + counter + "container").css({ top: event.pageY, left: event.pageX, position: 'absolute', display: 'block' });				
 					});
 				});
 			});

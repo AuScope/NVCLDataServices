@@ -8,11 +8,9 @@ import java.awt.Graphics2D;
 import java.awt.Menu;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.StringReader;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -33,11 +31,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 import com.drew.imaging.ImageProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -91,8 +86,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.stereotype.Controller;
@@ -190,19 +183,24 @@ public class MenuController {
 	@RequestMapping("/getDatasetCollection.html")
 	public ModelAndView datasetCollectionHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "holeidentifier") String holeIdentifier,
+			@RequestParam(required = false, value = "datasetid") String datasetid,
+			@RequestParam(value = "outputformat", required = false) String outputformat,
 			@RequestParam(required = false, value = "headersonly", defaultValue="no") String headersonly) throws ServletException,
 			IOException, SQLException, ParserConfigurationException, TransformerException {
 
 		// mandatory field : holeIdentifier - validate if holeIdentifier is null
-		if (Utility.stringIsBlankorNull(holeIdentifier)) {
-			String errMsg = "holeidentifier is not valid.";
+		if (Utility.stringIsBlankorNull(holeIdentifier) && Utility.stringIsBlankorNull(datasetid)) {
+			String errMsg = "holeidentifier or datasetid must be provided.";
 			return new ModelAndView("getDatasetCollectionUsage", "errmsg", errMsg);
 		}
 
 		// process list of dataset id and name
 		logger.debug("processing list of dataset and name ...");
+		
+		DatasetCollectionVo datasetList = null;
+		if (!Utility.stringIsBlankorNull(holeIdentifier)) datasetList = nvclDataSvc.getDatasetCollection(holeIdentifier);
+		else datasetList =nvclDataSvc.getDatasetCollectionbyDatasetId(datasetid);
 
-		DatasetCollectionVo datasetList = nvclDataSvc.getDatasetCollection(holeIdentifier);
 		if (!headersonly.equals("yes")) {
 			for (Iterator<DatasetVo> it2 = datasetList.getDatasetCollection().iterator(); it2.hasNext();) {
 				DatasetVo dataset = it2.next();
@@ -212,10 +210,16 @@ public class MenuController {
 				dataset.setProfLogCollection(nvclDataSvc.getProfLogCollection(dataset.getDatasetID()));
 			}
 		}
-		response.setContentType("text/xml");
-
-		this.marshaller.marshal(datasetList, new StreamResult(response.getOutputStream()));
-
+		if(outputformat != null && outputformat.equals("json")){
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+			new ObjectMapper().writeValue(response.getOutputStream(),datasetList);
+			return null;
+		}
+		else {
+			response.setContentType("text/xml");
+			this.marshaller.marshal(datasetList, new StreamResult(response.getOutputStream()));
+		}
 		return null;
 
 	}

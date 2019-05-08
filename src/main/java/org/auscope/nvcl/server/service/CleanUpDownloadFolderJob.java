@@ -2,16 +2,15 @@ package org.auscope.nvcl.server.service;
 
 import java.io.File;
 import java.io.IOException;
-import org.apache.logging.log4j.Logger;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
-import org.quartz.JobExecutionContext;
+import org.apache.logging.log4j.Logger;
 import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.quartz.QuartzJobBean;
 
 @Configuration
 @EnableScheduling

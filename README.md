@@ -17,7 +17,7 @@ To use the tsg file packaging component of the NVCLDataServices you will need TS
 
 Install the [Oracle instant client](http://www.oracle.com/technetwork/topics/winsoft-085727.html) or [Microsoft SQL Server CLI driver](http://www.microsoft.com/en-us/download/details.aspx?id=16978).
 
-Note for non-windows servers: WINE will need to be installed and the above will need to performed within it.  You will also need to install Xvfb and change the tsg.exepath setting in the config.properties file to point to a script file similar to this:
+Note for non-windows servers: WINE will need to be installed and the above will need to be performed within it.  You will also need to install Xvfb and change the tsg.exepath setting in the config.properties file to point to a script file similar to this:
 
     #!/bin/bash
     xvfb-run -a wine C:\\Program\ Files\\The\ Spectral\ Geologist\\tsgeol7.exe $1
@@ -39,7 +39,7 @@ Gradle is used for building. To clean and build the .jar file run:
 
 For debug purposes you can call the "Debug NVCLDataServices" launch configuration from VSCode.  Or directly call:
 
-    java -jar ../build/libs/NVCLDataServices-2.1.0.jar
+    java -jar ./build/libs/NVCLDataServices-2.1.0.jar
 
 ## License
 

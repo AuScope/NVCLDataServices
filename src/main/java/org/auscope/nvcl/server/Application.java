@@ -20,7 +20,6 @@ import org.auscope.nvcl.server.service.TSGDownloadRequestSvc;
 import org.auscope.nvcl.server.vo.BoreholeViewVo;
 import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.gmlPointVo;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;

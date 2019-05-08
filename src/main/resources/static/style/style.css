@@ -78,10 +78,11 @@ table.NVCLDSTable thead {
 .floatingGraph {
 	position: absolute;
 	z-index: 99;
-	width:500px;
+	width:800px;
 	background:white;
 	overflow: hidden;
-	display:none;
+  display:none;
+  resize: both;
 }
 
 .circle
@@ -138,4 +139,36 @@ position:absolute;
 top:10;
 right:10;
 display:none !important;
+}
+
+.LSImageSlice
+{
+  display: block;
+  width: 100%;
+  border-left-width: 8px;
+  border-right-width: 8px;
+  border-style: solid;
+  border-top-width: 0px;
+  border-bottom-width: 0px;
+}
+
+.imgSlicesRotatedDiv
+{
+  transform: rotate(270deg);
+  transform-origin: top left;
+  width: 75%;
+  top:100%;
+  position: absolute;
+
+}
+
+.plotspectracontainer
+{
+  position: relative;
+  left:32%;
+}
+
+.chart_container
+{
+  padding: 10px;
 }
