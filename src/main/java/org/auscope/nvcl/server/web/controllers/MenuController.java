@@ -154,7 +154,7 @@ public class MenuController {
 	@RequestMapping("/error_page.html")
 	public ModelAndView access_error() {
 		String errMsg = "Please contact the system administrator.";
-		return new ModelAndView("error_page", "errmsg", errMsg);
+		return new ModelAndView("error", "errmsg", errMsg);
 	}
 
 	@RequestMapping("/testlinks.html")
@@ -749,10 +749,10 @@ public class MenuController {
 		} catch (SQLException sqlerr) {
 			logger.error("SQLException : " + sqlerr);
 			String errMsg = "There is error with the database connection, please contact the administrator.";
-			return new ModelAndView("error_page", "errmsg", errMsg);
+			return new ModelAndView("error", "errmsg", errMsg);
 		} catch (Exception e) {
 			logger.error("Exception : " + e);
-			return new ModelAndView("error_page", "errmsg", e.getMessage());
+			return new ModelAndView("error", "errmsg", e.getMessage());
 		}
 	}
 
@@ -1001,7 +1001,7 @@ public class MenuController {
 					break;
 				default:
 					String errMsg = "Error !!  Logtype does not equal 1 or 2 !!";
-					return new ModelAndView("error_page", "errmsg", errMsg);
+					return new ModelAndView("error", "errmsg", errMsg);
 
 				}
 
@@ -1071,7 +1071,7 @@ public class MenuController {
 		} catch (Exception e) {
 			logger.error("Exception occurred in DownloadScalarHandler : " + e);
 			String errMsg = "Exception occurred : " + e;
-			return new ModelAndView("error_page", "errmsg", errMsg);
+			return new ModelAndView("error", "errmsg", errMsg);
 		}
 	}
 
@@ -1406,14 +1406,14 @@ public class MenuController {
 			if (cachedfile.exists() && !cachedfile.delete()) {
 				String errMsg ="Existing file couldn't be deleted.  Its probably in use. email "+ configVo.getSysAdminEmail() + "for support";
 				logger.error(errMsg);
-				return new ModelAndView("error_page", "errmsg", errMsg);
+				return new ModelAndView("error", "errmsg", errMsg);
 			}
 		}
 
 		if (scriptFileNameNoExt.equals("fail")) {
 			String errMsg = "Error occured while creating script file. email "+ configVo.getSysAdminEmail() + "for support";
 			logger.error(errMsg);
-			return new ModelAndView("error_page", "errmsg", errMsg);
+			return new ModelAndView("error", "errmsg", errMsg);
 		}
 		tsgreqmessage.setScriptFileNameNoExt(scriptFileNameNoExt);
 		tsgreqmessage.settSGDatasetID(datasetid);
@@ -1429,7 +1429,7 @@ public class MenuController {
 		if (messageID == null) {
 			String errMsg = "Failed to enqueue job. email "+ configVo.getSysAdminEmail() + "for support";
 			logger.error(errMsg);
-			return new ModelAndView("error_page", "errmsg", errMsg);
+			return new ModelAndView("error", "errmsg", errMsg);
 		}
 
 		logger.debug("JMS message created successfully ... ");
