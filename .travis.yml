@@ -5,7 +5,7 @@ deploy:
   provider: releases
   api_key:
     secure: K0iR0sedgAvvunse2DOz7Xo22D9+RoDvy7Ef/3jlvcLMxV763GdopM9TfcIAwCcKeSvKJhjUPbfAaXwd+61cFGmQ4rGWe4sHUo3ZHhgmb8/oiVLuNVSzCX5crncg0bZV5Jq7JHhhTpTrN67iWM/T6ice9kEZfxvFBGYXOp6zICyUDaHp5fM5BixCBuljCF91Zi+ll5vCOwZtesGuDs3TvRd+lEX+iaoYFnY+iJ5zjhwAgpLhhEUObd/A5SvXZlFej0SxjuTYNbv0jjwOpLQLlmFx23MhQ6ge/oqdIQemxuhO6OG1MLyu36Jwlkuesa1sq8Tini3tlW/AV8qCFiFkq+hYL3SP3OsxtT3KqSkeU+Ch56CEZIzVvXZTn34E0X5qWrsesOPmKnKCqFdD7bOkeAdzmQqQtqmw+ee+TVXyFD6RPJsVLGyKxQ7RjpdJIRyEwycigaenY9RKtE5JN2SLOnK57qf25AU09xpe3cJN+DQfkxAeCEG1uGK9dWwVKjsvl0/+Lu+z6RI9w4nZFUezDcK2fHifcxL5bxkRkLSrSnDI3unoElhDzlOcLkbJPwk5rPxVhkyKot8bjXFdSYdwdbtt5LBLXp901CORkGDKy0MhEaOMeaPHZE55Is73F9UHdKemoTlUDh7JExIkBkcVJJfkrfiDix7X5WTe3hjBOKw=
-  file: build/libs/NVCLDataServices-2.1.0.jar
+  file: build/libs/NVCLDataServices-2.1.0.war
   skip_cleanup: true
   on:
     repo: AuScope/NVCLDataServices

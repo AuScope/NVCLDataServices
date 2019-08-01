@@ -1,3 +1,9 @@
+plugins {
+	id 'org.springframework.boot' version '2.1.0.RELEASE'
+	id 'java'
+	id 'war'
+}
+
 
 def OTNUser = hasProperty('OTNUsername') ? OTNUsername : System.getenv('OTNUsername')
 def OTNPass = hasProperty('OTNPassword') ? OTNPassword : System.getenv('OTNPassword')
@@ -8,25 +14,15 @@ assert OTNPass: "Set the property 'OTNPassword' in your your gradle.properties o
 
 
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.5.RELEASE")
-    }
-}
-
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
-bootJar {
+bootWar {
     baseName = 'NVCLDataServices'
     version =  '2.1.0'
     launchScript()
+    from ('config/application.properties') {
+        into 'WEB-INF/classes/'
+    }
 }
 
 repositories {
@@ -63,17 +59,9 @@ dependencies {
 	compile group: 'org.springframework', name: 'spring-oxm', version: '5.0.9.RELEASE'
     compile 'com.oracle.jdbc:ojdbc7:12.1.0.2'
     compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.0.0.jre8'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 	testCompile 'org.jmock:jmock-junit4:2.6.0'
 	testCompile 'org.jmock:jmock-legacy:2.6.0'
     testCompile("junit:junit")
 }
 
-task runApp(type: JavaExec) {
-  classpath = sourceSets.main.runtimeClasspath
-
-  main = 'org.auscope.nvcl.server.Application'
-
-  // arguments to pass to the application
-  // '-Dhttp.proxyHost=127.0.0.1',  '-Dhttp.proxyPort=8888',  // forward connections through fiddler proxy
-  jvmArgs  "-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
-}
