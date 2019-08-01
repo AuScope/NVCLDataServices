@@ -1106,6 +1106,12 @@ public class MenuController {
 
 		String hostwgeoserver = serviceurl.substring(0, serviceurl.lastIndexOf('/'));
 		String hostname = hostwgeoserver.substring(0, hostwgeoserver.lastIndexOf('/'));
+		
+		UriComponentsBuilder checkNVCLDSCapabilitiesbuilder = UriComponentsBuilder.fromHttpUrl(hostname + "/NVCLDataServices/getDatasetCollection.html");
+		
+		ResponseEntity<String> checkNVCLDSCapabilities = client.exchange(checkNVCLDSCapabilitiesbuilder.toUriString(),HttpMethod.GET, null, String.class);
+
+		if (!checkNVCLDSCapabilities.getBody().contains("headersonly")) return new ModelAndView("error", "errmsg", "not supported by endpoint. it likely needs to be upgraded");
 
 		UriComponentsBuilder DSbuilder = UriComponentsBuilder.fromHttpUrl(hostname + "/NVCLDataServices/getDatasetCollection.html")
 						.queryParam("holeidentifier", "all")
