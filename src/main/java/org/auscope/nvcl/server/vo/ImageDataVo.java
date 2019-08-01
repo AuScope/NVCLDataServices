@@ -6,6 +6,7 @@ public class ImageDataVo {
 
     private int sampleNo;
     private Blob imgData;
+    private Blob imgHistogramLUT;
 
     public int getSampleNo() {
         return this.sampleNo;
@@ -21,6 +22,14 @@ public class ImageDataVo {
 
     public void setImgData(Blob imgData) {
         this.imgData = imgData;
+    }
+
+    public Blob getImgHistogramLUT() {
+        return imgHistogramLUT;
+    }
+
+    public void setImgHistogramLUT(Blob imgHistogramLUT) {
+        this.imgHistogramLUT = imgHistogramLUT;
     }
 
 }

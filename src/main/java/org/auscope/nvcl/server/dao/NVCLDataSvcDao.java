@@ -357,12 +357,13 @@ public class NVCLDataSvcDao {
      *         image store as BLOB data type in oracle db
      */
     public ImageDataVo getImgData(String logID, int sampleNo) {
-        String sql = "select imagedata from publishedimagelogdata where log_id = ? and samplenumber = ?";
+        String sql = "select publishedimagelogdata.imagedata, imagelogs.imghistogram, imagelogs.imgclippercent from publishedimagelogdata inner join imagelogs on publishedimagelogdata.log_id = imagelogs.log_id where imagelogs.log_id = ? and publishedimagelogdata.samplenumber = ?";
         RowMapper<ImageDataVo> mapper = new RowMapper<ImageDataVo>() {
             public ImageDataVo mapRow(ResultSet rs, int rowNum)
                     throws SQLException {
                 ImageDataVo imageDataVo = new ImageDataVo();
                 imageDataVo.setImgData(rs.getBlob("imagedata"));
+                imageDataVo.setImgHistogramLUT(rs.getBlob("imghistogram"));
                 return imageDataVo;
             }
         };

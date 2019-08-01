@@ -496,7 +496,8 @@ public class MenuController {
 	@RequestMapping("/Display_Tray_Thumb.html")
 	public ModelAndView TrayThumbHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId,
-			@RequestParam(required = false, value = "sampleno") Integer sampleNo) throws ServletException, IOException,
+			@RequestParam(required = false, value = "sampleno") Integer sampleNo,
+			@RequestParam(required = false, value = "uncorrected") String uncorrected) throws ServletException, IOException,
 			SQLException {
 
 		// mandatory field : logid
@@ -514,15 +515,61 @@ public class MenuController {
 
 		ImageDataVo imagedata = nvclDataSvc.getImageData(logId, sampleNo);
 		logger.debug("processing the blob data...");
-		Blob imgData = imagedata.getImgData();
+		Blob imgData = null;
+		if ((Utility.stringIsBlankorNull(uncorrected) || !uncorrected.equals("yes")) && imagedata.getImgHistogramLUT() != null && imagedata.getImgHistogramLUT().length()==256){
+			try {
+				byte[] histogramLUT = imagedata.getImgHistogramLUT().getBytes(1, 256);
 
-		response.setContentType("image/jpeg");
+				BufferedImage img = ImageIO.read(imagedata.getImgData().getBinaryStream());
+				int width = img.getWidth(), height = img.getHeight();
+				int[] data = new int[width * height];
+				img.getRGB(0, 0, width, height, data, 0, width);
 
-		int imgLength = (int) imgData.length();
+				for (int y = 0; y < height; ++y)
+				{
+					for (int x = 0; x < width; ++x)
+					{
+						int r = (int) ((data[width*y+x] >> 16) & 0xff);  //shift 3rd byte to first byte location
+						int g = (int) ((data[width*y+x] >> 8) & 0xff);   //shift 2nd byte to first byte location
+						int b = (int) (data[width*y+x] & 0xff);          //it is already at first byte location
+						
+						r = (int) histogramLUT[r];
+						g = (int) histogramLUT[g];
+						b = (int) histogramLUT[b];
+						data[width*y+x] = (r << 16) | (g << 8) | b;
 
-		response.setContentLength(imgLength);
+					}
+				}
+				img.setRGB(0, 0, width, height, data, 0, width);
 
-		response.getOutputStream().write(imgData.getBytes(1, imgLength));
+				response.setContentType("image/jpeg");
+
+				ImageIO.write(img, "jpeg" ,response.getOutputStream());
+
+
+			}
+			catch (Exception ex) {
+				logger.warn(ex.getMessage());
+				imgData = imagedata.getImgData();
+				response.setContentType("image/jpeg");
+
+				int imgLength = (int) imgData.length();
+		
+				response.setContentLength(imgLength);
+		
+				response.getOutputStream().write(imgData.getBytes(1, imgLength));
+			}
+		}
+		else {
+			imgData = imagedata.getImgData();
+			response.setContentType("image/jpeg");
+
+			int imgLength = (int) imgData.length();
+	
+			response.setContentLength(imgLength);
+	
+			response.getOutputStream().write(imgData.getBytes(1, imgLength));
+		}
 
 		return null;
 	}
