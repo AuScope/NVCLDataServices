@@ -520,6 +520,8 @@ public class MenuController {
 			try {
 				byte[] histogramLUT = imagedata.getImgHistogramLUT().getBytes(1, 256);
 
+				if (Utility.TSGDbaseValidateImageHistogramLUT(histogramLUT,256) != true) throw new Exception("Invalid histogram Lookup table");
+
 				BufferedImage img = ImageIO.read(imagedata.getImgData().getBinaryStream());
 				int width = img.getWidth(), height = img.getHeight();
 				int[] data = new int[width * height];

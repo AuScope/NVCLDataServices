@@ -121,4 +121,17 @@ public class Utility {
 		return str.toString();
     }
 
+  
+    public static Boolean TSGDbaseValidateImageHistogramLUT(byte[] LUTBytes, int length)
+    {
+        int previousvalue = 0;
+        int i;
+        for (i=0; i < 256; i++) {
+            if ((LUTBytes[i]&0xFF) < previousvalue) return false;
+            previousvalue = LUTBytes[i]&0xFF;
+        }
+        if (previousvalue > 0 ) return true;
+        else return false;
+    }
+
 }
