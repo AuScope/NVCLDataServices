@@ -18,7 +18,6 @@ apply plugin: 'io.spring.dependency-management'
 
 bootWar {
     baseName = 'NVCLDataServices'
-    version =  '2.1.0'
     launchScript()
     from ('config/application.properties') {
         into 'WEB-INF/classes/'

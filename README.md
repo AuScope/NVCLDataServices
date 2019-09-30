@@ -39,7 +39,7 @@ Gradle is used for building. To clean and build the .jar file run:
 
 For debug purposes you can call the "Debug NVCLDataServices" launch configuration from VSCode.  Or directly call:
 
-    java -jar ./build/libs/NVCLDataServices-2.1.0.jar
+    java -jar ./build/libs/NVCLDataServices.war
 
 ## License
 
