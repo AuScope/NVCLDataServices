@@ -170,5 +170,10 @@ display:none !important;
 
 .chart_container
 {
-  padding: 10px;
+  margin: 10px;
+}
+
+.chart
+{
+  display: flex
 }

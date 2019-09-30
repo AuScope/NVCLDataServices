@@ -242,6 +242,8 @@
 				new ResizeSensor($('#plot' + counter + 'container'), function(){ 
 					resizegraph();
 				});
+				setTimeout(resizegraph,500);
+				setTimeout(resizegraph,2000);
 				graph.render();
 			}
 		}
