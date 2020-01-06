@@ -259,7 +259,9 @@
 				if ($(this).height()==0) setTimeout(resizewindow,500,plotcontainer);
 				else {
 					$(this).height('');
-					$(this).height(Math.ceil($(this).height()));
+					var maxLSwidth = Math.ceil((plotcontainerwidth*0.4)/5); // max size of linescan display 40% of total window
+					if ($(this).prop('naturalHeight') < maxLSwidth) $(this).height(maxLSwidth);
+					else $(this).height(Math.min(Math.ceil($(this).height()),maxLSwidth));
 					if (index ==0) plotcontainer.find('.plotspectracontainer').first().css({ left: ($(this).height()*5) +'px'});
 				}
 			});
@@ -269,7 +271,7 @@
 
 			var specids = specidsStr.split(",");
 			var imgslices = $('<div id="imgSlicesRotatedDiv'+startSampleNo+'" class="imgSlicesRotatedDiv"></div>');
-			var imglink = $('<a href="./mosaic.html?logid='+LSimageID+'&startsampleno='+Math.max((startSampleNo - 2), 0)+'&endsampleno='+(endSampleNo+2)+'&width=1" target="_blank" ></a>');
+			var imglink = $('<a href="./mosaic.html?logid='+LSimageID+'&startsampleno='+Math.max((startSampleNo - 2), 0)+'&endsampleno='+(endSampleNo+2)+'&width=1" target="_blank" class="LSImageLink" ></a>');
 			for (var i=Math.max(startSampleNo-1,0);i<=Math.min(endSampleNo+1,maxsampleno);i++) {
 				var bordercolor = '#FFFFFF';
 				if (i==startSampleNo) bordercolor = '#00cc00';

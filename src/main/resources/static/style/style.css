@@ -144,7 +144,7 @@ display:none !important;
 .LSImageSlice
 {
   display: block;
-  width: 100%;
+  max-width: 100%;
   border-left-width: 8px;
   border-right-width: 8px;
   border-style: solid;
@@ -176,4 +176,11 @@ display:none !important;
 .chart
 {
   display: flex
+}
+
+.LSImageLink
+{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
