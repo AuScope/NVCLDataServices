@@ -159,7 +159,113 @@
 
 		function hex(x) {
   			return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
- 		}
+		}
+		var histograms = [];
+		var imgs = [];
+		var imgsstillloading =0;
+
+		function applyHistotrim(startNo,endNo)
+		{
+			var fullhisto=[];
+			var total=0;
+			var trimpercent =1;
+			var minstretch=0,maxstretch=255;
+			for(i=0;i<256;++i) {
+				fullhisto[i]=0;
+				for (var j=startNo;j<=endNo;j++) {
+					fullhisto[i] += histograms[j][i];
+					total += histograms[j][i];
+				}
+			}
+			var mintrim = trimpercent * total/100;
+			var maxtrim = mintrim;
+			for (var i = 0; i < 256; i++)
+			{
+				mintrim -= fullhisto[i];
+				if (mintrim<=0) 
+				{
+					minstretch = i;
+					break;
+				}
+			}
+			for (var i = 255; i > 0; i--)
+			{
+				maxtrim -= fullhisto[i];
+				if (maxtrim <= 0)
+				{
+					maxstretch = i;
+					break;
+				}
+			}
+
+			var tempCanvas = document.createElement("canvas");
+			var context = tempCanvas.getContext("2d");
+			for (var i=startNo+4; i<=endNo-4;i++){
+				var natheight = imgs[i].prop('naturalHeight');
+				var natwidth = imgs[i].prop('naturalWidth');
+				tempCanvas.width = natwidth;
+    			tempCanvas.height = natheight;
+				context.drawImage(imgs[i][0], 0, 0);
+				imgdata = context.getImageData(0, 0, natwidth, natheight);
+				data = imgdata.data;
+				var x, y, idx, val;
+				for(y=0,idx=0;y<natheight*4;++y) {
+        			for(x=0;x<natwidth*4;++x,idx++) {
+						if (idx % 4 ==3) continue;
+						// figure out which bin it is in
+						val = Math.floor(((data[idx] -minstretch) * 255.0) / (maxstretch-minstretch));
+						if (val < 0) val = 0;
+						if (val > 255) val = 255;
+						data[idx] = val;
+        			}
+				}
+				context.putImageData(imgdata, 0, 0);
+				var imgurl = tempCanvas.toDataURL("image/png");
+				imgs[i].prop('origsrc', imgs[i][0].src);
+				imgs[i][0].src = imgurl;
+				imgs[i].removeAttr('hidden');
+			}
+		}
+
+		function switchLSImagesBacktoOrig()
+		{
+			for (i=0;i<imgs.length;i++)
+			{
+				if (imgs[i] !== undefined) {
+					imgs[i].prop('adjustedsrc', imgs[i][0].src);
+					imgs[i][0].src = imgs[i].prop('origsrc');
+				}
+			}
+		}
+
+		 function LSImageLoaded(sampleNo,startNo,EndNo,img)
+		 {
+			var natheight =img.prop('naturalHeight');
+			var natwidth = img.prop('naturalWidth');
+			if (natwidth==0 || natheight==0) {setTimeout(LSImageLoaded,500,sampleNo,startNo,EndNo,img); return;}
+			var i, x, y, idx, val;
+			var hist = [];
+    		// initialize the histogram
+    		for(i=0;i<256;++i)
+				hist[i] = 0;
+			histograms[sampleNo] = hist;
+			imgs[sampleNo] = img;
+			var tempCanvas = document.createElement("canvas");
+			var context = tempCanvas.getContext("2d");
+			tempCanvas.width = natwidth;
+    		tempCanvas.height = natheight;
+			context.drawImage(img[ 0 ], 0, 0);
+			data = context.getImageData(0, 0, natwidth, natheight).data;
+			for(y=0,idx=0;y<natheight*4;++y) {
+        		for(x=0;x<natwidth*4;++x,idx++) {
+					if (idx % 4 ==3) continue;
+					val = data[idx];
+					++hist[val];
+        		}
+    		}
+			imgsstillloading-=1;
+			if (imgsstillloading==0) applyHistotrim(startNo,EndNo);
+		}
 
 		function drawgraph(k, wavelengths, startSampleNo, endSampleNo, width, height,counter) {
 			return function (result) {
@@ -272,12 +378,20 @@
 			var specids = specidsStr.split(",");
 			var imgslices = $('<div id="imgSlicesRotatedDiv'+startSampleNo+'" class="imgSlicesRotatedDiv"></div>');
 			var imglink = $('<a href="./mosaic.html?logid='+LSimageID+'&startsampleno='+Math.max((startSampleNo - 2), 0)+'&endsampleno='+(endSampleNo+2)+'&width=1" target="_blank" class="LSImageLink" ></a>');
-			for (var i=Math.max(startSampleNo-1,0);i<=Math.min(endSampleNo+1,maxsampleno);i++) {
-				var bordercolor = '#FFFFFF';
-				if (i==startSampleNo) bordercolor = '#00cc00';
-				else if (i==startSampleNo+1) bordercolor = '#0066b3';
-				else if (i==startSampleNo+2) bordercolor = '#ff8000';
-				imglink.append('<img class="LSImageSlice" style="border-color:'+bordercolor+';" src="Display_Tray_Thumb.html?logid='+LSimageID+'&sampleno='+i +'" >');
+			var extraimagesForHistogram = 5;
+			imgsstillloading = Math.min(endSampleNo+extraimagesForHistogram,maxsampleno) - Math.max(startSampleNo-extraimagesForHistogram,0)+1;
+			for (var i=Math.max(startSampleNo-extraimagesForHistogram,0);i<=Math.min(endSampleNo+extraimagesForHistogram,maxsampleno);i++) {
+				var LSimg = $("<img>")
+				if (i==startSampleNo) LSimg.css('border-color', '#00cc00');
+				else if (i==startSampleNo+1) LSimg.css('border-color', '#0066b3');
+				else if (i==startSampleNo+2) LSimg.css('border-color', '#ff8000');
+				else LSimg.css('border-color', '#ffffff');
+				LSimg.attr('class','LSImageSlice');
+				LSimg.attr('hidden','true');
+				LSimg.attr('src', 'Display_Tray_Thumb.html?logid='+LSimageID+'&sampleno='+i);//+'&uncorrected=yes');
+				if (i < (startSampleNo -1) || i > (endSampleNo+1)) LSimg.attr('class','hiddenLSImage');
+				LSimg.on('load',LSImageLoaded(i,Math.max(startSampleNo-extraimagesForHistogram,0),Math.min(endSampleNo+extraimagesForHistogram,maxsampleno),LSimg))
+				imglink.append(LSimg);
 			}
 			imgslices.append(imglink);
 			$('#plotspectra' + startSampleNo).append(imgslices);

@@ -184,3 +184,8 @@ display:none !important;
   flex-direction: column;
   align-items: center;
 }
+
+.hiddenLSImage
+{
+  width: 0px;
+}
