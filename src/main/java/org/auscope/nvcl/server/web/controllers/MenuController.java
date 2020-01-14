@@ -535,10 +535,10 @@ public class MenuController {
 						int g = (int) ((data[width*y+x] >> 8) & 0xff);   //shift 2nd byte to first byte location
 						int b = (int) (data[width*y+x] & 0xff);          //it is already at first byte location
 						
-						r = (int) histogramLUT[r];
-						g = (int) histogramLUT[g];
-						b = (int) histogramLUT[b];
-						data[width*y+x] = (r << 16) | (g << 8) | b;
+						r = 0xff & (int) histogramLUT[r];
+						g = 0xff & (int) histogramLUT[g];
+						b = 0xff & (int) histogramLUT[b];
+						data[width*y+x] = 0xff000000 | (r << 16) | (g << 8) | b;
 
 					}
 				}
