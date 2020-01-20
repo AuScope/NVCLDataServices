@@ -21,3 +21,11 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/TEST-*.xml'
     tasks: 'build'
+
+- task: AzureRmWebAppDeployment@4
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Visual Studio Professional with MSDN($(Azure_Subsciption_ID))'
+    appType: 'webApp'
+    WebAppName: 'geoservertest'
+    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.war'
