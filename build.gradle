@@ -5,12 +5,11 @@ plugins {
 }
 
 
-def OTNUser = hasProperty('OTNUsername') ? OTNUsername : System.getenv('OTNUsername')
-def OTNPass = hasProperty('OTNPassword') ? OTNPassword : System.getenv('OTNPassword')
+def OTNUser = hasProperty('OTNUSERNAME') ? OTNUSERNAME : System.getenv('OTNUSERNAME')
+def OTNPass = hasProperty('OTNPASSWORD') ? OTNPASSWORD : System.getenv('OTNPASSWORD')
 
-
-assert OTNUser: "Set the property 'OTNUsername' in your your gradle.properties or system environment to download the OJDBC jar from Oracle's secured repository"
-assert OTNPass: "Set the property 'OTNPassword' in your your gradle.properties or system environment to download the OJDBC jar from Oracle's secured repository"
+assert OTNUser: "Set the property 'OTNUSERNAME' in your your gradle.properties or system environment to download the OJDBC jar from Oracle's secured repository."
+assert OTNPass: "Set the property 'OTNPASSWORD' in your your gradle.properties or system environment to download the OJDBC jar from Oracle's secured repository."
 
 
 
