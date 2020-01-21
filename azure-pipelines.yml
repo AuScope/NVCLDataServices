@@ -19,12 +19,8 @@ steps:
     jdkVersionOption: '1.8'
     gradleOptions: '-Xmx3072m'
     sonarQubeRunAnalysis: false
-
-- task: AzureRmWebAppDeployment@4
+- task: PublishPipelineArtifact@1
   inputs:
-    ConnectionType: 'AzureRM'
-    azureSubscription: '$(AzureSub)'
-    appType: 'webApp'
-    WebAppName: 'nvcldataservices'
-    VirtualApplication: 'NVCLDataServices'
-    packageForLinux: '$(System.DefaultWorkingDirectory)/**/NVCLDataServices.war'
+    targetPath: '$(Pipeline.Workspace)/**/NVCLDataServices.war'
+    artifact: 'NVCLDataServices.war'
+    publishLocation: 'pipeline'
