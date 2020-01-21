@@ -20,18 +20,8 @@ steps:
     gradleOptions: '-Xmx3072m'
     sonarQubeRunAnalysis: false
 
-- task: CmdLine@2
-  inputs:
-    script: |
-      echo Write your commands here
-      
-      ls
-      
-      ls ./build
-      
-      ls ./build/libs
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: '$(Pipeline.Workspace)/build/libs/'
+    targetPath: './build/libs/NVCLDataServices.war'
     artifact: 'NVCLDataServices.war'
     publishLocation: 'pipeline'
