@@ -26,4 +26,7 @@ steps:
     azureSubscription: '$(azureSubscription)'
     appType: 'webApp'
     WebAppName: 'geoservertest'
+    deployToSlotOrASE: true
+    ResourceGroupName: 'geoserver-test'
+    SlotName: 'production'
     packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.war'
