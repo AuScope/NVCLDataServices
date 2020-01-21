@@ -10,7 +10,12 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-
+- task: CmdLine@2
+  inputs:
+    script: |
+      echo Write your commands here
+      
+      env
 
 
 - task: Gradle@2
