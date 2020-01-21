@@ -23,7 +23,7 @@ steps:
 - task: AzureRmWebAppDeployment@4
   inputs:
     ConnectionType: 'AzureRM'
-    azureSubscription: $(azureSubscription)
+    azureSubscription: '$(AzureSub)'
     appType: 'webApp'
     WebAppName: 'geoservertest'
     deployToSlotOrASE: true
