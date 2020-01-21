@@ -19,6 +19,17 @@ steps:
     jdkVersionOption: '1.8'
     gradleOptions: '-Xmx3072m'
     sonarQubeRunAnalysis: false
+
+- task: CmdLine@2
+  inputs:
+    script: |
+      echo Write your commands here
+      
+      ls
+      
+      ls ./build
+      
+      ls ./build/lib
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: '$(Pipeline.Workspace)/build/libs/'
