@@ -29,7 +29,7 @@ steps:
       
       ls ./build
       
-      ls ./build/lib
+      ls ./build/libs
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: '$(Pipeline.Workspace)/build/libs/'
