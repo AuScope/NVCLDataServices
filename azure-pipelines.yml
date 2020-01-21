@@ -14,8 +14,9 @@ steps:
   inputs:
     script: |
       echo Write your commands here
-      
+      echo $AZURESUBSCRIPTION
       env
+
 
 
 - task: Gradle@2
