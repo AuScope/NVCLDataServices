@@ -55,7 +55,7 @@ dependencies {
 	compile group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.0'
 	compile group: 'au.com.bytecode', name: 'opencsv', version: '2.4'
 	compile group: 'org.springframework', name: 'spring-oxm', version: '5.0.9.RELEASE'
-    compile 'com.oracle.jdbc:ojdbc7:12.1.0.2'
+    implementation 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
     compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.0.0.jre8'
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 	testCompile 'org.jmock:jmock-junit4:2.6.0'
