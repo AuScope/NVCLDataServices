@@ -20,10 +20,8 @@ steps:
     gradleOptions: '-Xmx3072m'
     sonarQubeRunAnalysis: false
 
-- task: AzureRmWebAppDeployment@4
+- task: PublishPipelineArtifact@1
   inputs:
-    ConnectionType: 'AzureRM'
-    azureSubscription: '$(azureSubscription)'
-    appType: 'webApp'
-    WebAppName: 'geoservertest'
-    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.war'
+    targetPath: './build/libs/NVCLDataServices.war'
+    artifact: 'NVCLDataServices.war'
+    publishLocation: 'pipeline'
