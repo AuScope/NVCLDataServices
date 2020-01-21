@@ -25,8 +25,6 @@ steps:
     ConnectionType: 'AzureRM'
     azureSubscription: '$(AzureSub)'
     appType: 'webApp'
-    WebAppName: 'geoservertest'
-    deployToSlotOrASE: true
-    ResourceGroupName: 'geoserver-test'
-    SlotName: 'production'
+    WebAppName: 'nvcldataservices'
+    VirtualApplication: 'NVCLDataServices'
     packageForLinux: '$(System.DefaultWorkingDirectory)/**/NVCLDataServices.war'
