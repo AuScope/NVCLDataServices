@@ -21,6 +21,6 @@ steps:
     sonarQubeRunAnalysis: false
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: '$(Pipeline.Workspace)/**/NVCLDataServices.war'
+    targetPath: '$(Pipeline.Workspace)/build/libs/NVCLDataServices.war'
     artifact: 'NVCLDataServices.war'
     publishLocation: 'pipeline'
