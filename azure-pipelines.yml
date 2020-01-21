@@ -29,4 +29,4 @@ steps:
     deployToSlotOrASE: true
     ResourceGroupName: 'geoserver-test'
     SlotName: 'production'
-    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.war'
+    packageForLinux: '$(System.DefaultWorkingDirectory)/**/NVCLDataServices.war'
