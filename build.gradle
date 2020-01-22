@@ -16,7 +16,7 @@ assert OTNPass: "Set the property 'OTNPASSWORD' in your your gradle.properties o
 apply plugin: 'io.spring.dependency-management'
 
 bootWar {
-    baseName = 'NVCLDataServices'
+    archiveBaseName = 'NVCLDataServices'
     launchScript()
     from ('config/application.properties') {
         into 'WEB-INF/classes/'
@@ -41,25 +41,25 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile("org.springframework.boot:spring-boot-starter-web")
-	compile("org.springframework.boot:spring-boot-starter-activemq")
-	compile("org.springframework.boot:spring-boot-starter-jdbc")
-	compile("org.springframework.boot:spring-boot-starter-quartz")
-    compile("org.springframework.boot:spring-boot-starter-mail")
-    compile("org.springframework.boot:spring-boot-starter-thymeleaf")
-    compile("org.apache.activemq:activemq-broker")
-    compile group: 'org.apache.activemq', name:'activemq-kahadb-store'
-	compile group: 'commons-io', name: 'commons-io', version: '2.6'
-	compile group: 'org.jfree', name: 'jfreechart', version: '1.0.19'
-	compile group: 'com.drewnoakes', name: 'metadata-extractor', version: '2.10.0'
-	compile group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.0'
-	compile group: 'au.com.bytecode', name: 'opencsv', version: '2.4'
-	compile group: 'org.springframework', name: 'spring-oxm', version: '5.0.9.RELEASE'
+    implementation "org.springframework.boot:spring-boot-starter-web"
+	implementation "org.springframework.boot:spring-boot-starter-activemq"
+	implementation "org.springframework.boot:spring-boot-starter-jdbc"
+	implementation "org.springframework.boot:spring-boot-starter-quartz"
+    implementation "org.springframework.boot:spring-boot-starter-mail"
+    implementation "org.springframework.boot:spring-boot-starter-thymeleaf"
+    implementation "org.apache.activemq:activemq-broker"
+    implementation 'org.apache.activemq:activemq-kahadb-store'
+	implementation 'commons-io:commons-io:2.6'
+	implementation 'org.jfree:jfreechart:1.0.19'
+	implementation 'com.drewnoakes:metadata-extractor:2.10.0'
+	implementation 'org.apache.commons:commons-dbcp2'
+	implementation 'au.com.bytecode:opencsv:2.4'
+	implementation 'org.springframework:spring-oxm'
     implementation 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
-    compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.0.0.jre8'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc'
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
-	testCompile 'org.jmock:jmock-junit4:2.6.0'
-	testCompile 'org.jmock:jmock-legacy:2.6.0'
-    testCompile("junit:junit")
+	testImplementation 'org.jmock:jmock-junit4:2.6.0'
+	testImplementation 'org.jmock:jmock-legacy:2.6.0'
+    testImplementation "junit:junit"
 }
 
