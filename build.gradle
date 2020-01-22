@@ -28,12 +28,12 @@ repositories {
     
     maven {
 
-       url "https://www.oracle.com/content/secure/maven/content"
+        url "https://maven.oracle.com"
 
-       credentials {
-         username = OTNUser
-         password = OTNPass
-       }
+        credentials {
+            username = OTNUser
+            password = OTNPass
+        }
     }
 }
 
