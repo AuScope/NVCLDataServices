@@ -23,5 +23,5 @@ steps:
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: './build/libs/NVCLDataServices.war'
-    artifact: 'NVCLDataServices.war'
+    artifact: 'bootWARPackage'
     publishLocation: 'pipeline'
