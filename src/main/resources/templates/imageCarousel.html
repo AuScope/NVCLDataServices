@@ -200,9 +200,10 @@
 
 			var tempCanvas = document.createElement("canvas");
 			var context = tempCanvas.getContext("2d");
-			for (var i=startNo+4; i<=endNo-4;i++){
+			for (var i=startNo; i<=endNo;i++){
 				var natheight = imgs[i].prop('naturalHeight');
 				var natwidth = imgs[i].prop('naturalWidth');
+				if (imgs[i].hasClass('hiddenLSImage')) continue;
 				tempCanvas.width = natwidth;
     			tempCanvas.height = natheight;
 				context.drawImage(imgs[i][0], 0, 0);
