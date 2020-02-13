@@ -51,7 +51,7 @@ dependencies {
     implementation 'org.apache.activemq:activemq-kahadb-store'
 	implementation 'commons-io:commons-io:2.6'
 	implementation 'org.jfree:jfreechart:1.0.19'
-	implementation 'com.drewnoakes:metadata-extractor:2.10.0'
+	implementation 'com.drewnoakes:metadata-extractor:2.13.0'
 	implementation 'org.apache.commons:commons-dbcp2'
 	implementation 'au.com.bytecode:opencsv:2.4'
 	implementation 'org.springframework:spring-oxm'
