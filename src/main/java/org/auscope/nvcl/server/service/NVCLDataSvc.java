@@ -1,6 +1,7 @@
 package org.auscope.nvcl.server.service;
 
 import java.awt.Color;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -946,8 +947,8 @@ public class NVCLDataSvc {
 
 		Metadata metadata;
 		try {
-			metadata = ImageMetadataReader.readMetadata(imagedata.getImgData().getBinaryStream());
-		} catch (ImageProcessingException | IOException | SQLException e1) {
+			metadata = ImageMetadataReader.readMetadata(new ByteArrayInputStream(imagedata.getImgData()));
+		} catch (ImageProcessingException | IOException e1) {
 			return null;
 		}
 		

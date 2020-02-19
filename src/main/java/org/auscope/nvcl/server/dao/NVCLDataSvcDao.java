@@ -362,8 +362,8 @@ public class NVCLDataSvcDao {
             public ImageDataVo mapRow(ResultSet rs, int rowNum)
                     throws SQLException {
                 ImageDataVo imageDataVo = new ImageDataVo();
-                imageDataVo.setImgData(rs.getBlob("imagedata"));
-                imageDataVo.setImgHistogramLUT(rs.getBlob("imghistogram"));
+                imageDataVo.setImgData(rs.getBlob("imagedata").getBytes(1, (int)rs.getBlob("imagedata").length()));
+                if (rs.getBlob("imghistogram")!=null) imageDataVo.setImgHistogramLUT(rs.getBlob("imghistogram").getBytes(1, (int)rs.getBlob("imghistogram").length()));
                 return imageDataVo;
             }
         };

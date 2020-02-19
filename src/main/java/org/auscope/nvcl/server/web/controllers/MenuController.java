@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.Menu;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,7 +16,6 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -515,14 +515,14 @@ public class MenuController {
 
 		ImageDataVo imagedata = nvclDataSvc.getImageData(logId, sampleNo);
 		logger.debug("processing the blob data...");
-		Blob imgData = null;
-		if ((Utility.stringIsBlankorNull(uncorrected) || !uncorrected.equals("yes")) && imagedata.getImgHistogramLUT() != null && imagedata.getImgHistogramLUT().length()==256){
+		byte[] imgData = null;
+		if ((Utility.stringIsBlankorNull(uncorrected) || !uncorrected.equals("yes")) && imagedata.getImgHistogramLUT() != null && imagedata.getImgHistogramLUT().length==256){
 			try {
-				byte[] histogramLUT = imagedata.getImgHistogramLUT().getBytes(1, 256);
+				byte[] histogramLUT = imagedata.getImgHistogramLUT();
 
 				if (Utility.TSGDbaseValidateImageHistogramLUT(histogramLUT,256) != true) throw new Exception("Invalid histogram Lookup table");
 
-				BufferedImage img = ImageIO.read(imagedata.getImgData().getBinaryStream());
+				BufferedImage img = ImageIO.read(new ByteArrayInputStream(imagedata.getImgData()));
 				int width = img.getWidth(), height = img.getHeight();
 				int[] data = new int[width * height];
 				img.getRGB(0, 0, width, height, data, 0, width);
@@ -555,22 +555,22 @@ public class MenuController {
 				imgData = imagedata.getImgData();
 				response.setContentType("image/jpeg");
 
-				int imgLength = (int) imgData.length();
+				int imgLength = (int) imgData.length;
 		
 				response.setContentLength(imgLength);
 		
-				response.getOutputStream().write(imgData.getBytes(1, imgLength));
+				response.getOutputStream().write(imgData);
 			}
 		}
 		else {
 			imgData = imagedata.getImgData();
 			response.setContentType("image/jpeg");
 
-			int imgLength = (int) imgData.length();
+			int imgLength = (int) imgData.length;
 	
 			response.setContentLength(imgLength);
 	
-			response.getOutputStream().write(imgData.getBytes(1, imgLength));
+			response.getOutputStream().write(imgData);
 		}
 
 		return null;

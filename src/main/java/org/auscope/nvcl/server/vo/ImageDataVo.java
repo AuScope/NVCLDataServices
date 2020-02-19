@@ -1,12 +1,11 @@
 package org.auscope.nvcl.server.vo;
 
-import java.sql.Blob;
 
 public class ImageDataVo {
 
     private int sampleNo;
-    private Blob imgData;
-    private Blob imgHistogramLUT;
+    private byte[] imgData;
+    private byte[] imgHistogramLUT;
 
     public int getSampleNo() {
         return this.sampleNo;
@@ -16,19 +15,19 @@ public class ImageDataVo {
         this.sampleNo = sampleNo;
     }
 
-    public Blob getImgData() {
+    public byte[] getImgData() {
         return this.imgData;
     }
 
-    public void setImgData(Blob imgData) {
+    public void setImgData(byte[] imgData) {
         this.imgData = imgData;
     }
 
-    public Blob getImgHistogramLUT() {
+    public byte[] getImgHistogramLUT() {
         return imgHistogramLUT;
     }
 
-    public void setImgHistogramLUT(Blob imgHistogramLUT) {
+    public void setImgHistogramLUT(byte[] imgHistogramLUT) {
         this.imgHistogramLUT = imgHistogramLUT;
     }
 
