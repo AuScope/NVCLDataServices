@@ -362,8 +362,10 @@ public class NVCLDataSvcDao {
             public ImageDataVo mapRow(ResultSet rs, int rowNum)
                     throws SQLException {
                 ImageDataVo imageDataVo = new ImageDataVo();
-                imageDataVo.setImgData(rs.getBlob("imagedata").getBytes(1, (int)rs.getBlob("imagedata").length()));
-                if (rs.getBlob("imghistogram")!=null) imageDataVo.setImgHistogramLUT(rs.getBlob("imghistogram").getBytes(1, (int)rs.getBlob("imghistogram").length()));
+                Blob imgBlob = rs.getBlob("imagedata");
+                if (!rs.wasNull() && imgBlob!=null) imageDataVo.setImgData(imgBlob.getBytes(1, (int)imgBlob.length()));
+                Blob LUTBlob = rs.getBlob("imghistogram");
+                if (!rs.wasNull() && LUTBlob!=null) imageDataVo.setImgHistogramLUT(LUTBlob.getBytes(1, (int)LUTBlob.length()));
                 return imageDataVo;
             }
         };
@@ -466,8 +468,9 @@ public class NVCLDataSvcDao {
 			public SpectralDataVo mapRow(ResultSet rs, int rowNum)
 			throws SQLException {
 				SpectralDataVo spectralDataVo = new SpectralDataVo();
-				spectralDataVo.setSampleNo(rs.getInt("samplenumber"));
-				spectralDataVo.setSpectraldata(rs.getBlob("spectralvalues").getBytes(1,(int)rs.getBlob("spectralvalues").length()));
+                spectralDataVo.setSampleNo(rs.getInt("samplenumber"));
+                Blob specdataBlob = rs.getBlob("spectralvalues");
+				if (!rs.wasNull() && specdataBlob !=null) spectralDataVo.setSpectraldata(specdataBlob.getBytes(1,(int)specdataBlob.length()));
 				return spectralDataVo;
 			}
 		};
@@ -486,21 +489,21 @@ public class NVCLDataSvcDao {
 				spectralLog.setScript(rs.getString("customscript"));
 				
 				Blob specblob = rs.getBlob("SPECTRALSAMPLINGPOINTS");
-				if (!rs.wasNull()){
+				if (!rs.wasNull() && specblob!=null){
 					FloatBuffer floatbuf = ByteBuffer.wrap( specblob.getBytes(1,(int)specblob.length())).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
 					float[] floatArray = new float[floatbuf.limit()];
 					floatbuf.get(floatArray);
 					spectralLog.setWavelengths(floatArray);
 				}
 				Blob fwhmblob = rs.getBlob("fwhm");
-				if (!rs.wasNull()){
+				if (!rs.wasNull() && fwhmblob!=null){
 					FloatBuffer fwhmfloatbuf = ByteBuffer.wrap( fwhmblob.getBytes(1,(int)fwhmblob.length())).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
 					float[] fwhmfloatArray = new float[fwhmfloatbuf.limit()];
 					fwhmfloatbuf.get(fwhmfloatArray);
 					spectralLog.setFwhm(fwhmfloatArray);
 				}
 				Blob tirqblob = rs.getBlob("tirq");
-				if (!rs.wasNull()){
+				if (!rs.wasNull() && tirqblob!=null){
 					FloatBuffer tirqfloatbuf = ByteBuffer.wrap( tirqblob.getBytes(1,(int)tirqblob.length())).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
 					float[] tirqfloatArray = new float[tirqfloatbuf.limit()];
 					tirqfloatbuf.get(tirqfloatArray);
@@ -541,8 +544,9 @@ public class NVCLDataSvcDao {
 			public ProfDataVo mapRow(ResultSet rs, int rowNum)
 			throws SQLException {
 				ProfDataVo profDataVo = new ProfDataVo();
-				profDataVo.setSampleNo(rs.getInt("samplenumber"));
-				profDataVo.setProfdata(rs.getBlob("PROFILOMETERVALUES").getBytes(1,(int)rs.getBlob("PROFILOMETERVALUES").length()));
+                profDataVo.setSampleNo(rs.getInt("samplenumber"));
+                Blob profdataBlob = rs.getBlob("PROFILOMETERVALUES");
+				if (!rs.wasNull() && profdataBlob!=null) profDataVo.setProfdata(profdataBlob.getBytes(1,(int)profdataBlob.length()));
 				return profDataVo;
 			}
 		};
