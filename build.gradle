@@ -37,8 +37,8 @@ repositories {
     }
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 dependencies {
     implementation "org.springframework.boot:spring-boot-starter-web"
@@ -57,6 +57,10 @@ dependencies {
 	implementation 'org.springframework:spring-oxm'
     implementation 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
     implementation 'com.microsoft.sqlserver:mssql-jdbc'
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+	implementation 'com.sun.xml.bind:jaxb-core:2.3.0'
+	implementation 'com.sun.xml.bind:jaxb-impl:2.3.1'
+	implementation 'javax.annotation:javax.annotation-api'
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 	testImplementation 'org.jmock:jmock-junit4:2.6.0'
 	testImplementation 'org.jmock:jmock-legacy:2.6.0'
