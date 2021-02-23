@@ -82,6 +82,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -512,8 +513,21 @@ public class MenuController {
 			String errMsg = "sampleno must be a non-negative integer.";
 			return new ModelAndView("displaytraythumbusage", "errmsg", errMsg);
 		}
-
-		ImageDataVo imagedata = nvclDataSvc.getImageData(logId, sampleNo);
+		ImageDataVo imagedata = null;
+        try {
+            imagedata = nvclDataSvc.getImageData(logId, sampleNo);
+        }
+        catch (EmptyResultDataAccessException ex )
+        {
+            logger.warn("No images found for logid : " + logId);
+			String errMsg = "No images found for logid : " + logId;
+			return new ModelAndView("displaytraythumbusage", "errmsg", errMsg);
+        }
+		if (imagedata ==null ){
+			logger.warn("No images found for logid : " + logId);
+			String errMsg = "No images found for logid : " + logId;
+			return new ModelAndView("displaytraythumbusage", "errmsg", errMsg);
+		}
 		logger.debug("processing the blob data...");
 		byte[] imgData = null;
 		if ((Utility.stringIsBlankorNull(uncorrected) || !uncorrected.equals("yes")) && imagedata.getImgHistogramLUT() != null && imagedata.getImgHistogramLUT().length==256){
