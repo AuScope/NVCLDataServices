@@ -55,6 +55,7 @@ import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
 import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetVo;
+import org.auscope.nvcl.server.vo.DepthRangeVo;
 import org.auscope.nvcl.server.vo.DomainDataCollectionVo;
 import org.auscope.nvcl.server.vo.DomainDataVo;
 import org.auscope.nvcl.server.vo.FeatureCollectionVo;
@@ -181,7 +182,7 @@ public class MenuController {
 	 * @throws ParserConfigurationException
 	 * @throws TransformerException
 	 */
-	@RequestMapping("/getDatasetCollection.html")
+	@RequestMapping(value = "/getDatasetCollection.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView datasetCollectionHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "holeidentifier") String holeIdentifier,
 			@RequestParam(required = false, value = "datasetid") String datasetid,
@@ -205,6 +206,7 @@ public class MenuController {
 		if (!headersonly.equals("yes")) {
 			for (Iterator<DatasetVo> it2 = datasetList.getDatasetCollection().iterator(); it2.hasNext();) {
 				DatasetVo dataset = it2.next();
+				dataset.setDepthRange(nvclDataSvc.getDatasetDepthRange(dataset.getDatasetID()));
 				dataset.setSpectralLogCollection(nvclDataSvc.getSpectralLogCollection(dataset.getDatasetID()));
 				dataset.setImageLogCollection(nvclDataSvc.getImageLogCollection(dataset.getDatasetID()));
 				dataset.setLogCollection(nvclDataSvc.getLogCollection(dataset.getDatasetID()));
@@ -243,7 +245,7 @@ public class MenuController {
 	 * @throws JAXBException
 	 */
 
-	@RequestMapping("/getLogCollection.html")
+	@RequestMapping(value = "/getLogCollection.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView logCollectionHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "datasetid") String datasetId,
 			@RequestParam(required = false, value = "mosaicsvc", defaultValue = "no") String mosaicSvc)
@@ -308,7 +310,7 @@ public class MenuController {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	@RequestMapping("/mosaic*.html")
+	@RequestMapping(value = "/mosaic*.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView mosaicHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId,
 			@RequestParam(required = false, value = "datasetid") String datasetId,
@@ -494,7 +496,7 @@ public class MenuController {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	@RequestMapping("/Display_Tray_Thumb.html")
+	@RequestMapping(value = "/Display_Tray_Thumb.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView TrayThumbHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId,
 			@RequestParam(required = false, value = "sampleno") Integer sampleNo,
@@ -607,7 +609,7 @@ public class MenuController {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	@RequestMapping("/getImageTrayDepth.html")
+	@RequestMapping(value = "/getImageTrayDepth.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView imageTrayDepthHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId) throws ServletException, IOException,
 			SQLException {
@@ -671,7 +673,7 @@ public class MenuController {
 	 * @throws IOException
 	 */
 	@SuppressWarnings("rawtypes")
-	@RequestMapping("/plotscalar.html")
+	@RequestMapping(value = "/plotscalar.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView DisplayChartHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId,
 			@RequestParam(required = false, value = "samplinginterval", defaultValue = "1.0") Float samplingInterval,
@@ -850,7 +852,7 @@ public class MenuController {
 	 * @throws ServletException
 	 * @throws IOException
 	 */
-	@RequestMapping("/plotmultiscalars.html")
+	@RequestMapping(value = "/plotmultiscalars.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView chartHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String[] logIdList,
 			@RequestParam(required = false, value = "samplinginterval", defaultValue = "1.0") Float samplingInterval,
@@ -943,7 +945,7 @@ public class MenuController {
 	 * @throws IOException
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@RequestMapping("/downloadscalars.html")
+	@RequestMapping(value = "/downloadscalars.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView DownloadScalarHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String[] logIdList,
 			@RequestParam(required = false, value = "startdepth") Float startdepth,
@@ -1138,7 +1140,7 @@ public class MenuController {
 		}
 	}
 
-	@RequestMapping("/checkscannedborehlelinks.html")
+	@RequestMapping(value = "/checkscannedborehlelinks.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView ScannedBoreholeLinks(
 			HttpServletRequest request,
 			HttpServletResponse response,
@@ -1403,7 +1405,7 @@ public class MenuController {
 	 * @throws ServletException
 	 * @throws IOException
 	 */
-	@RequestMapping("/downloadtsg.html")
+	@RequestMapping(value = "/downloadtsg.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView downloadtsgHandler(@RequestParam(value = "email", required = false) String email,
 			@RequestParam(value = "datasetid", required = false) String datasetid,
 			@RequestParam(value = "linescan", required = false, defaultValue = "yes") String linescan,
@@ -1535,7 +1537,7 @@ public class MenuController {
 	 * @throws ServletException
 	 * @throws IOException
 	 */
-	@RequestMapping("/checktsgstatus.html")
+	@RequestMapping(value = "/checktsgstatus.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView checkTsgStatusHandler(@RequestParam(value = "email", required = false) String email,
 			@RequestParam(value = "outputformat", required = false) String outputformat,
 			HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -1568,7 +1570,7 @@ public class MenuController {
 	}
 
 	
-	@RequestMapping("/imageCarousel.html")
+	@RequestMapping(value = "/imageCarousel.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView imageCarousel(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String imglogId,
 			@RequestParam(required = false, value = "sampleno", defaultValue = "0") Integer SampleNo)
@@ -1636,7 +1638,7 @@ public class MenuController {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	@RequestMapping("/getspectraldata.html")
+	@RequestMapping(value = "/getspectraldata.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getspectraldata(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "speclogid") List<String> speclogId,
 			@RequestParam(required = false, value = "startsampleno", defaultValue = "0") Integer startsampleNo,
@@ -1715,7 +1717,7 @@ public class MenuController {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	@RequestMapping("/getspectrallogs.html")
+	@RequestMapping(value = "/getspectrallogs.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getspectrallogs(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "datasetid") String datasetId,
 			@RequestParam(required = false, value = "outputformat") String outputformat) throws ServletException,
@@ -1749,7 +1751,7 @@ public class MenuController {
 
 	}
 
-	@RequestMapping("/gettraymap.html")
+	@RequestMapping(value = "/gettraymap.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getTrayMap(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logid,
 			@RequestParam(required = false, value = "trayindex") Integer trayindex) throws ServletException,
@@ -1861,7 +1863,7 @@ public class MenuController {
 		return null;
 	}
 
-	@RequestMapping("/gettraymaphtml.html")
+	@RequestMapping(value = "/gettraymaphtml.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getTrayMapHtml(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logid,
 			@RequestParam(required = false, value = "trayindex") Integer trayindex,
@@ -1897,7 +1899,7 @@ public class MenuController {
 		return new ModelAndView("gettraymaphtml", "msgMap", msgMap);
 	}
 
-	@RequestMapping("/getDownsampledData.html")
+	@RequestMapping(value = "/getDownsampledData.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getDownsampledData(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId,
 			@RequestParam(required = false, value = "interval", defaultValue = "1.0") Float interval,
@@ -1989,7 +1991,7 @@ public class MenuController {
 		return null;
 	}
 
-	@RequestMapping("/trayImageSampleLocate.html")
+	@RequestMapping(value = "/trayImageSampleLocate.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView trayImageSampleLocate(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String imglogId,
 			@RequestParam(required = false, value = "pixelx") Integer pixelx,
@@ -2032,7 +2034,7 @@ public class MenuController {
 		return null;
 	}
 
-	@RequestMapping("/plotspectra.html")
+	@RequestMapping(value = "/plotspectra.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView plotspectra(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "speclogid")  List<String> logId,
 			@RequestParam(required = false, value = "startsampleno", defaultValue = "0") Integer startSampleNo,
@@ -2067,7 +2069,7 @@ public class MenuController {
 		return new ModelAndView("plotspectra", "msgMap", msgMap);
 	}
 
-	@RequestMapping("/getDatasetID.html")
+	@RequestMapping(value = "/getDatasetID.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getDatasetID(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId) throws ServletException, IOException,
 			SQLException, ImageProcessingException {
@@ -2088,7 +2090,7 @@ public class MenuController {
 		return null;
 	}
 
-	@RequestMapping("/getSpectralLogSamplingPoints.html")
+	@RequestMapping(value = "/getSpectralLogSamplingPoints.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getSpectralLogSamplingPoints(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "speclogid") List<String> speclogIds) throws ServletException,
 			IOException, SQLException, ImageProcessingException {
@@ -2127,7 +2129,7 @@ public class MenuController {
 		return null;
 	}
 
-	@RequestMapping("/getSampleNumberFromDepth.html")
+	@RequestMapping(value = "/getSampleNumberFromDepth.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getSampleNumberFromDepth(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "datasetid") String datasetid,
 			@RequestParam(required = false, value = "depth") Float depth) throws ServletException, IOException,
@@ -2153,7 +2155,7 @@ public class MenuController {
 		return null;
 	}
 
-	@RequestMapping("/getAlgorithms.html")
+	@RequestMapping(value = "/getAlgorithms.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getAlgorithms(
 			@RequestParam(required = false, value = "outputformat", defaultValue = "xml") String outputformat,
 			HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -2170,7 +2172,7 @@ public class MenuController {
 		return null;
 	}
 	
-	@RequestMapping("/getClassifications.html")
+	@RequestMapping(value = "/getClassifications.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getClassifications(
 			@RequestParam(required = false, value = "outputformat", defaultValue = "xml") String outputformat,
 			@RequestParam(required = false, value = "logid") String logid,
@@ -2194,6 +2196,30 @@ public class MenuController {
 				this.marshaller.marshal(classcol, new StreamResult(response.getOutputStream()));
 			}
 		}
+		return null;
+	}
+
+	@RequestMapping(value = "/getDatasetDepthRange.html" ,method = { RequestMethod.GET, RequestMethod.POST })
+	public ModelAndView getDatasetDepthRange(
+			@RequestParam(required = false, value = "outputformat", defaultValue = "xml") String outputformat,
+			@RequestParam(required = false, value = "datasetid") String datasetid,
+			HttpServletRequest request, HttpServletResponse response) throws IOException, DataAccessException, SQLException {
+	
+		if (!Utility.isAlphanumericOrHyphen(datasetid) ) {
+			String errMsg = "datasetid required";
+			return new ModelAndView("getDatasetDepthRangeusage", "errmsg", errMsg);
+		}
+
+		DepthRangeVo depthrange = nvclDataSvc.getDatasetDepthRange(datasetid);
+		
+		if (outputformat.equals("json")) {
+			response.setContentType("application/json");
+			new ObjectMapper().writeValue(response.getOutputStream(),depthrange);
+		} else {
+			response.setContentType("text/xml");
+			this.marshaller.marshal(depthrange, new StreamResult(response.getOutputStream()));
+		}
+
 		return null;
 	}
 }

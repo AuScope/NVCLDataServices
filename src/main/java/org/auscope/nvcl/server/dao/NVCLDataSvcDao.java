@@ -18,6 +18,7 @@ import org.auscope.nvcl.server.vo.ClassDataVo;
 import org.auscope.nvcl.server.vo.ClassificationVo;
 import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetVo;
+import org.auscope.nvcl.server.vo.DepthRangeVo;
 import org.auscope.nvcl.server.vo.FloatDataVo;
 import org.auscope.nvcl.server.vo.ImageLogCollectionVo;
 import org.auscope.nvcl.server.vo.ImageLogVo;
@@ -217,6 +218,30 @@ public class NVCLDataSvcDao {
         };
 
         return this.jdbcTemplate.queryForObject(sql, mapper, log_id);
+    }
+
+    
+    /**
+     * Retrieves the the domain minimum and maximum depth range.
+     *
+     * @param datasetID
+     *            dataset id as primary key for retrieving the domain depth ranges
+     */
+    public DepthRangeVo getDatasetDepthRange(String dataset_id) throws SQLException,
+            DataAccessException {
+
+        String sql = "SELECT MIN(STARTVALUE), MAX(ENDVALUE) FROM DOMAINLOGDATA WHERE LOG_ID=(SELECT DOMAIN_ID FROM DATASETS WHERE DATASET_ID=?)";
+        RowMapper<DepthRangeVo> mapper = new RowMapper<DepthRangeVo>() {
+            public DepthRangeVo mapRow(ResultSet rs, int rowNum)
+                    throws SQLException, DataAccessException {
+                DepthRangeVo retVal = new DepthRangeVo();
+                retVal.setstart(rs.getFloat(1));
+                retVal.setend(rs.getFloat(2));
+                return retVal;
+            }
+        };
+
+        return this.jdbcTemplate.queryForObject(sql, mapper, dataset_id);
     }
 
     /**

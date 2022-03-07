@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "Dataset")
-@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","trayID","sectionID","domainID","spectralLogCollection","imageLogCollection","logCollection","profLogCollection"})
+@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection"})
 public class DatasetVo {
 
     private String datasetID;
@@ -16,6 +16,7 @@ public class DatasetVo {
 	private ImageLogCollectionVo imageLogCollection;
 	private ProfLogCollectionVo profLogCollection;
 	private LogCollectionVo logCollection;
+	private DepthRangeVo depthRange;
 	private String trayID;
 	private String sectionID;
 	private String domainID;
@@ -96,5 +97,12 @@ public class DatasetVo {
 	@XmlElement(name = "ProfilometerLogs")
 	public void setProfLogCollection(ProfLogCollectionVo profLogCollection) {
 		this.profLogCollection = profLogCollection;
+	}
+	@XmlElement(name = "DepthRange")
+	public DepthRangeVo getDepthRange() {
+		return depthRange;
+	}
+	public void setDepthRange(DepthRangeVo depthRange) {
+		this.depthRange = depthRange;
 	}
 }

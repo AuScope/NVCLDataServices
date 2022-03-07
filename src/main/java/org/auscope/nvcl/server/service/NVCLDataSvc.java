@@ -24,6 +24,7 @@ import org.auscope.nvcl.server.vo.BinnedClassDataVo;
 import org.auscope.nvcl.server.vo.ClassDataVo;
 import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetCollectionVo;
+import org.auscope.nvcl.server.vo.DepthRangeVo;
 import org.auscope.nvcl.server.vo.DomainDataCollectionVo;
 import org.auscope.nvcl.server.vo.FloatDataVo;
 import org.auscope.nvcl.server.vo.ImageDataVo;
@@ -183,6 +184,20 @@ public class NVCLDataSvc {
             throws DataAccessException, SQLException {
         logger.debug("getDomainChartDepthRange(" + log_id + ") start ...");
         return nvclDataSvcDao.getDomainChartDepthRange(log_id);
+    }
+
+        /**
+     * Getting the Domain depth range for a dataset id
+     *
+     * @param dataset_id
+     *            unique log id for retrieving detail from logs table
+     * @return DomainDepthRangeVo the log details value object that consists of
+     *         start start and end range measures.
+     */
+    public DepthRangeVo getDatasetDepthRange(String dataset_id)
+            throws DataAccessException, SQLException {
+        logger.debug("getDomainChartDepthRange(" + dataset_id + ") start ...");
+        return nvclDataSvcDao.getDatasetDepthRange(dataset_id);
     }
 
     /**

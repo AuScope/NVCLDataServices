@@ -274,7 +274,8 @@ public class Application {
             org.auscope.nvcl.server.vo.SpectralLogCollectionVo.class,
             org.auscope.nvcl.server.vo.ProfLogCollectionVo.class,
             org.auscope.nvcl.server.vo.AlgorithmCollectionVo.class,
-            org.auscope.nvcl.server.vo.ClassificationsCollectionVo.class
+            org.auscope.nvcl.server.vo.ClassificationsCollectionVo.class,
+            org.auscope.nvcl.server.vo.DepthRangeVo.class
         });
 
         return marshaller;
