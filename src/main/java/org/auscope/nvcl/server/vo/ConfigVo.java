@@ -3,6 +3,8 @@ package org.auscope.nvcl.server.vo;
 import org.springframework.stereotype.*;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.validation.constraints.NotBlank;
 
@@ -46,11 +48,26 @@ public class ConfigVo {
 		private Boolean sendEmails;
 		@Value("${msgTimetoLiveDays}")
 		private int msgTimetoLiveDays;
+		@Value("${enableAutoCacheBuilder:false}")
+		private Boolean autoCacheBuilder;
+		
+		@Value("${enableAggressiveCacheClearing:false}")
+		private Boolean aggressiveCacheClearing;
+		
+		private List<String> autoCacheFailedDatasetsList= new ArrayList<String>();
 		
 		public String getJdbcDbType() {
 		  return jdbc_dbtype;
 		}
 		 
+		public List<String> getAutoCacheFailedDatasetsList() {
+			return autoCacheFailedDatasetsList;
+		}
+
+		public void addItemtoAutoCacheFailedDatasetsList(String failedDataset) {
+			this.autoCacheFailedDatasetsList.add(failedDataset);
+		}
+
 		public void setJdbcDbType(String jdbcDbType) {
 			this.jdbc_dbtype = jdbcDbType;
 		}
@@ -183,6 +200,22 @@ public class ConfigVo {
 
 		public void setMsgTimetoLiveDays(int msgTimetoLiveDays) {
 			this.msgTimetoLiveDays = msgTimetoLiveDays;
+		}
+
+		public Boolean getAutoCacheBuilder() {
+			return autoCacheBuilder;
+		}
+
+		public void setAutoCacheBuilder(Boolean autoCacheBuilder) {
+			this.autoCacheBuilder = autoCacheBuilder;
+		}
+
+		public Boolean getAggressiveCacheClearing() {
+			return aggressiveCacheClearing;
+		}
+
+		public void setAggressiveCacheClearing(Boolean aggressiveCacheClearing) {
+			this.aggressiveCacheClearing = aggressiveCacheClearing;
 		}
 
 }

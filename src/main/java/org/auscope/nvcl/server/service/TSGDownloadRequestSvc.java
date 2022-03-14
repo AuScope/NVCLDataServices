@@ -159,10 +159,22 @@ public class TSGDownloadRequestSvc {
 	        	msg.setText(msgtext);
 	        }
 	        else{
-	        	msg.setSubject("NVCL Download preparation failed");
-	        	msg.setBcc(config.getSysAdminEmail());
-	        	msg.setText("This is an automated email from the National Virtual Core Library Download Service.\n\nYour request for TSG dataset "+messageVo.gettSGDatasetID()+" has failed.  Please reply to this email for support.");
-	        }
+				if (messageVo.getAutoCacheJob()){
+					msg.setSubject("The NVCL DataServices auto caching job tried to generate a dataset but it failed");
+					msg.setTo(config.getSysAdminEmail());
+					msg.setText(
+							"This is an automated email from your NVCL Data Services application.\n\nThe auto caching service tried to generate TSG dataset: "
+									+ messageVo.gettSGDatasetID()
+									+ " but it failed.  Please check the server logs to determine what went wrong.  Each download job should generate a new log file named: "
+									+ messageVo.gettSGDatasetID() + "###.log.  \n\nFor support email cg-admin@csiro.au.");
+					this.config.addItemtoAutoCacheFailedDatasetsList(messageVo.gettSGDatasetID());
+				}
+				else {
+					msg.setSubject("NVCL Download preparation failed");
+					msg.setBcc(config.getSysAdminEmail());
+					msg.setText("This is an automated email from the National Virtual Core Library Download Service.\n\nYour request for TSG dataset "+messageVo.gettSGDatasetID()+" has failed.  Please reply to this email for support.");
+				}
+			}
 	        logger.debug("Sending result email");
 			
 			msg.setFrom(config.getSysAdminEmail());

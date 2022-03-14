@@ -21,13 +21,22 @@ public class MessageVo {
 	// TSG download specific properties:
 	private String scriptFileNameNoExt="";
 	private String tSGDatasetID="";
-	private boolean requestLS; 
+	private boolean requestLS=true; 
 	// WFS download specific properties:
 	private String boreholeid="";
 	private String featureTypeName="";
+	private Boolean autoCacheJob=false;
 
 	public String getJMSTimestamp() {
 		return JMSTimestamp;
+	}
+
+	public Boolean getAutoCacheJob() {
+		return autoCacheJob;
+	}
+
+	public void setAutoCacheJob(Boolean autoCacheJob) {
+		this.autoCacheJob = autoCacheJob;
 	}
 
 	public void setJMSTimestamp(String jMSTimestamp) {

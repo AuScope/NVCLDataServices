@@ -54,6 +54,7 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 		messageVo.settSGDatasetID(mapMessage.getString("tsgdatasetid"));
 		messageVo.setRequestLS(mapMessage.getBoolean("requestLS"));
 		messageVo.setBoreholeid(mapMessage.getString("boreholeid"));
+		messageVo.setAutoCacheJob(mapMessage.getBoolean("autoCacheJob"));
 
 		messageVo.setRequestorEmail(message.getJMSCorrelationID());
 		return messageVo;
@@ -88,6 +89,7 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 		
 		message.setString("requestType", "TSG");
 		message.setString("scriptFileNameNoExt", messageVo.getScriptFileNameNoExt());
+		message.setBoolean("autoCacheJob", messageVo.getAutoCacheJob());
 		
 		
 		return message;

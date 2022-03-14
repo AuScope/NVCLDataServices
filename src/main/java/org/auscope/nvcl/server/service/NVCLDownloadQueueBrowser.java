@@ -3,6 +3,7 @@ package org.auscope.nvcl.server.service;
 import java.sql.Date;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -81,7 +82,14 @@ public class NVCLDownloadQueueBrowser {
 		
 		return msgList;
 	}
+
+	public int getMessageCount(final Destination destination) {
+		// to an Integer because the response of .browse may be null
+		Integer totalPendingMessages = this.jmsTemplate.browse((Queue)destination, (session, browser) -> Collections.list(browser.getEnumeration()).size());
 	
+		return totalPendingMessages == null ? 0 : totalPendingMessages;
+	   }
+
 	//Injects JmsTemplate
 	private JmsTemplate jmsTemplate;
 	public void setJmsTemplate(JmsTemplate jmsTemplate) {
