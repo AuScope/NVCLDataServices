@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -190,7 +191,8 @@ public class MenuController {
 			@RequestParam(required = false, value = "holeidentifier") String holeIdentifier,
 			@RequestParam(required = false, value = "datasetid") String datasetid,
 			@RequestParam(value = "outputformat", required = false) String outputformat,
-			@RequestParam(required = false, value = "headersonly", defaultValue="no") String headersonly) throws ServletException,
+			@RequestParam(required = false, value = "headersonly", defaultValue="no") String headersonly,
+			@RequestParam(required = false, value = "checkdownloadavailable", defaultValue="no") String checkdownloadavailable) throws ServletException,
 			IOException, SQLException, ParserConfigurationException, TransformerException {
 
 		// mandatory field : holeIdentifier - validate if holeIdentifier is null
@@ -214,6 +216,29 @@ public class MenuController {
 				dataset.setImageLogCollection(nvclDataSvc.getImageLogCollection(dataset.getDatasetID()));
 				dataset.setLogCollection(nvclDataSvc.getLogCollection(dataset.getDatasetID()));
 				dataset.setProfLogCollection(nvclDataSvc.getProfLogCollection(dataset.getDatasetID()));
+				File dldir = new File(this.configVo.getDownloadRootPath());
+				if (new File(dldir, dataset.getDatasetID()+".zip").exists())
+				{
+					try {
+						dataset.setDownloadLink(new URI(this.configVo.getDownloadURL()+dataset.getDatasetID()+".zip"));
+					} catch (URISyntaxException e) {
+						logger.error("couldn't generate URI for download link");
+					}
+				}
+			}
+		}
+		else if (checkdownloadavailable.equals("yes")){
+			for (Iterator<DatasetVo> it2 = datasetList.getDatasetCollection().iterator(); it2.hasNext();) {
+				DatasetVo dataset = it2.next();
+				File dldir = new File(this.configVo.getDownloadRootPath());
+				if (new File(dldir, dataset.getDatasetID()+".zip").exists())
+				{
+					try {
+						dataset.setDownloadLink(new URI(this.configVo.getDownloadURL()+dataset.getDatasetID()+".zip"));
+					} catch (URISyntaxException e) {
+						logger.error("couldn't generate URI for download link");
+					}
+				}
 			}
 		}
 		if(outputformat != null && outputformat.equals("json")){
