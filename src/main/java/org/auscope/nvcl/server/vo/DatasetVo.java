@@ -1,11 +1,13 @@
 package org.auscope.nvcl.server.vo;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "Dataset")
-@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection"})
+@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection","downloadLink"})
 public class DatasetVo {
 
     private String datasetID;
@@ -20,6 +22,7 @@ public class DatasetVo {
 	private String trayID;
 	private String sectionID;
 	private String domainID;
+	private URI DownloadLink;
 	
 	public String getBoreholeURI() {
 		return boreholeURI;
@@ -104,5 +107,11 @@ public class DatasetVo {
 	}
 	public void setDepthRange(DepthRangeVo depthRange) {
 		this.depthRange = depthRange;
+	}
+	public URI getDownloadLink() {
+		return DownloadLink;
+	}
+	public void setDownloadLink(URI downloadLink) {
+		DownloadLink = downloadLink;
 	}
 }

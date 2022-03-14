@@ -8,7 +8,8 @@ public class ProfDataCollectionVo {
 
 	private ArrayList<ProfDataVo> ProfDataCollection;
 
-	protected ProfDataCollectionVo() {
+	public ProfDataCollectionVo() {
+		this.ProfDataCollection = new ArrayList<ProfDataVo>();
 	}
 
 	public ProfDataCollectionVo(ArrayList<ProfDataVo> profDataCollection) {

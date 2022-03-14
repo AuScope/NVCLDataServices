@@ -69,6 +69,8 @@ import org.auscope.nvcl.server.vo.LogDetailsVo;
 import org.auscope.nvcl.server.vo.LogExtentsVo;
 import org.auscope.nvcl.server.vo.MaskDataVo;
 import org.auscope.nvcl.server.vo.MessageVo;
+import org.auscope.nvcl.server.vo.ProfDataCollectionVo;
+import org.auscope.nvcl.server.vo.ProfDataVo;
 import org.auscope.nvcl.server.vo.SpectralDataCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralDataVo;
 import org.auscope.nvcl.server.vo.SpectralLogCollectionVo;
@@ -2223,5 +2225,72 @@ public class MenuController {
 
 		return null;
 	}
+
+
+	/**
+	 * calls the dao services in NVCLdatatSvc class to retrieve profilometer data
+	 * from PROFLOGSDATA table
+	 *
+	 * @param request
+	 *            proflogid (String) : log identifier of the prof log
+	 * @param request
+	 *            startsamplenumber (int) : start sample number of the spectra
+	 *            required
+	 * @param request
+	 *            endsamplenumber (int) : end sample number of the spectra
+	 *            required
+	 * @param response
+	 *            respond with the spectral data as binary arrays
+
+	 * @throws ServletException
+	 * @throws IOException
+	 * @throws SQLException
+	 */
+	@RequestMapping(value = "/getprofdata.html" ,method = { RequestMethod.GET, RequestMethod.POST })
+	public ModelAndView getprofdata(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam(required = false, value = "proflogid") String proflogid,
+			@RequestParam(required = false, value = "startsampleno", defaultValue = "0") Integer startsampleNo,
+			@RequestParam(required = false, value = "endsampleno", defaultValue = "999999") Integer endsampleNo,
+			@RequestParam(required = false, value = "outputformat", defaultValue = "binary") String outputformat)
+			throws ServletException, IOException, SQLException {
+		
+		if (!Utility.isAlphanumericOrHyphen(proflogid) ) {
+			String errMsg = "proflogid required";
+			return new ModelAndView("getprofdatausage", "errmsg", errMsg);
+		}
+
+		// validate if sampleno is null or empty or missing, if true, redirect
+		if (startsampleNo == null || startsampleNo < 0) {
+			String errMsg = "startsampleno must be a non-negative integer.";
+			return new ModelAndView("getprofdatausage", "errmsg", errMsg);
+		}
+
+		// validate if sampleno is null or empty or missing, if true, redirect
+		if (endsampleNo == null || endsampleNo < 0) {
+			String errMsg = "endsampleno must be a non-negative integer.";
+			return new ModelAndView("getprofdatausage", "errmsg", errMsg);
+		}
+
+		ProfDataCollectionVo profdata = new ProfDataCollectionVo(); 
+		profdata=nvclDataSvc.getProfData(proflogid, startsampleNo, endsampleNo);
+
+		int totalbytes = 0;
+		if (outputformat.equals("json")){
+			response.setContentType("application/json");
+			new ObjectMapper().writeValue(response.getOutputStream(),profdata.getProfDataCollection());
+		}
+		else {
+			for (Iterator<ProfDataVo> it1 = profdata.getProfDataCollection().iterator(); it1.hasNext();) {
+				ProfDataVo profData = it1.next();
+				response.getOutputStream().write(profData.getProfdata());
+				totalbytes += profData.getProfdata().length;
+			}
+			response.setContentLength(totalbytes);
+			response.setContentType("APPLICATION/OCTET-STREAM");
+		}
+
+		return null;
+	}
+
 }
 
