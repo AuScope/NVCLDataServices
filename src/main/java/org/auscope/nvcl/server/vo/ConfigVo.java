@@ -6,8 +6,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.validation.constraints.NotBlank;
-
 import org.springframework.beans.factory.annotation.*;
 
 /**
@@ -53,6 +51,11 @@ public class ConfigVo {
 		
 		@Value("${enableAggressiveCacheClearing:false}")
 		private Boolean aggressiveCacheClearing;
+
+		@Value("${azureStorageConnectionString:}")
+		private String azureBlobStoreConnectionString;
+		@Value("${downloadFileMirror:}")
+		private String downloadFileMirror;
 		
 		private List<String> autoCacheFailedDatasetsList= new ArrayList<String>();
 		
@@ -124,7 +127,7 @@ public class ConfigVo {
 			return download_rootpath;
 		}
 		
-		@NotBlank
+
 		@Value("${download.rootpath}")
 		public void setDownloadRootPath(String download_rootpath) throws Exception {
 			this.download_rootpath = download_rootpath;
@@ -138,7 +141,7 @@ public class ConfigVo {
 			return download_cachepath;
 		}
 
-		@NotBlank
+
 		@Value("${download.cachepath}")
 		public void setDownloadCachePath(String download_cachepath) throws Exception {
 			this.download_cachepath = download_cachepath;
@@ -152,7 +155,7 @@ public class ConfigVo {
 			return tsg_scriptpath;
 		}
 
-		@NotBlank
+
 		@Value("${tsg.scriptpath}")
 		public void setTsgScriptPath(String tsg_scriptpath) throws Exception {
 			this.tsg_scriptpath = tsg_scriptpath;
@@ -216,6 +219,22 @@ public class ConfigVo {
 
 		public void setAggressiveCacheClearing(Boolean aggressiveCacheClearing) {
 			this.aggressiveCacheClearing = aggressiveCacheClearing;
+		}
+
+		public String getAzureBlobStoreConnectionString() {
+			return azureBlobStoreConnectionString;
+		}
+
+		public void setAzureBlobStoreConnectionString(String azureBlobStoreConnectionString) {
+			this.azureBlobStoreConnectionString = azureBlobStoreConnectionString;
+		}
+
+		public String getDownloadFileMirror() {
+			return downloadFileMirror;
+		}
+
+		public void setDownloadFileMirror(String downloadFileMirror) {
+			this.downloadFileMirror = downloadFileMirror;
 		}
 
 }

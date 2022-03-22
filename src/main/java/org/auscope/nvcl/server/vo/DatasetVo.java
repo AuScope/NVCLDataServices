@@ -1,13 +1,14 @@
 package org.auscope.nvcl.server.vo;
 
 import java.net.URI;
+import java.util.Date;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "Dataset")
-@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection","downloadLink"})
+@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","modifiedDate","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection","downloadLink"})
 public class DatasetVo {
 
     private String datasetID;
@@ -23,9 +24,16 @@ public class DatasetVo {
 	private String sectionID;
 	private String domainID;
 	private URI DownloadLink;
+	private Date modifiedDate;
 	
 	public String getBoreholeURI() {
 		return boreholeURI;
+	}
+	public Date getModifiedDate() {
+		return modifiedDate;
+	}
+	public void setModifiedDate(Date modifiedDate) {
+		this.modifiedDate = modifiedDate;
 	}
 	public void setBoreholeURI(String boreholeID) {
 		this.boreholeURI = boreholeID;

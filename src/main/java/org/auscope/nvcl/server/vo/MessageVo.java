@@ -1,5 +1,6 @@
 package org.auscope.nvcl.server.vo;
 
+
 /**
  * This message value object class set the necessary config and url parameter info from
  * ConfigVo and TSGParamVo objects into MessageVo object 
@@ -21,14 +22,32 @@ public class MessageVo {
 	// TSG download specific properties:
 	private String scriptFileNameNoExt="";
 	private String tSGDatasetID="";
-	private boolean requestLS=true; 
+
 	// WFS download specific properties:
 	private String boreholeid="";
 	private String featureTypeName="";
 	private Boolean autoCacheJob=false;
+	private String datasetname="";
+	private Long dbModifiedDate;
 
 	public String getJMSTimestamp() {
 		return JMSTimestamp;
+	}
+
+	public Long getDbModifiedDate() {
+		return dbModifiedDate;
+	}
+
+	public void setDbModifiedDate(Long dbModifiedDate) {
+		this.dbModifiedDate = dbModifiedDate;
+	}
+
+	public String getDatasetname() {
+		return datasetname;
+	}
+
+	public void setDatasetname(String datasetname) {
+		this.datasetname = datasetname;
 	}
 
 	public Boolean getAutoCacheJob() {
@@ -129,15 +148,6 @@ public class MessageVo {
 
 	public void settSGDatasetID(String tSGDatasetID) {
 		this.tSGDatasetID = tSGDatasetID;
-	}
-	
-	public Boolean getRequestLS(){
-		return this.requestLS;
-	}
-
-	public void setRequestLS(Boolean requestLS)
-	{
-		this.requestLS = requestLS;
 	}
 
 }

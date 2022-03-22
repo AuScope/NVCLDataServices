@@ -85,13 +85,13 @@ public class TSGFileCacheBuilderSvc  {
                                 MessageVo tsgreqmessage = new MessageVo();
 
                                 tsgreqmessage.setAutoCacheJob(true);
-                                tsgreqmessage.setRequestLS(true);
+
                                 // Set url parameters to URLParamVo object
                                 tsgParamVo.setDatasetid(dataset.getDatasetID());
 
                                 tsgParamVo.setEmail("peter.warren@csiro.au");
                                 tsgreqmessage.setRequestorEmail("peter.warren@csiro.au");
-                                tsgParamVo.setLinescan("yes");
+
                                 logger.debug("Start generating script file...");
 
                                 String scriptFileNameNoExt = nvclDownloadSvc.createScriptFile(tsgParamVo);
@@ -102,6 +102,8 @@ public class TSGFileCacheBuilderSvc  {
                                 }
                                 tsgreqmessage.setScriptFileNameNoExt(scriptFileNameNoExt);
                                 tsgreqmessage.settSGDatasetID(dataset.getDatasetID());
+                                tsgreqmessage.setDatasetname(dataset.getDatasetName());
+                                tsgreqmessage.setDbModifiedDate(dataset.getModifiedDate().getTime());
                                 String boreholeURI = nvclDataSvc.getBoreholeHoleURIbyDatasetId(dataset.getDatasetID());
                                 tsgreqmessage.setBoreholeid(boreholeURI);
 
@@ -132,5 +134,22 @@ public class TSGFileCacheBuilderSvc  {
 		}
 		
 	}
+
+    @Scheduled(cron="0 0 2 * * ?")
+	protected void CleanoutdatedFiles() throws JobExecutionException {
+        File downloadsFolder = new File(this.downloadfolderpath);
+        logger.debug("running outdated file cleaner");
+        if (downloadsFolder.exists()) {
+            for (final File fileEntry : downloadsFolder.listFiles()) {
+                if (!fileEntry.isDirectory()) {
+                    DatasetCollectionVo dataset = nvclDataSvc.getDatasetCollectionbyDatasetId(fileEntry.getName().replace(".zip",""));
+                    if (dataset.getDatasetCollection().size()==1 && dataset.getDatasetCollection().get(0).getModifiedDate().getTime()>fileEntry.lastModified()){
+                        fileEntry.delete();
+                        logger.info("deleted file "+fileEntry.getName() + " because it was created before the last modified date for this dataset");
+                    }
+                } 
+            }
+        }
+    }
 
 }

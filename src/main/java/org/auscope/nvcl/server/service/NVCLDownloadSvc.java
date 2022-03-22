@@ -20,6 +20,7 @@ import javax.jms.Destination;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.MessageVo;
 import org.auscope.nvcl.server.vo.TsgParamVo;
@@ -59,7 +60,6 @@ public class NVCLDownloadSvc {
 
 			//Creating new file base on dataset id 
 			String dlDirName = tsgParamVo.getDatasetid();
-			if (tsgParamVo.getLinescan().equals("no"))  dlDirName += "_NoLS";
 			fileNameNoExt = dlDirName;
 			fileName = dlDirName + ".txt";
 			String scriptDir = config.getTsgScriptPath();
@@ -77,12 +77,12 @@ public class NVCLDownloadSvc {
 			output.println("task_begin");
 			output.println("operation download ");
 			output.println("Connection_string " + config.getJdbcURL());
+			if (!Utility.stringIsBlankorNull(config.getAzureBlobStoreConnectionString())) output.println("AzureBlobStore " + config.getAzureBlobStoreConnectionString());
 			output.println("Database_type " + config.getJdbcDbType());
 			output.println("Username " + config.getJdbcUsername());
 			output.println("Password " + config.getJdbcPassword());
 			output.println("output_dir " + downloadDir);
 			output.println("Uuid " + tsgParamVo.getDatasetid());
-			if ( tsgParamVo.getLinescan().equals("no") ) output.println("Linescan no");
 			output.println("task_end");
 			output.flush();
 			output.close();

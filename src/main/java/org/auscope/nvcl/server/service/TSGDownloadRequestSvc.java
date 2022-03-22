@@ -2,6 +2,8 @@ package org.auscope.nvcl.server.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
@@ -13,6 +15,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.auscope.nvcl.server.service.SpringFrameworkJmsSender.ReferenceHolderMessagePostProcessor;
+import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.MessageVo;
 import org.springframework.jms.core.JmsTemplate;
@@ -96,7 +99,32 @@ public class TSGDownloadRequestSvc {
 	  * @param	messaveVo	message value object 
 	  */
 	private MessageVo exeRequest(MessageVo messageVo) {
-		logger.debug("Start TSGDownload process ........");			
+		logger.debug("Start TSGDownload process ........");
+		if (!Utility.stringIsBlankorNull(config.getDownloadFileMirror())) {
+			try {
+				URL url = new URL(config.getDownloadFileMirror()+messageVo.gettSGDatasetID()+".zip");
+				HttpURLConnection http = (HttpURLConnection)url.openConnection();
+				http.setRequestMethod("HEAD");
+				if (http.getResponseCode()==200 && http.getLastModified() > messageVo.getDbModifiedDate()) {
+					logger.info("found file by its datasetID " + messageVo.gettSGDatasetID()+".zip"+ " on the file mirror");
+					messageVo.setStatus("Success");
+					messageVo.setDescription(config.getDownloadFileMirror() + messageVo.getScriptFileNameNoExt() + ".zip");
+					return messageVo;
+				}
+				else if (!Utility.stringIsBlankorNull(messageVo.getDatasetname())) {
+					URL dsnameurl = new URL(config.getDownloadFileMirror()+messageVo.getDatasetname()+".zip");
+					HttpURLConnection dsnamehttp = (HttpURLConnection)dsnameurl.openConnection();
+					dsnamehttp.setRequestMethod("HEAD");
+					if (dsnamehttp.getResponseCode()==200 && dsnamehttp.getLastModified() > messageVo.getDbModifiedDate()) {
+						logger.info("found file by its dataset name " + messageVo.getDatasetname()+".zip"+ " on the file mirror");
+						messageVo.setStatus("Success");
+						messageVo.setDescription(config.getDownloadFileMirror() + messageVo.getDatasetname() + ".zip");
+						return messageVo;
+					}
+				}
+			}
+			catch (Exception e)	{}
+		}		
 		int exitVal = nvclDownloadSvc.execTSGDownload(
 				config.getTsgExePath(), 
 				config.getTsgScriptPath()+messageVo.getScriptFileNameNoExt()+".txt");
@@ -151,9 +179,9 @@ public class TSGDownloadRequestSvc {
 	        if(messageVo.getStatus().equals("Success")){
 	        	String msgtext;
 	        	msg.setSubject("NVCL Download ready");
-	        	msgtext="This is an automated email from the National Virtual Core Library Download Service.\n\nThe TSG dataset you requested :" + messageVo.getScriptFileNameNoExt() + " is ready for download.  " + config.getDownloadURL()+messageVo.getScriptFileNameNoExt()+".zip .  This file will remain available for download for "+ this.config.getMsgTimetoLiveDays() +" days.\n\nTo view the content of these files you will need \"The Spectral Geologist Viewer\" available at http://www.thespectralgeologist.com ";
+	        	msgtext="This is an automated email from the National Virtual Core Library Download Service.\n\nThe TSG dataset you requested :" + messageVo.getDatasetname() + " is ready for download.  " + config.getDownloadURL()+messageVo.getScriptFileNameNoExt()+".zip .  This file will remain available for download for "+ this.config.getMsgTimetoLiveDays() +" days.\n\nTo view the content of these files you will need \"The Spectral Geologist Viewer\" available at http://www.thespectralgeologist.com ";
 	        	if(messageVo.getResultfromcache()){
-	        		msgtext+="\n\nThis file was recovered from cache.  If you believe it is stale you can force the service to regenerate it by clicking this link: "+config.getWebappURL()+"downloadtsg.html?datasetid="+messageVo.gettSGDatasetID()+"&email="+messageVo.getRequestorEmail()+"&linescan="+(messageVo.getRequestLS()?"yes":"no")+"&forcerecreate=yes .  Note: this can take some time and may not be possible if you or another user is currenly downloading the cached file";
+	        		msgtext+="\n\nThis file was recovered from cache.  If you believe it is stale you can force the service to regenerate it by clicking this link: "+config.getWebappURL()+"downloadtsg.html?datasetid="+messageVo.gettSGDatasetID()+"&email="+messageVo.getRequestorEmail()+"&forcerecreate=yes .  Note: this can take some time and may not be possible if you or another user is currenly downloading the cached file";
 	        	}
 	        	msgtext+="\n\n If you have any comments, suggestions or issues with the download please reply to this email.";
 	        	msg.setText(msgtext);
@@ -172,7 +200,7 @@ public class TSGDownloadRequestSvc {
 				else {
 					msg.setSubject("NVCL Download preparation failed");
 					msg.setBcc(config.getSysAdminEmail());
-					msg.setText("This is an automated email from the National Virtual Core Library Download Service.\n\nYour request for TSG dataset "+messageVo.gettSGDatasetID()+" has failed.  Please reply to this email for support.");
+					msg.setText("This is an automated email from the National Virtual Core Library Download Service.\n\nYour request for TSG dataset "+messageVo.getDatasetname()+" with ID: "+messageVo.gettSGDatasetID()+ " has failed.  Please reply to this email for support.");
 				}
 			}
 	        logger.debug("Sending result email");

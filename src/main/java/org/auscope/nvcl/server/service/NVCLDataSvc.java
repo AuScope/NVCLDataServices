@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.dao.DomainDataDao;
 import org.auscope.nvcl.server.dao.DownSampledClassDataDao;
 import org.auscope.nvcl.server.dao.DownSampledFloatDataDao;
@@ -83,6 +84,7 @@ public class NVCLDataSvc {
 	private static final Logger logger = LogManager.getLogger(NVCLDataSvc.class);
 
     private NVCLDataSvcDao nvclDataSvcDao;
+    private NVCLBlobStoreAccessSvc nvclBlobStoreAccessSvc;
     private DownSampledClassDataDao downSampledClassDataDao;
     private DownSampledFloatDataDao downSampledFloatDataDao;
     private DomainDataDao domainDataDao;
@@ -98,6 +100,21 @@ public class NVCLDataSvc {
     public void setNvclDataSvcDao(NVCLDataSvcDao nvclDataSvcDao) {
         this.nvclDataSvcDao = nvclDataSvcDao;
     }
+
+    /**
+     * Configure the NVCLBlobStoreAccessSvc 
+     *
+     * @param nvclBlobStoreAccessSvc
+     *            data access object
+     */
+    public void setNVCLBlobStoreAccessSvc(NVCLBlobStoreAccessSvc nvclBlobStoreAccessSvc) {
+        this.nvclBlobStoreAccessSvc = nvclBlobStoreAccessSvc;
+    }
+
+    private ConfigVo config;
+	public void setConfig(ConfigVo config) {
+			this.config = config;
+	}
 
     /**
      * Configure the DownSampledClassDataDao (Data Access Object)
@@ -277,7 +294,20 @@ public class NVCLDataSvc {
      */
     public ImageDataVo getImageData(String logID, int sampleNo) {
         logger.debug("getImageData start...");
-        return nvclDataSvcDao.getImgData(logID, sampleNo);
+        if (Utility.stringIsBlankorNull(config.getAzureBlobStoreConnectionString())) {
+            return nvclDataSvcDao.getImgData(logID, sampleNo);
+        }
+        else {
+            String datasetid = this.getDatasetIdfromLogId(logID);
+            ImageDataVo imgdata=nvclBlobStoreAccessSvc.getImgData(datasetid,logID, sampleNo);
+            byte[] histo = nvclDataSvcDao.getImgHistogramData(logID);
+            if (histo!=null && histo.length>0) imgdata.setImgHistogramLUT(histo);
+            return imgdata;
+        }
+    }
+
+    public byte[] getImgHistogramData(String logID) {
+        return nvclDataSvcDao.getImgHistogramData(logID);
     }
 
     /**
@@ -910,7 +940,18 @@ public class NVCLDataSvc {
 
     public SpectralDataCollectionVo getSpectralData(String speclogid, int startsampleno, int endsampleno)
     {
-    	return nvclDataSvcDao.getSpectralData(speclogid, startsampleno,endsampleno);
+        if (Utility.stringIsBlankorNull(config.getAzureBlobStoreConnectionString())) {
+            return nvclDataSvcDao.getSpectralData(speclogid, startsampleno,endsampleno);
+        }
+        else {
+            String datasetid = this.getDatasetIdfromLogId(speclogid);
+            SpectralDataCollectionVo specdata = nvclBlobStoreAccessSvc.getSpectralData(datasetid, speclogid, startsampleno,endsampleno);
+            //ImageDataVo imgdata=nvclBlobStoreAccessSvc.getImgData(datasetid,logID, sampleNo);
+            //byte[] histo = nvclDataSvcDao.getImgHistogramData(logID);
+            //if (histo!=null && histo.length>0) imgdata.setImgHistogramLUT(histo);
+            return specdata;
+        }
+
     }
 
 	public SpectralLogCollectionVo getSpectralLogCollection(String datasetId) {
@@ -1049,4 +1090,12 @@ public class NVCLDataSvc {
 	public ClassificationsCollectionVo getClassifications(String logid) {
 		return nvclDataSvcDao.getClassificationsCollection(logid);	
 	}
+
+    public String getDatasetIdfromLogId(String logId) {
+        return nvclDataSvcDao.getDatasetIdfromLogId(logId);
+    }
+
+    public Integer getLastsampleNumber(String domainlogId, Integer startSampleNo, Integer endSampleNo) {
+        return nvclDataSvcDao.getLastsampleNumber(domainlogId, startSampleNo, endSampleNo);
+    }
 }

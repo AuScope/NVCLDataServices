@@ -13,7 +13,6 @@ public class TsgParamVo {
 		
 	    private String email;
 		private String datasetid;
-		private String linescan;
 		
 		public String getEmail() {
 		  return email;
@@ -30,14 +29,6 @@ public class TsgParamVo {
 		public String getDatasetid() {
 			  return datasetid;
 		}
-
-		public String getLinescan() {
-		  return linescan;
-		}
-			 
-		public void setLinescan(String linescan) {
-			this.linescan = linescan;
-		}
-		
+	
 
 }

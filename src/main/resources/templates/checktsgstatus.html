@@ -30,9 +30,9 @@
 			<tr th:each="entry : ${msgMap['reply']}" class="${rowStyle}">
 				<td th:text="${entry.JMSTimestamp}">timestamp</td>
 				<td th:text="${entry.status}">status</td>
-				<td th:unless="${entry.status!='Success'}"><a th:href="${entry.description}" th:text="${entry.tSGDatasetID+(entry.requestLS ? '.zip' : '_NoLS.zip')}">link</a> Scan of <span th:text="${entry.boreholeid}"></span></td>
+				<td th:unless="${entry.status!='Success'}"><a th:href="${entry.description}" th:text="${entry.datasetname}">link</a> Scan of borehole: <span th:text="${entry.boreholeid}"></span></td>
 				<td th:unless="${entry.resultfromcache!=true}">
-					This file was recovered from cache. If you believe it is stale you can force the service to <a th:href="${'downloadtsg.html?datasetid='+entry.tSGDatasetID+'&email='+entry.JMSCorrelationID+'&linescan='+(entry.requestLS ? 'yes' : 'no') +'&forcerecreate=yes'}">regenerate
+					This file was recovered from cache. If you believe it is stale you can force the service to <a th:href="${'downloadtsg.html?datasetid='+entry.tSGDatasetID+'&email='+entry.JMSCorrelationID+'&forcerecreate=yes'}">regenerate
 						it.</a>
 				</td>
 				<td th:unless="${entry.resultfromcache==true}" th:text="${entry.description}">description</td>

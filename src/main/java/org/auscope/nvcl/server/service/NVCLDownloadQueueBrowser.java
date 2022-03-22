@@ -65,7 +65,7 @@ public class NVCLDownloadQueueBrowser {
 							jmsMsgVo.setDescription(mapMessage.getString("description"));
 							jmsMsgVo.setResultfromcache(mapMessage.getBoolean("resultfromcache"));
 							jmsMsgVo.settSGDatasetID(mapMessage.getString("tsgdatasetid"));
-							jmsMsgVo.setRequestLS(mapMessage.getBoolean("requestLS"));
+							jmsMsgVo.setDatasetname(mapMessage.getString("datasetname"));
 							jmsMsgVo.setBoreholeid(mapMessage.getString("boreholeid"));
 							jmsMsgVo.setFeatureTypeName(mapMessage.getString("typename"));
 							
@@ -85,7 +85,7 @@ public class NVCLDownloadQueueBrowser {
 
 	public int getMessageCount(final Destination destination) {
 		// to an Integer because the response of .browse may be null
-		Integer totalPendingMessages = this.jmsTemplate.browse((Queue)destination, (session, browser) -> Collections.list(browser.getEnumeration()).size());
+		Integer totalPendingMessages = this.jmsTemplate.browse((Queue)destination, (session, browser) -> Collections.list(((Enumeration<?>)browser.getEnumeration())).size());
 	
 		return totalPendingMessages == null ? 0 : totalPendingMessages;
 	   }

@@ -412,26 +412,19 @@ public class MenuController {
 		}
 
 		StringBuffer imageURL = new StringBuffer("<div class=\"NVCLMosaicContainer\" >");
-		// getting list of sequence sample number based on the start and end
-		// sample number range
-		ArrayList<ImageDataVo> sampleNoList = (ArrayList<ImageDataVo>) nvclDataSvc.getSampleNo(logId, startSampleNo,
-				endSampleNo);
 
-		if (sampleNoList.isEmpty()) {
-			logger.error("Empty sample no list !!");
-			String errMsg = "There are no images available in this dataset or log id";
-			return new ModelAndView("mosaicusage", "errmsg", errMsg);
-		}
+		endSampleNo = min(endSampleNo, nvclDataSvc.getLastsampleNumber(domainlogId, startSampleNo,endSampleNo));
+		startSampleNo = min(startSampleNo,endSampleNo);
 
 		DomainDataCollectionVo domainDataList = null;
 		if (domainlogId != null) {
 			domainDataList = nvclDataSvc.getDomainData(domainlogId);
 		}
 		int i = 0;
-		colWidth = min(sampleNoList.size(), colWidth);
-		for (Iterator<ImageDataVo> it1 = sampleNoList.iterator(); it1.hasNext();) {
+		colWidth = min(endSampleNo-startSampleNo, colWidth);
+		for (int j= startSampleNo; j<=endSampleNo;j++) {
 			// extract sample number from the array list
-			ImageDataVo imageDataVo = it1.next();
+			//ImageDataVo imageDataVo = it1.next();
 			// by default display 3 image per row
 			if (i != 0 && (i % colWidth == 0)) {
 				imageURL.append("<div style=\"clear:both;\"></div>");
@@ -447,7 +440,7 @@ public class MenuController {
 					// extract sampleNo, startValue and endValue from the array
 					// list
 					DomainDataVo domainDataVo = it2.next();
-					if (domainDataVo.getSampleNo() == imageDataVo.getSampleNo()) {
+					if (domainDataVo.getSampleNo() == j) {
 						startdepth = domainDataVo.getStartValue();
 						enddepth = domainDataVo.getEndValue();
 						break;
@@ -477,19 +470,19 @@ public class MenuController {
 
 			if (trayLogId != null) {
 				imageURL.append("<a href=\"" + srvroot + "/imageCarousel.html?logid=" + trayLogId + "&sampleno="
-						+ imageDataVo.getSampleNo() + "\" target=\"_blank\">" + "<img title=\"" + titletext
+						+j + "\" target=\"_blank\">" + "<img title=\"" + titletext
 						+ "\" class=\"NVCLMosaicImage\" " + "src=\"" + srvroot + "/Display_Tray_Thumb.html?logid="
-						+ logId + "&sampleno=" + imageDataVo.getSampleNo() + "\" alt=\"Core Image\" ></a></div>");
+						+ logId + "&sampleno=" + j + "\" alt=\"Core Image\" ></a></div>");
 
 			} else {
 				imageURL.append("<img title=\"" + titletext + "\" class=\"NVCLMosaicImage\" " + "src=\"" + srvroot
-						+ "/Display_Tray_Thumb.html?logid=" + logId + "&sampleno=" + imageDataVo.getSampleNo()
+						+ "/Display_Tray_Thumb.html?logid=" + logId + "&sampleno=" + j
 						+ "\" alt=\"Core Image\" ></div>");
 
 			}
 			for (Iterator<String> it3 = scalarids.iterator(); it3.hasNext();) {
 				imageURL.append("<div class=\"NVCLMosaicCellImg\" ><img class=\"pixelated\" src=\"" + srvroot
-						+ "/gettraymap.html?logid=" + it3.next() + "&trayindex=" + imageDataVo.getSampleNo()
+						+ "/gettraymap.html?logid=" + it3.next() + "&trayindex=" + j
 						+ "\" style=\"display: block;  height:100%;width:100%;\" ></div>");
 			}
 
@@ -1395,10 +1388,9 @@ public class MenuController {
 	/**
 	 * Handling request when downloadtsg.html is called. The following tasks
 	 * will be handled: 1) Validate the URL parameters, set default parameter
-	 * value 2) Create new script file, script file name =
-	 * emailyyyymmddhhmmssms.txt 3) Create new directory, name same as script
+	 * value 2) Create new script file, script 3) Create new directory, name same as script
 	 * file name 4) Create new message JMS request queue 5) Back to user request
-	 * page with new message ID created and link to check status of request
+	 * page with new message ID created and check status of request
 	 * 
 	 * @param request
 	 *            input url parameters :
@@ -1409,21 +1401,6 @@ public class MenuController {
 	 *            <li>datasetid (String) : Dataset ID (mandatory for
 	 *            requestType=TSG) All the rest of the parameters below are
 	 *            optional for requestType=TSG
-	 *            <li>match_string (String) : Its value is part or all of a
-	 *            proper drillhole name. The first dataset found to match in the
-	 *            database is downloaded
-	 *            <li>linescan (String) : yes or no. If no then the main image
-	 *            component is not downloaded. The default is yes.
-	 *            <li>spectra (String) : yes or no. If no then the spectral
-	 *            component is not downloaded. The default is yes.
-	 *            <li>profilometer (String) : yes or no. If no then the
-	 *            profilometer component is not downloaded. The default is yes.
-	 *            <li>traypics (String) : yes or no. If no then the individual
-	 *            tray pictures are not downloaded. The default is yes.
-	 *            <li>mospic (String) : yes or no. If no then the hole mosaic
-	 *            picture is not downloaded. The default is yes.
-	 *            <li>mappics (String) : yes or no. If no then the map pictures
-	 *            are not downloaded. The default is yes.
 	 *            </ul>
 	 * 
 	 * @param response
@@ -1436,7 +1413,6 @@ public class MenuController {
 	@RequestMapping(value = "/downloadtsg.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView downloadtsgHandler(@RequestParam(value = "email", required = false) String email,
 			@RequestParam(value = "datasetid", required = false) String datasetid,
-			@RequestParam(value = "linescan", required = false, defaultValue = "yes") String linescan,
 			@RequestParam(value = "forcerecreate", required = false, defaultValue = "no") String deletecache,
 			HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -1464,20 +1440,16 @@ public class MenuController {
 			return new ModelAndView("downloadtsgusage", "errmsg", errMsg);
 		}
 
+		DatasetCollectionVo datasets = this.nvclDataSvc.getDatasetCollectionbyDatasetId(datasetid);
+		if (datasets.getDatasetCollection().size()!=1) {
+			String errMsg = "A valid Dataset id must be provided for this service to function.";
+			return new ModelAndView("downloadtsgusage", "errmsg", errMsg);
+		}
+		DatasetVo selecteddataset=datasets.getDatasetCollection().get(0);
+
 		// end validating mandatory parameter for TSG Download
 
 		// start validating optional url parameters for TSG Download
-		// validate linescan, if null or empty or missing, set default to yes
-
-		if (!Utility.stringIsBlankorNull(linescan) && linescan.toLowerCase().equals("no")) {
-			linescan = "no";
-			tsgreqmessage.setRequestLS(false);
-		} else {
-			linescan = "yes";
-			tsgreqmessage.setRequestLS(true);
-		}
-
-		logger.debug("linescan = " + linescan);
 
 		// validate recreate datafile option. This option overrides the built in
 		// caching and forces the service to recreate the datafile.
@@ -1488,10 +1460,9 @@ public class MenuController {
 			deletecache = "no";
 
 		// Set url parameters to URLParamVo object
-		tsgParamVo.setDatasetid(datasetid);
+		tsgParamVo.setDatasetid(selecteddataset.getDatasetID());
 
 		tsgParamVo.setEmail(email);
-		tsgParamVo.setLinescan(linescan);
 
 		// Reading configuration information from config.properties file and
 		// create
@@ -1500,8 +1471,14 @@ public class MenuController {
 
 		String scriptFileNameNoExt = nvclDownloadSvc.createScriptFile(tsgParamVo);
 
+		if (scriptFileNameNoExt.equals("fail")) {
+			String errMsg = "Error occured while creating script file. email "+ configVo.getSysAdminEmail() + "for support";
+			logger.error(errMsg);
+			return new ModelAndView("error", "errmsg", errMsg);
+		}
+
 		if (deletecache.equals("yes")) {
-			File cachedfile = new File(configVo.getDownloadRootPath() + scriptFileNameNoExt + ".zip");
+			File cachedfile = new File(configVo.getDownloadRootPath() + selecteddataset.getDatasetID() + ".zip");
 			if (cachedfile.exists() && !cachedfile.delete()) {
 				String errMsg ="Existing file couldn't be deleted.  Its probably in use. email "+ configVo.getSysAdminEmail() + "for support";
 				logger.error(errMsg);
@@ -1509,15 +1486,12 @@ public class MenuController {
 			}
 		}
 
-		if (scriptFileNameNoExt.equals("fail")) {
-			String errMsg = "Error occured while creating script file. email "+ configVo.getSysAdminEmail() + "for support";
-			logger.error(errMsg);
-			return new ModelAndView("error", "errmsg", errMsg);
-		}
 		tsgreqmessage.setScriptFileNameNoExt(scriptFileNameNoExt);
-		tsgreqmessage.settSGDatasetID(datasetid);
-		String boreholeURI = nvclDataSvc.getBoreholeHoleURIbyDatasetId(datasetid);
+		tsgreqmessage.settSGDatasetID(selecteddataset.getDatasetID());
+		tsgreqmessage.setDatasetname(selecteddataset.getDatasetName());
+		String boreholeURI = nvclDataSvc.getBoreholeHoleURIbyDatasetId(selecteddataset.getDatasetID());
 		tsgreqmessage.setBoreholeid(boreholeURI);
+		tsgreqmessage.setDbModifiedDate(selecteddataset.getModifiedDate().getTime());
 
 		logger.debug("Script file created successfully ...");
 

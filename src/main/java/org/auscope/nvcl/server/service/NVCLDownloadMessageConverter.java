@@ -52,10 +52,10 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 
 		messageVo.setScriptFileNameNoExt(mapMessage.getString("scriptFileNameNoExt"));
 		messageVo.settSGDatasetID(mapMessage.getString("tsgdatasetid"));
-		messageVo.setRequestLS(mapMessage.getBoolean("requestLS"));
 		messageVo.setBoreholeid(mapMessage.getString("boreholeid"));
 		messageVo.setAutoCacheJob(mapMessage.getBoolean("autoCacheJob"));
-
+		messageVo.setDatasetname(mapMessage.getString("datasetname"));
+		messageVo.setDbModifiedDate(mapMessage.getLong("dbModifiedDate"));
 		messageVo.setRequestorEmail(message.getJMSCorrelationID());
 		return messageVo;
 	}
@@ -80,16 +80,16 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 		message.setJMSCorrelationID(messageVo.getRequestorEmail());
 		message.setString("status", messageVo.getStatus());
 		if(messageVo.getStatus().equals("Success"))	message.setString("description", messageVo.getDescription());
-		else message.setString("description", "Request for dataset with ID: " + messageVo.getScriptFileNameNoExt());
+		else message.setString("description", "Request for dataset named: "+messageVo.getDatasetname() +" with ID: " + messageVo.getScriptFileNameNoExt());
 		message.setBoolean("resultfromcache", messageVo.getResultfromcache());
 		message.setString("tsgdatasetid", messageVo.gettSGDatasetID());
-		message.setBoolean("requestLS", messageVo.getRequestLS());
 		message.setString("boreholeid",  messageVo.getBoreholeid());
 		message.setString("typename",  messageVo.getFeatureTypeName());
-		
+		message.setLong("dbModifiedDate", messageVo.getDbModifiedDate());
 		message.setString("requestType", "TSG");
 		message.setString("scriptFileNameNoExt", messageVo.getScriptFileNameNoExt());
 		message.setBoolean("autoCacheJob", messageVo.getAutoCacheJob());
+		message.setString("datasetname", messageVo.getDatasetname());
 		
 		
 		return message;

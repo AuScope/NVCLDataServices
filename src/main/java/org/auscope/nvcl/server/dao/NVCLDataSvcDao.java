@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.sql.*;
+import java.sql.Blob;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,38 +14,37 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSource;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.vo.AlgorithmCollectionVo;
 import org.auscope.nvcl.server.vo.ClassDataVo;
 import org.auscope.nvcl.server.vo.ClassificationVo;
 import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
+import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetVo;
 import org.auscope.nvcl.server.vo.DepthRangeVo;
 import org.auscope.nvcl.server.vo.FloatDataVo;
+import org.auscope.nvcl.server.vo.ImageDataVo;
 import org.auscope.nvcl.server.vo.ImageLogCollectionVo;
 import org.auscope.nvcl.server.vo.ImageLogVo;
-import org.auscope.nvcl.server.vo.LogDetailsVo;
-import org.auscope.nvcl.server.vo.ImageDataVo;
 import org.auscope.nvcl.server.vo.LogCollectionVo;
-import org.auscope.nvcl.server.vo.DatasetCollectionVo;
+import org.auscope.nvcl.server.vo.LogDetailsVo;
 import org.auscope.nvcl.server.vo.LogVo;
 import org.auscope.nvcl.server.vo.MaskDataVo;
 import org.auscope.nvcl.server.vo.ProfDataCollectionVo;
 import org.auscope.nvcl.server.vo.ProfDataVo;
 import org.auscope.nvcl.server.vo.ProfLogCollectionVo;
 import org.auscope.nvcl.server.vo.ProfLogVo;
+import org.auscope.nvcl.server.vo.SectionVo;
 import org.auscope.nvcl.server.vo.SpectralDataCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralDataVo;
 import org.auscope.nvcl.server.vo.SpectralLogCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralLogVo;
-import org.auscope.nvcl.server.vo.SectionVo;
 import org.auscope.nvcl.server.vo.TraySectionsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * This Data Access Object (DAO) implement JDBC connection using SpringFramework
@@ -118,7 +119,7 @@ public class NVCLDataSvcDao {
      */
 
     public ImageLogCollectionVo getImageLogCollection(String datasetId) {
-        String sql = "select log_id, logname, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount from logs where dataset_id=? and logtype=3 "
+        String sql = "select log_id, logname, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.DOMAINLOG_ID) as samplecount from logs where dataset_id=? and logtype=3 "
                 + "order by case logname when 'Mosaic' then 1 when 'Tray Thumbnail Images' "
                 + "then 2 when 'Tray Images' then 3 when 'Imagery' then 4 when 'holeimg' "
                 + "then 5 else 6 end, logname";
@@ -303,13 +304,14 @@ public class NVCLDataSvcDao {
                 dataset.setDatasetID(rs.getString("dataset_id"));
                 dataset.setDatasetName(rs.getString("datasetname"));
                 dataset.setDescription(rs.getString("dsdescription"));
+                dataset.setModifiedDate(rs.getDate("modifieddate"));
                 dataset.setTrayID(rs.getString("traylog_id"));
                 dataset.setSectionID(rs.getString("sectionlog_id"));
                 dataset.setDomainID(rs.getString("domain_id"));
                 return dataset;
             }
         };
-        sql= "select dataset_id, datasetname, dsdescription, traylog_id, sectionlog_id, domain_id from publisheddatasets where dataset_ID= ?";
+        sql= "select dataset_id, datasetname, dsdescription, traylog_id, sectionlog_id, domain_id, modifieddate from publisheddatasets where dataset_ID= ?";
     	return new DatasetCollectionVo( (ArrayList<DatasetVo>) this.jdbcTemplate.query(sql, mapper, datasetId));	
 
     }
@@ -397,6 +399,19 @@ public class NVCLDataSvcDao {
         logger.debug("getImgData end...");
         return this.jdbcTemplate.queryForObject(sql, mapper, logID,
                 sampleNo);
+    }
+
+    /**
+     * Getting the image histogram from IMAGELOGS table
+     *
+     * @param logID
+     *            log id as primary key for retrieving the image log
+     * @return ImageLogsVo a value object consists the borehole tray thumbnail
+     *         image store as BLOB data type in oracle db
+     */
+    public byte[] getImgHistogramData(String logID) {
+        String sql = "select imghistogram from imagelogs where log_id = ?";
+        return (byte[]) this.jdbcTemplate.queryForObject(sql,new Object[] { logID }, byte[].class);
     }
 
 
@@ -752,5 +767,22 @@ public class NVCLDataSvcDao {
         };
         return new ClassificationsCollectionVo((ArrayList<ClassificationVo>) this.jdbcTemplate.query(sql,mapper, logid,logid));
 	}
+
+    public String getDatasetIdfromLogId(String logId) {
+        String sql = "select dataset_id from logs where log_id=?";
+        return (String) this.jdbcTemplate.queryForObject(sql,new Object[] { logId }, String.class);
+    }
+
+    public Integer getLastsampleNumber(String domainlogId, Integer startSampleNo, Integer endSampleNo) {
+        String sql = "select max(samplenumber) from domainlogdata where log_id = ? "
+        + "and samplenumber between ? and ? ";
+        RowMapper<Integer> mapper = new RowMapper<Integer>() {
+            public Integer mapRow(ResultSet rs, int rowNum)
+                    throws SQLException, DataAccessException {
+                return rs.getInt(1);
+            }
+        };
+        return this.jdbcTemplate.queryForObject(sql,mapper, domainlogId, startSampleNo,endSampleNo);
+    }
     
 }

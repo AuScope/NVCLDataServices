@@ -11,6 +11,7 @@ import org.auscope.nvcl.server.dao.DownSampledClassDataDao;
 import org.auscope.nvcl.server.dao.DownSampledFloatDataDao;
 import org.auscope.nvcl.server.dao.LogExtentsDao;
 import org.auscope.nvcl.server.dao.NVCLDataSvcDao;
+import org.auscope.nvcl.server.service.NVCLBlobStoreAccessSvc;
 import org.auscope.nvcl.server.service.NVCLDataSvc;
 import org.auscope.nvcl.server.service.NVCLDownloadGateway;
 import org.auscope.nvcl.server.service.NVCLDownloadMessageConverter;
@@ -51,6 +52,8 @@ public class Application {
     private MessageListenerAdapter tsgDownloadRequestListener = null;
     private SimpleMessageListenerContainer tsgDownloadRequestContainer = null;
     private JavaMailSenderImpl mailSender = null;
+    NVCLBlobStoreAccessSvc nvclBlobStoreAccessSvc = null;
+    NVCLDataSvc nvclDataSvc = null;
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -69,6 +72,16 @@ public class Application {
     @Bean
     public NVCLDataSvcDao nvclDataSvcDao() {
 		return new NVCLDataSvcDao();
+    }
+
+    @Bean
+    public NVCLBlobStoreAccessSvc nvclBlobStoreAccessSvc() {
+        if (this.nvclBlobStoreAccessSvc==null) {
+            this.nvclBlobStoreAccessSvc = new NVCLBlobStoreAccessSvc(createConfig());
+            return this.nvclBlobStoreAccessSvc;
+        }
+        else
+            return this.nvclBlobStoreAccessSvc;
     }
 
     @Bean
@@ -104,7 +117,15 @@ public class Application {
 
     @Bean
 	public NVCLDataSvc nvclDataSvc() {
-		return new NVCLDataSvc();
+        if (this.nvclDataSvc==null) {
+            this.nvclDataSvc = new NVCLDataSvc();
+            this.nvclDataSvc.setNVCLBlobStoreAccessSvc(nvclBlobStoreAccessSvc());
+            this.nvclDataSvc.setConfig(createConfig());
+            return this.nvclDataSvc;
+        }
+        else {
+            return this.nvclDataSvc;
+        }
     }
 
     @Bean
