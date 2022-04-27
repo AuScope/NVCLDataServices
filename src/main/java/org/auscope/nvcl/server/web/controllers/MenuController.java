@@ -322,7 +322,7 @@ public class MenuController {
 	 * Handling request when mosaic.html or mosaicthumbnail.html is called. The
 	 * mosaic handler will get the list of sample numbers from IMAGELOGDATA
 	 * table and map the sample number into a list of img tag that point to
-	 * Display_Tray_Thumb.html If it is mosaictraythumbnail.html, extra url link
+	 * getImage.html If it is mosaictraythumbnail.html, extra url link
 	 * will be embeded to each thumbnail tray to retrieve the big tray image.
 	 *
 	 * @param request
@@ -333,7 +333,7 @@ public class MenuController {
 	 *            range of sample number (optional) endsampleno (int): ending
 	 *            range of sample number (optional) *
 	 * @return out a StringBuffer that hold a list of img tag pointing to
-	 *         Display_Tray_Thumb.html
+	 *         getImage.html
 	 * @throws ServletException
 	 * @throws IOException
 	 * @throws SQLException
@@ -471,12 +471,12 @@ public class MenuController {
 			if (trayLogId != null) {
 				imageURL.append("<a href=\"" + srvroot + "/imageCarousel.html?logid=" + trayLogId + "&sampleno="
 						+j + "\" target=\"_blank\">" + "<img title=\"" + titletext
-						+ "\" class=\"NVCLMosaicImage\" " + "src=\"" + srvroot + "/Display_Tray_Thumb.html?logid="
+						+ "\" class=\"NVCLMosaicImage\" " + "src=\"" + srvroot + "/getImage.html?logid="
 						+ logId + "&sampleno=" + j + "\" alt=\"Core Image\" ></a></div>");
 
 			} else {
 				imageURL.append("<img title=\"" + titletext + "\" class=\"NVCLMosaicImage\" " + "src=\"" + srvroot
-						+ "/Display_Tray_Thumb.html?logid=" + logId + "&sampleno=" + j
+						+ "/getImage.html?logid=" + logId + "&sampleno=" + j
 						+ "\" alt=\"Core Image\" ></div>");
 
 			}
@@ -500,7 +500,7 @@ public class MenuController {
 	}
 
 	/**
-	 * Handling request when Display_Tray_Thumb.html is called. Validate the URL
+	 * Handling request when getImage.html is called. Validate the URL
 	 * parameters, call the dao services in NVCLChartSvc class to retrieve the
 	 * thumbnail image from IMAGELOGS table
 	 *
@@ -517,7 +517,7 @@ public class MenuController {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	@RequestMapping(value = "/Display_Tray_Thumb.html" ,method = { RequestMethod.GET, RequestMethod.POST })
+	@RequestMapping(value = {"/Display_Tray_Thumb.html","/getImage.html"} ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView TrayThumbHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId,
 			@RequestParam(required = false, value = "sampleno") Integer sampleNo,
@@ -1610,7 +1610,7 @@ public class MenuController {
 		for (Iterator<DomainDataVo> it1 = sampleNoList.getDomainDataCollection().iterator(); it1.hasNext();) {
 			DomainDataVo imageDataVo = it1.next();
 			ImageDataURLVo imgurl = new ImageDataURLVo();
-			imgurl.setURL(srvroot + "/Display_Tray_Thumb.html?logid=" + imglogId + "&sampleno="
+			imgurl.setURL(srvroot + "/getImage.html?logid=" + imglogId + "&sampleno="
 					+ imageDataVo.getSampleNo());
 			imgurl.setSampleNo(imageDataVo.getSampleNo());
 			imgslist.add(imgurl);

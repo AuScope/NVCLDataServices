@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.*;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * This Config Value Object class set the configuration info from config.properties 
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.*;
  */
 
 @Component
+@ConfigurationProperties()
 public class ConfigVo {
 
 		//Spring will populate these fields through Dependency Injection.

@@ -10,9 +10,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.MetadataException;
+import com.drew.metadata.jpeg.JpegCommentDirectory;
+import com.drew.metadata.jpeg.JpegDirectory;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.dao.DomainDataDao;
 import org.auscope.nvcl.server.dao.DownSampledClassDataDao;
 import org.auscope.nvcl.server.dao.DownSampledFloatDataDao;
@@ -24,6 +30,7 @@ import org.auscope.nvcl.server.vo.AveragedFloatDataVo;
 import org.auscope.nvcl.server.vo.BinnedClassDataVo;
 import org.auscope.nvcl.server.vo.ClassDataVo;
 import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
+import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.DepthRangeVo;
 import org.auscope.nvcl.server.vo.DomainDataCollectionVo;
@@ -60,13 +67,6 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-
-import com.drew.imaging.ImageMetadataReader;
-import com.drew.imaging.ImageProcessingException;
-import com.drew.metadata.Metadata;
-import com.drew.metadata.MetadataException;
-import com.drew.metadata.jpeg.JpegCommentDirectory;
-import com.drew.metadata.jpeg.JpegDirectory;
 
 /**
  * Service class that provide action call to Data Access Object (DAO) methods,

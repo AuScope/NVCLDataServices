@@ -389,7 +389,7 @@
 				else LSimg.css('border-color', '#ffffff');
 				LSimg.attr('class','LSImageSlice');
 				LSimg.attr('hidden','true');
-				LSimg.attr('src', 'Display_Tray_Thumb.html?logid='+LSimageID+'&sampleno='+i);//+'&uncorrected=yes');
+				LSimg.attr('src', 'getImage.html?logid='+LSimageID+'&sampleno='+i);//+'&uncorrected=yes');
 				if (i < (startSampleNo -1) || i > (endSampleNo+1)) LSimg.attr('class','hiddenLSImage');
 				LSimg.on('load',LSImageLoaded(i,Math.max(startSampleNo-extraimagesForHistogram,0),Math.min(endSampleNo+extraimagesForHistogram,maxsampleno),LSimg))
 				imglink.append(LSimg);
