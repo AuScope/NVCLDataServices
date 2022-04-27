@@ -8,6 +8,7 @@ import com.azure.storage.blob.specialized.BlockBlobClient;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.ImageDataVo;
 import org.auscope.nvcl.server.vo.SpectralDataCollectionVo;
@@ -16,7 +17,7 @@ import org.auscope.nvcl.server.vo.SpectralDataVo;
 
 public class NVCLBlobStoreAccessSvc {
     private static final Logger logger = LogManager.getLogger(NVCLBlobStoreAccessSvc.class);
-
+    public boolean isConnected = false;
     private ConfigVo config;
 	public void setConfig(ConfigVo config) {
 			this.config = config;
@@ -26,7 +27,10 @@ public class NVCLBlobStoreAccessSvc {
 
     public NVCLBlobStoreAccessSvc(ConfigVo config) {
         this.setConfig(config);
-        this.blobServiceClient = new BlobServiceClientBuilder().connectionString(this.config.getAzureBlobStoreConnectionString()).buildClient();
+        if (!Utility.stringIsBlankorNull(this.config.getAzureBlobStoreConnectionString())) {
+            this.blobServiceClient = new BlobServiceClientBuilder().connectionString(this.config.getAzureBlobStoreConnectionString()).buildClient();
+            this.isConnected=true;
+        }
 
     }
     

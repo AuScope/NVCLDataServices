@@ -294,15 +294,15 @@ public class NVCLDataSvc {
      */
     public ImageDataVo getImageData(String logID, int sampleNo) {
         logger.debug("getImageData start...");
-        if (Utility.stringIsBlankorNull(config.getAzureBlobStoreConnectionString())) {
-            return nvclDataSvcDao.getImgData(logID, sampleNo);
-        }
-        else {
+        if (nvclBlobStoreAccessSvc.isConnected) {
             String datasetid = this.getDatasetIdfromLogId(logID);
             ImageDataVo imgdata=nvclBlobStoreAccessSvc.getImgData(datasetid,logID, sampleNo);
             byte[] histo = nvclDataSvcDao.getImgHistogramData(logID);
             if (histo!=null && histo.length>0) imgdata.setImgHistogramLUT(histo);
             return imgdata;
+        }
+        else {      
+            return nvclDataSvcDao.getImgData(logID, sampleNo);
         }
     }
 
@@ -940,16 +940,13 @@ public class NVCLDataSvc {
 
     public SpectralDataCollectionVo getSpectralData(String speclogid, int startsampleno, int endsampleno)
     {
-        if (Utility.stringIsBlankorNull(config.getAzureBlobStoreConnectionString())) {
-            return nvclDataSvcDao.getSpectralData(speclogid, startsampleno,endsampleno);
-        }
-        else {
+        if (nvclBlobStoreAccessSvc.isConnected) {
             String datasetid = this.getDatasetIdfromLogId(speclogid);
             SpectralDataCollectionVo specdata = nvclBlobStoreAccessSvc.getSpectralData(datasetid, speclogid, startsampleno,endsampleno);
-            //ImageDataVo imgdata=nvclBlobStoreAccessSvc.getImgData(datasetid,logID, sampleNo);
-            //byte[] histo = nvclDataSvcDao.getImgHistogramData(logID);
-            //if (histo!=null && histo.length>0) imgdata.setImgHistogramLUT(histo);
             return specdata;
+        }
+        else {
+            return nvclDataSvcDao.getSpectralData(speclogid, startsampleno,endsampleno);
         }
 
     }
