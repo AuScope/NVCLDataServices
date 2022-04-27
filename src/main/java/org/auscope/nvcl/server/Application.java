@@ -24,6 +24,7 @@ import org.auscope.nvcl.server.vo.gmlPointVo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.core.JmsTemplate;
@@ -37,7 +38,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
 @Configuration
-public class Application {
+public class Application extends SpringBootServletInitializer  {
 
     private BasicDataSource ds = null;
     private ConfigVo config = null;
