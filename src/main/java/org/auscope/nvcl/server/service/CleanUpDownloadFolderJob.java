@@ -91,9 +91,12 @@ public class CleanUpDownloadFolderJob {
 		int cachefolderscleaned = 0;
 		File cacheFolder = new File(this.cachefolderpath);
 		if (cacheFolder.exists()) {
-			for (File CachelistFile : cacheFolder.listFiles()) {
-				if (CachelistFile.isDirectory()
-						&& (CachelistFile.lastModified() < System.currentTimeMillis() - (days * 86400000))) {
+			File[] CachelistFiles = cacheFolder.listFiles();
+			Arrays.sort(CachelistFiles, Comparator.comparingLong(File::lastModified));
+			// clean all but the most recent folder incase its still being processed
+			for (int i=0; i <CachelistFiles.length-1;i++) {
+				File CachelistFile =CachelistFiles[i];
+				if (CachelistFile.isDirectory()) {
 					try {
 						FileUtils.deleteDirectory(CachelistFile);
 						cachefolderscleaned++;
