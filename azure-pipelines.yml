@@ -20,8 +20,13 @@ steps:
     gradleOptions: '-Xmx3072m'
     sonarQubeRunAnalysis: false
 
+- task: CmdLine@2
+  inputs:
+    script: |
+      projver=$(gradlew properties -q | grep "version:" | awk ''{print $2}'')
+
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: './build/libs/NVCLDataServices.war'
+    targetPath: './build/libs/NVCLDataServices-$(projver).war'
     artifact: 'bootWARPackage'
     publishLocation: 'pipeline'
