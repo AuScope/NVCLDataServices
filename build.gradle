@@ -4,14 +4,8 @@ plugins {
 	id 'war'
 }
 
-
-def OTNUser = hasProperty('OTNUSERNAME') ? OTNUSERNAME : System.getenv('OTNUSERNAME')
-def OTNPass = hasProperty('OTNPASSWORD') ? OTNPASSWORD : System.getenv('OTNPASSWORD')
-
-assert OTNUser: "Set the property 'OTNUSERNAME' in your your gradle.properties or system environment to download the OJDBC jar from Oracle's secured repository."
-assert OTNPass: "Set the property 'OTNPASSWORD' in your your gradle.properties or system environment to download the OJDBC jar from Oracle's secured repository."
-
-
+group = 'org.auscope'
+version = '2.1.3'
 
 apply plugin: 'io.spring.dependency-management'
 
@@ -25,16 +19,6 @@ bootWar {
 
 repositories {
     mavenCentral()
-    
-    maven {
-
-        url "https://maven.oracle.com"
-
-        credentials {
-            username = OTNUser
-            password = OTNPass
-        }
-    }
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
@@ -56,7 +40,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-dbcp2'
 	implementation 'au.com.bytecode:opencsv:2.4'
 	implementation 'org.springframework:spring-oxm'
-    implementation 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
+    implementation 'com.oracle.database.jdbc:ojdbc10:19.3.0.0'
     implementation 'com.microsoft.sqlserver:mssql-jdbc'
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
 	implementation 'com.sun.xml.bind:jaxb-core:2.3.0'
