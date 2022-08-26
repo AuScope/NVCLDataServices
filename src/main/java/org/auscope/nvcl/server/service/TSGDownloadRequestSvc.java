@@ -52,20 +52,63 @@ public class TSGDownloadRequestSvc {
 		File dir = new File(downloadRootPath);
 		File fullpath = new File(dir, fileName + ".zip");
 		logger.debug("fullpath : " + fullpath);
-
-		// proceed to download only if the dataset has not been downloaded before
-		if (!fullpath.exists()) { 
-			logger.debug("File does not exists, proceed to actual download...");
-			messageVo.setResultfromcache(false);
-			//messageVo.setTSGDatasetID(config.getTSGdatasetid());
-			messageVo = exeRequest(messageVo);
-		} else {
+		messageVo.setStatus("Processing");
+		if (!messageVo.getAutoCacheJob() && !Utility.stringIsBlankorNull(config.getDownloadFileMirror())) {
+			try {
+				URL url = new URL(config.getDownloadFileMirror()+messageVo.gettSGDatasetID()+".zip");
+				HttpURLConnection http = (HttpURLConnection)url.openConnection();
+				http.setRequestMethod("HEAD");
+				if (http.getResponseCode()==200 && http.getLastModified() > messageVo.getDbModifiedDate()) {
+					logger.info("found file by its datasetID " + messageVo.gettSGDatasetID()+".zip"+ " on the file mirror");
+					messageVo.setStatus("Success");
+					messageVo.setDescription(config.getDownloadFileMirror() + messageVo.getScriptFileNameNoExt() + ".zip");
+					messageVo.setResultfromcache(true);
+				}
+				else if (!Utility.stringIsBlankorNull(messageVo.getDatasetname())) {
+					URL dsnameurl = new URL(config.getDownloadFileMirror()+messageVo.getDatasetname()+".zip");
+					HttpURLConnection dsnamehttp = (HttpURLConnection)dsnameurl.openConnection();
+					dsnamehttp.setRequestMethod("HEAD");
+					if (dsnamehttp.getResponseCode()==200 && dsnamehttp.getLastModified() > messageVo.getDbModifiedDate()) {
+						logger.info("found file by its dataset name " + messageVo.getDatasetname()+".zip"+ " on the file mirror");
+						messageVo.setStatus("Success");
+						messageVo.setDescription(config.getDownloadFileMirror() + messageVo.getDatasetname() + ".zip");
+						messageVo.setResultfromcache(true);
+					}
+				}
+			}
+			catch (Exception e)	{}
+		}
+		
+		if (!messageVo.getStatus().equals("Success") && fullpath.exists()) {
+			logger.debug("File exists in local cache. set reply message....");
 			fullpath.setLastModified(System.currentTimeMillis());
 			messageVo.setStatus("Success");
-			messageVo.setDescription(donwloadURL + fileName + ".zip" );
+			messageVo.setDescription(donwloadURL + fileName + ".zip");
 			messageVo.setResultfromcache(true);
-			//messageVo.setTSGDatasetID(config.getTSGdatasetid());
-			logger.debug("File exists, skip download... create reply message....");
+		} 
+		// proceed to download only if the dataset has not been downloaded before
+		else if (!messageVo.getStatus().equals("Success")) {
+			logger.debug("File does not exist in mirror or local cache. proceed to actual file prep job.");
+			int minuteswaitedforavailablediskspace=0;
+			File cachepath = new File(config.getDownloadCachePath());
+			while ((dir.getUsableSpace() < 5000000000L || cachepath.getUsableSpace() < 5000000000L ) && minuteswaitedforavailablediskspace <20){
+				try {
+					// wait and hope cleaner job clears enough space to proceed.
+					minuteswaitedforavailablediskspace++;
+					Thread.sleep(60000);
+				} catch (InterruptedException e) {
+				}
+			}
+			if ((dir.getUsableSpace() < 5000000000L || cachepath.getUsableSpace() < 5000000000L )){
+				logger.error("insufficient disk space available in cache directory "+cachepath+" ("+cachepath.getUsableSpace()+" bytes) and/or serve directory "+dir+"("+dir.getUsableSpace()+" bytes) to begin TSG file preparation job.");
+				messageVo.setStatus("Failed");
+				messageVo.setDescription("insufficient disk space available on the server to generate this file.  contact support.");
+			}
+			else {
+				// sufficient space proceed to prep job.
+				messageVo.setResultfromcache(false);
+				messageVo = exeRequest(messageVo);
+			}
 		}
 
 		
@@ -80,8 +123,6 @@ public class TSGDownloadRequestSvc {
 			Message sentMessage = messagePostProcessor.getSentMessage();   
 		    logger.debug("Generated JMSMessageID" + sentMessage.getJMSMessageID());
 		    logger.debug("Generated JMSCorrelationID" + sentMessage.getJMSCorrelationID());
-
-
 		    
 		} catch (JMSException jmse) {
 			logger.error("JMSException : " + jmse);
@@ -99,50 +140,29 @@ public class TSGDownloadRequestSvc {
 	  * @param	messaveVo	message value object 
 	  */
 	private MessageVo exeRequest(MessageVo messageVo) {
-		logger.debug("Start TSGDownload process ........");
-		if (!Utility.stringIsBlankorNull(config.getDownloadFileMirror())) {
-			try {
-				URL url = new URL(config.getDownloadFileMirror()+messageVo.gettSGDatasetID()+".zip");
-				HttpURLConnection http = (HttpURLConnection)url.openConnection();
-				http.setRequestMethod("HEAD");
-				if (http.getResponseCode()==200 && http.getLastModified() > messageVo.getDbModifiedDate()) {
-					logger.info("found file by its datasetID " + messageVo.gettSGDatasetID()+".zip"+ " on the file mirror");
-					messageVo.setStatus("Success");
-					messageVo.setDescription(config.getDownloadFileMirror() + messageVo.getScriptFileNameNoExt() + ".zip");
-					return messageVo;
-				}
-				else if (!Utility.stringIsBlankorNull(messageVo.getDatasetname())) {
-					URL dsnameurl = new URL(config.getDownloadFileMirror()+messageVo.getDatasetname()+".zip");
-					HttpURLConnection dsnamehttp = (HttpURLConnection)dsnameurl.openConnection();
-					dsnamehttp.setRequestMethod("HEAD");
-					if (dsnamehttp.getResponseCode()==200 && dsnamehttp.getLastModified() > messageVo.getDbModifiedDate()) {
-						logger.info("found file by its dataset name " + messageVo.getDatasetname()+".zip"+ " on the file mirror");
-						messageVo.setStatus("Success");
-						messageVo.setDescription(config.getDownloadFileMirror() + messageVo.getDatasetname() + ".zip");
-						return messageVo;
-					}
-				}
-			}
-			catch (Exception e)	{}
-		}		
+		logger.debug("Start TSG File preparation job.");	
+		String downloadCachePath = config.getDownloadCachePath();
+		String fileName 		 = messageVo.getScriptFileNameNoExt();
+		String downloadRootPath  = config.getDownloadRootPath();
+		String downloadURL		 = config.getDownloadURL();
+		File foldertocompress = new File (downloadCachePath+fileName);
+		if (!foldertocompress.exists()) {
+			foldertocompress.mkdir();
+		}
+		try {
+			FileUtils.touch(foldertocompress);
+		} catch (IOException e1) {}
 		int exitVal = nvclDownloadSvc.execTSGDownload(
-				config.getTsgExePath(), 
-				config.getTsgScriptPath()+messageVo.getScriptFileNameNoExt()+".txt");
+			config.getTsgExePath(), 
+			config.getTsgScriptPath()+messageVo.getScriptFileNameNoExt()+".txt");
 		//exit value 0 = success 
 		if (exitVal == 0 ) {		
-			String downloadCachePath = config.getDownloadCachePath();
-			String fileName 		 = messageVo.getScriptFileNameNoExt();
-			String downloadRootPath  = config.getDownloadRootPath();
-			String downloadURL		 = config.getDownloadURL();
-			// zip the folder that consists the downloaded file
-			File foldertocompress = new File (downloadCachePath+fileName);
 			int zipFolder = nvclDownloadSvc.zipFolder(downloadCachePath,fileName);
 			if ( zipFolder == 0 ) {
 				File preparedzip = new File(downloadCachePath+fileName+".zip");
 				File downloadfile= new File(downloadRootPath + fileName+".zip");
 				try {
 					Files.move(preparedzip.toPath(), downloadfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					FileUtils.deleteDirectory(foldertocompress);
 					messageVo.setStatus("Success");
 					messageVo.setDescription(downloadURL + fileName + ".zip");
 				}
@@ -160,6 +180,10 @@ public class TSGDownloadRequestSvc {
 			messageVo.setStatus("Failed");
 			messageVo.setDescription("Failed on tsg dataset download");
 		}
+		try {
+			FileUtils.deleteDirectory(foldertocompress);
+		}
+		catch (Exception e){}
 		logger.debug("TSGDownload process done... ");
 		return messageVo;
 	}

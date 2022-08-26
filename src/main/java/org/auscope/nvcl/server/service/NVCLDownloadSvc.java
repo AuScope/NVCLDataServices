@@ -68,10 +68,6 @@ public class NVCLDownloadSvc {
 			scriptFile.createNewFile();
 			//Create new download directory name which is same as scriptFile name
 			File downloadDir = new File(config.getDownloadCachePath(),  dlDirName);
-			logger.debug("downloadDir : " + downloadDir);
-			if (!downloadDir.exists()) {
-				downloadDir.mkdir();
-			}
 			//Writing to Script File
 			PrintWriter output = new PrintWriter(scriptFile);
 			output.println("task_begin");
