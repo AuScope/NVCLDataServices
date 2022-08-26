@@ -23,7 +23,7 @@ steps:
 - task: CmdLine@2
   inputs:
     script: |
-      projver=$(gradlew properties -q | grep "version:" | awk ''{print $2}'')
+      projver=$(./gradlew properties -q | grep "version:" | awk ''{print $2}'')
 
 - task: PublishPipelineArtifact@1
   inputs:
