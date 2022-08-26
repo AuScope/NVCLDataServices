@@ -24,6 +24,7 @@ steps:
   inputs:
     script: |
       projver=$(./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}')
+      echo "##vso[task.setvariable variable=projver]$projver"
 
 - task: PublishPipelineArtifact@1
   inputs:
