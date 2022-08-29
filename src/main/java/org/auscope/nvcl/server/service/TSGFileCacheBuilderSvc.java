@@ -6,6 +6,7 @@ import javax.jms.Destination;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetVo;
@@ -80,7 +81,8 @@ public class TSGFileCacheBuilderSvc  {
                         int datasetsaddedcount=0;
                         for(DatasetVo dataset : datasetsindb.getDatasetCollection()) {
                             boolean datasetalreadycached = new File(downloadsFolder, dataset.getDatasetID()+".zip").exists();
-                            if (!datasetalreadycached && !this.config.getAutoCacheFailedDatasetsList().contains(dataset.getDatasetID())) {
+                            boolean cachedonMirror = !Utility.stringIsBlankorNull(config.getDownloadFileMirror()) && !Utility.stringIsBlankorNull(this.nvclDownloadSvc.findDatasetInMirror(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime()));
+                            if (!datasetalreadycached && !cachedonMirror && !this.config.getAutoCacheFailedDatasetsList().contains(dataset.getDatasetID())) {
                                 TsgParamVo tsgParamVo = new TsgParamVo();
                                 MessageVo tsgreqmessage = new MessageVo();
 

@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -418,6 +420,35 @@ public class NVCLDownloadSvc {
 		msgMap.put("request",reqMsgList);
 		msgMap.put("reply",repMsgList);
 		return msgMap;
+	}
+
+	/**
+	 * find dataset on the mirror
+	 * @param 	datasetID 	ID of dataset to check
+	 * @return	String 		if found return url in string format
+	 */
+	public String findDatasetInMirror(String datasetID, String datasetName, Long modifiedDate)
+	 {
+		try {
+			URL url = new URL(config.getDownloadFileMirror()+datasetID+".zip");
+			HttpURLConnection http = (HttpURLConnection)url.openConnection();
+			http.setRequestMethod("HEAD");
+			if (http.getResponseCode()==200 && http.getLastModified() > modifiedDate) {
+				logger.info("found file by its datasetID " + datasetID+".zip"+ " on the file mirror");
+				return url.toString();
+			}
+			else if (!Utility.stringIsBlankorNull(datasetName)) {
+				URL dsnameurl = new URL(config.getDownloadFileMirror()+datasetName+".zip");
+				HttpURLConnection dsnamehttp = (HttpURLConnection)dsnameurl.openConnection();
+				dsnamehttp.setRequestMethod("HEAD");
+				if (dsnamehttp.getResponseCode()==200 && dsnamehttp.getLastModified() > modifiedDate) {
+					logger.info("found file by its dataset name " + datasetName+".zip"+ " on the file mirror");
+					return dsnameurl.toString();
+				}
+			}
+		}
+		catch (Exception e)	{}
+		return null;
 	}
 
 	

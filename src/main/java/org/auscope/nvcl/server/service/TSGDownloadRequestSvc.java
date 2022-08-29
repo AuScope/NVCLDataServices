@@ -54,29 +54,13 @@ public class TSGDownloadRequestSvc {
 		logger.debug("fullpath : " + fullpath);
 		messageVo.setStatus("Processing");
 		if (!messageVo.getAutoCacheJob() && !Utility.stringIsBlankorNull(config.getDownloadFileMirror())) {
-			try {
-				URL url = new URL(config.getDownloadFileMirror()+messageVo.gettSGDatasetID()+".zip");
-				HttpURLConnection http = (HttpURLConnection)url.openConnection();
-				http.setRequestMethod("HEAD");
-				if (http.getResponseCode()==200 && http.getLastModified() > messageVo.getDbModifiedDate()) {
-					logger.info("found file by its datasetID " + messageVo.gettSGDatasetID()+".zip"+ " on the file mirror");
-					messageVo.setStatus("Success");
-					messageVo.setDescription(config.getDownloadFileMirror() + messageVo.getScriptFileNameNoExt() + ".zip");
-					messageVo.setResultfromcache(true);
-				}
-				else if (!Utility.stringIsBlankorNull(messageVo.getDatasetname())) {
-					URL dsnameurl = new URL(config.getDownloadFileMirror()+messageVo.getDatasetname()+".zip");
-					HttpURLConnection dsnamehttp = (HttpURLConnection)dsnameurl.openConnection();
-					dsnamehttp.setRequestMethod("HEAD");
-					if (dsnamehttp.getResponseCode()==200 && dsnamehttp.getLastModified() > messageVo.getDbModifiedDate()) {
-						logger.info("found file by its dataset name " + messageVo.getDatasetname()+".zip"+ " on the file mirror");
-						messageVo.setStatus("Success");
-						messageVo.setDescription(config.getDownloadFileMirror() + messageVo.getDatasetname() + ".zip");
-						messageVo.setResultfromcache(true);
-					}
-				}
+			String urltomirror = nvclDownloadSvc.findDatasetInMirror(messageVo.gettSGDatasetID(), messageVo.getDatasetname(), messageVo.getDbModifiedDate());
+			if (!Utility.stringIsBlankorNull(urltomirror)) {
+				messageVo.setStatus("Success");
+				messageVo.setDescription(urltomirror);
+				messageVo.setResultfromcache(true);
+
 			}
-			catch (Exception e)	{}
 		}
 		
 		if (!messageVo.getStatus().equals("Success") && fullpath.exists()) {
