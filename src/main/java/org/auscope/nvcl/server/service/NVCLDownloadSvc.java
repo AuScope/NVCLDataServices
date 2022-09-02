@@ -429,25 +429,28 @@ public class NVCLDownloadSvc {
 	 */
 	public String findDatasetInMirror(String datasetID, String datasetName, Long modifiedDate)
 	 {
-		try {
-			URL url = new URL(config.getDownloadFileMirror()+datasetID+".zip");
-			HttpURLConnection http = (HttpURLConnection)url.openConnection();
-			http.setRequestMethod("HEAD");
-			if (http.getResponseCode()==200 && http.getLastModified() > modifiedDate) {
-				logger.info("found file by its datasetID " + datasetID+".zip"+ " on the file mirror");
-				return url.toString();
-			}
-			else if (!Utility.stringIsBlankorNull(datasetName)) {
-				URL dsnameurl = new URL(config.getDownloadFileMirror()+datasetName+".zip");
-				HttpURLConnection dsnamehttp = (HttpURLConnection)dsnameurl.openConnection();
-				dsnamehttp.setRequestMethod("HEAD");
-				if (dsnamehttp.getResponseCode()==200 && dsnamehttp.getLastModified() > modifiedDate) {
-					logger.info("found file by its dataset name " + datasetName+".zip"+ " on the file mirror");
-					return dsnameurl.toString();
+		if (!Utility.stringIsBlankorNull(config.getDownloadFileMirror()))
+		{
+			try {
+				URL url = new URL(config.getDownloadFileMirror()+datasetID+".zip");
+				HttpURLConnection http = (HttpURLConnection)url.openConnection();
+				http.setRequestMethod("HEAD");
+				if (http.getResponseCode()==200 && http.getLastModified() > modifiedDate) {
+					logger.info("found file by its datasetID " + datasetID+".zip"+ " on the file mirror");
+					return url.toString();
+				}
+				else if (!Utility.stringIsBlankorNull(datasetName)) {
+					URL dsnameurl = new URL(config.getDownloadFileMirror()+datasetName+".zip");
+					HttpURLConnection dsnamehttp = (HttpURLConnection)dsnameurl.openConnection();
+					dsnamehttp.setRequestMethod("HEAD");
+					if (dsnamehttp.getResponseCode()==200 && dsnamehttp.getLastModified() > modifiedDate) {
+						logger.info("found file by its dataset name " + datasetName+".zip"+ " on the file mirror");
+						return dsnameurl.toString();
+					}
 				}
 			}
+			catch (Exception e)	{}
 		}
-		catch (Exception e)	{}
 		return null;
 	}
 

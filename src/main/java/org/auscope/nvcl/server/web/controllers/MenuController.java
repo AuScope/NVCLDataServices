@@ -225,6 +225,14 @@ public class MenuController {
 						logger.error("couldn't generate URI for download link");
 					}
 				}
+				else {
+					try {
+						String cacheurl=nvclDownloadSvc.findDatasetInMirror(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime());
+						if (!Utility.stringIsBlankorNull(cacheurl)) dataset.setDownloadLink(new URI(cacheurl));
+					} catch (URISyntaxException e) {
+						logger.error("couldn't generate URI for cache download link");
+					}
+				}
 			}
 		}
 		else if (checkdownloadavailable.equals("yes")){
