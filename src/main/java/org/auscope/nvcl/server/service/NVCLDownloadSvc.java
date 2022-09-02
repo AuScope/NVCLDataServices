@@ -425,6 +425,8 @@ public class NVCLDownloadSvc {
 	/**
 	 * find dataset on the mirror
 	 * @param 	datasetID 	ID of dataset to check
+	 * @param 	datasetName Human readable name of dataset
+	 * @param	modifiedDate Last modified date of dataset to ensure the cached copy is fresh
 	 * @return	String 		if found return url in string format
 	 */
 	public String findDatasetInMirror(String datasetID, String datasetName, Long modifiedDate)
@@ -454,6 +456,25 @@ public class NVCLDownloadSvc {
 		return null;
 	}
 
+		/**
+	 * find dataset on the mirror or in the local cache
+	 * @param 	datasetID 	ID of dataset to check
+	 * @param 	datasetName Human readable name of dataset
+	 * @param	modifiedDate Last modified date of dataset to ensure the cached copy is fresh
+	 * @return	String 		if found return url in string format
+	 */
+	public String findDatasetInAnyCache(String datasetID, String datasetName, Long modifiedDate)
+	 {
+		File dldir = new File(config.getDownloadRootPath());
+		File cachedTSGFile = new File(dldir, datasetID+".zip");
+		if (cachedTSGFile.exists() && cachedTSGFile.lastModified() > modifiedDate)
+		{
+			return (config.getDownloadURL()+datasetID+".zip");
+		}
+		else {
+			return this.findDatasetInMirror(datasetID,datasetName, modifiedDate);
+		}
+	}
 	
 	private ConfigVo config;
 	public void setConfig(ConfigVo config) {

@@ -216,36 +216,24 @@ public class MenuController {
 				dataset.setImageLogCollection(nvclDataSvc.getImageLogCollection(dataset.getDatasetID()));
 				dataset.setLogCollection(nvclDataSvc.getLogCollection(dataset.getDatasetID()));
 				dataset.setProfLogCollection(nvclDataSvc.getProfLogCollection(dataset.getDatasetID()));
-				File dldir = new File(this.configVo.getDownloadRootPath());
-				if (new File(dldir, dataset.getDatasetID()+".zip").exists())
-				{
-					try {
-						dataset.setDownloadLink(new URI(this.configVo.getDownloadURL()+dataset.getDatasetID()+".zip"));
-					} catch (URISyntaxException e) {
-						logger.error("couldn't generate URI for download link");
-					}
+				try {
+					String cacheurl= nvclDownloadSvc.findDatasetInAnyCache(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime());
+					if (!Utility.stringIsBlankorNull(cacheurl)) dataset.setDownloadLink(new URI(cacheurl));
 				}
-				else {
-					try {
-						String cacheurl=nvclDownloadSvc.findDatasetInMirror(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime());
-						if (!Utility.stringIsBlankorNull(cacheurl)) dataset.setDownloadLink(new URI(cacheurl));
-					} catch (URISyntaxException e) {
-						logger.error("couldn't generate URI for cache download link");
-					}
+				catch (URISyntaxException e) {
+					logger.debug("no valid cache url found");
 				}
 			}
 		}
 		else if (checkdownloadavailable.equals("yes")){
 			for (Iterator<DatasetVo> it2 = datasetList.getDatasetCollection().iterator(); it2.hasNext();) {
 				DatasetVo dataset = it2.next();
-				File dldir = new File(this.configVo.getDownloadRootPath());
-				if (new File(dldir, dataset.getDatasetID()+".zip").exists())
-				{
-					try {
-						dataset.setDownloadLink(new URI(this.configVo.getDownloadURL()+dataset.getDatasetID()+".zip"));
-					} catch (URISyntaxException e) {
-						logger.error("couldn't generate URI for download link");
-					}
+				try {
+					String cacheurl= nvclDownloadSvc.findDatasetInAnyCache(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime());
+					if (!Utility.stringIsBlankorNull(cacheurl)) dataset.setDownloadLink(new URI(cacheurl));
+				}
+				catch (URISyntaxException e) {
+					logger.debug("no valid cache url found");
 				}
 			}
 		}
