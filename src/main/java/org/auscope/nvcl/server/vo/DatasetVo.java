@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "Dataset")
-@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","modifiedDate","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection","downloadLink"})
+@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","createdDate","modifiedDate","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection","downloadLink"})
 public class DatasetVo {
 
     private String datasetID;
@@ -25,7 +25,14 @@ public class DatasetVo {
 	private String domainID;
 	private URI DownloadLink;
 	private Date modifiedDate;
+	private Date createdDate;
 	
+	public Date getCreatedDate() {
+		return createdDate;
+	}
+	public void setCreatedDate(Date createdDate) {
+		this.createdDate = createdDate;
+	}
 	public String getBoreholeURI() {
 		return boreholeURI;
 	}
