@@ -418,6 +418,7 @@ public class MenuController {
 		}
 		int i = 0;
 		colWidth = min(endSampleNo-startSampleNo, colWidth);
+		String mosaicCellClass = (( colWidth>1) ? "NVCLMosaicCelltwoDCell" : "NVCLMosaicCell");
 		for (int j= startSampleNo; j<=endSampleNo;j++) {
 			// extract sample number from the array list
 			//ImageDataVo imageDataVo = it1.next();
@@ -426,7 +427,7 @@ public class MenuController {
 				imageURL.append("<div style=\"clear:both;\"></div>");
 			}
 
-			imageURL.append("<div class=\"NVCLMosaicCell\" style=\"max-width: " + 100 / colWidth + "%\">");
+			imageURL.append("<div class=\""+mosaicCellClass+"\" style=\"max-width: " + Math.floor(100*( 100F / colWidth))/100 + "%;\">");
 
 			String titletext = "Core Image";
 

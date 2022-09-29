@@ -41,9 +41,15 @@ table.NVCLDSTable thead {
   -ms-interpolation-mode:nearest-neighbor;   /* IE8+           */
 }
 
-.NVCLMosaicCell {
+.NVCLMosaicCell, .NVCLMosaicCelltwoDCell {
 	display:block;
 	float:left;
+}
+
+.NVCLMosaicCelltwoDCell {
+  border-bottom: black solid 2px;
+  border-top: black solid 2px;
+  margin-bottom: 2px;
 }
 
 .NVCLMosaicCellContent {
