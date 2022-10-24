@@ -51,6 +51,7 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 		MessageVo messageVo = new MessageVo();
 
 		messageVo.setScriptFileNameNoExt(mapMessage.getString("scriptFileNameNoExt"));
+		messageVo.setForcerecreate(mapMessage.getBoolean("forcerecreate"));
 		messageVo.settSGDatasetID(mapMessage.getString("tsgdatasetid"));
 		messageVo.setBoreholeid(mapMessage.getString("boreholeid"));
 		messageVo.setAutoCacheJob(mapMessage.getBoolean("autoCacheJob"));
@@ -82,6 +83,7 @@ public class NVCLDownloadMessageConverter implements MessageConverter {
 		if(messageVo.getStatus().equals("Success"))	message.setString("description", messageVo.getDescription());
 		else message.setString("description", "Request for dataset named: "+messageVo.getDatasetname() +" with ID: " + messageVo.getScriptFileNameNoExt());
 		message.setBoolean("resultfromcache", messageVo.getResultfromcache());
+		message.setBoolean("forcerecreate", messageVo.isForcerecreate());
 		message.setString("tsgdatasetid", messageVo.gettSGDatasetID());
 		message.setString("boreholeid",  messageVo.getBoreholeid());
 		message.setString("typename",  messageVo.getFeatureTypeName());

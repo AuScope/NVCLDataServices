@@ -1475,12 +1475,7 @@ public class MenuController {
 		}
 
 		if (deletecache.equals("yes")) {
-			File cachedfile = new File(configVo.getDownloadRootPath() + selecteddataset.getDatasetID() + ".zip");
-			if (cachedfile.exists() && !cachedfile.delete()) {
-				String errMsg ="Existing file couldn't be deleted.  Its probably in use. email "+ configVo.getSysAdminEmail() + "for support";
-				logger.error(errMsg);
-				return new ModelAndView("error", "errmsg", errMsg);
-			}
+			tsgreqmessage.setForcerecreate(true);
 		}
 
 		tsgreqmessage.setScriptFileNameNoExt(scriptFileNameNoExt);

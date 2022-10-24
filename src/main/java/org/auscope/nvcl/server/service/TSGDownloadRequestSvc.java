@@ -49,11 +49,12 @@ public class TSGDownloadRequestSvc {
 		String donwloadURL		= config.getDownloadURL();
 		String downloadRootPath = config.getDownloadRootPath();
 		String fileName 		= messageVo.getScriptFileNameNoExt();
+		boolean skipcaches = messageVo.isForcerecreate();
 		File dir = new File(downloadRootPath);
 		File fullpath = new File(dir, fileName + ".zip");
 		logger.debug("fullpath : " + fullpath);
 		messageVo.setStatus("Processing");
-		if (!messageVo.getAutoCacheJob() && !Utility.stringIsBlankorNull(config.getDownloadFileMirror())) {
+		if (!skipcaches && !messageVo.getAutoCacheJob() && !Utility.stringIsBlankorNull(config.getDownloadFileMirror())) {
 			String urltomirror = nvclDownloadSvc.findDatasetInMirror(messageVo.gettSGDatasetID(), messageVo.getDatasetname(), messageVo.getDbModifiedDate());
 			if (!Utility.stringIsBlankorNull(urltomirror)) {
 				messageVo.setStatus("Success");
@@ -63,7 +64,7 @@ public class TSGDownloadRequestSvc {
 			}
 		}
 		
-		if (!messageVo.getStatus().equals("Success") && fullpath.exists()) {
+		if (!skipcaches && !messageVo.getStatus().equals("Success") && fullpath.exists()) {
 			logger.debug("File exists in local cache. set reply message....");
 			fullpath.setLastModified(System.currentTimeMillis());
 			messageVo.setStatus("Success");

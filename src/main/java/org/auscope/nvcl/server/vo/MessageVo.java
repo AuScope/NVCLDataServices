@@ -18,6 +18,7 @@ public class MessageVo {
 	private String status="";
 	private String description="";
 	private boolean resultfromcache;
+	private boolean forcerecreate=false;
 	private String requestType="";		//request type selector WFS or TSG
 	// TSG download specific properties:
 	private String scriptFileNameNoExt="";
@@ -100,6 +101,14 @@ public class MessageVo {
 
 	public void setResultfromcache(Boolean resultfromcache) {
 		this.resultfromcache = resultfromcache;
+	}
+
+	public boolean isForcerecreate() {
+		return forcerecreate;
+	}
+
+	public void setForcerecreate(boolean forcerecreate) {
+		this.forcerecreate = forcerecreate;
 	}
 
 	public String getRequestorEmail() {
