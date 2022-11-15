@@ -1,13 +1,17 @@
 package org.auscope.nvcl.server.vo;
 
-import org.springframework.stereotype.*;
-
 import java.io.File;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.auscope.nvcl.server.service.TSGDownloadRequestSvc;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * This Config Value Object class set the configuration info from config.properties 
@@ -60,6 +64,8 @@ public class ConfigVo {
 		private String downloadFileMirror;
 		
 		private List<String> autoCacheFailedDatasetsList= new ArrayList<String>();
+
+		private static final Logger logger = LogManager.getLogger(TSGDownloadRequestSvc.class);
 		
 		public String getJdbcDbType() {
 		  return jdbc_dbtype;
@@ -237,6 +243,25 @@ public class ConfigVo {
 
 		public void setDownloadFileMirror(String downloadFileMirror) {
 			this.downloadFileMirror = downloadFileMirror;
+			if (this.downloadFileMirror.charAt(this.downloadFileMirror.length()-1)!='/'){
+				this.downloadFileMirror= this.downloadFileMirror+'/';
+			}
+			try {
+				URL url = new URL(this.downloadFileMirror);
+				HttpURLConnection http = (HttpURLConnection)url.openConnection();
+				http.setRequestMethod("HEAD");
+				if (http.getResponseCode()==200 ) {
+					logger.info("mirror url looks good.");
+				}
+				else {
+					logger.warn("mirror url appears to be inaccessible. falling back to no mirror connection");
+					this.downloadFileMirror="";
+				}
+			}
+			catch(Exception e) {
+				logger.warn("mirror url appears to be inaccessible. falling back to no mirror connection");
+				this.downloadFileMirror="";
+			}
 		}
 
 }

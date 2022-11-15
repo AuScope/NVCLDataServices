@@ -55,6 +55,7 @@ public class TSGDownloadRequestSvc {
 		logger.debug("fullpath : " + fullpath);
 		messageVo.setStatus("Processing");
 		if (!skipcaches && !messageVo.getAutoCacheJob() && !Utility.stringIsBlankorNull(config.getDownloadFileMirror())) {
+			logger.debug("looking for file on mirror : " + config.getDownloadFileMirror());
 			String urltomirror = nvclDownloadSvc.findDatasetInMirror(messageVo.gettSGDatasetID(), messageVo.getDatasetname(), messageVo.getDbModifiedDate());
 			if (!Utility.stringIsBlankorNull(urltomirror)) {
 				messageVo.setStatus("Success");
