@@ -173,8 +173,10 @@
 			for(i=0;i<256;++i) {
 				fullhisto[i]=0;
 				for (var j=startNo;j<=endNo;j++) {
-					fullhisto[i] += histograms[j][i];
-					total += histograms[j][i];
+					if (histograms[j]) {
+						fullhisto[i] += histograms[j][i];
+						total += histograms[j][i];
+					}
 				}
 			}
 			var mintrim = trimpercent * total/100;
