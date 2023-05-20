@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'org.auscope'
-version = '2.2.1'
+version = '2.2.2'
 
 apply plugin: 'io.spring.dependency-management'
 

@@ -417,7 +417,7 @@ public class MenuController {
 			domainDataList = nvclDataSvc.getDomainData(domainlogId);
 		}
 		int i = 0;
-		colWidth = min(endSampleNo-startSampleNo, colWidth);
+		colWidth = min(endSampleNo-startSampleNo+1, colWidth);
 		String mosaicCellClass = (( colWidth>1) ? "NVCLMosaicCelltwoDCell" : "NVCLMosaicCell");
 		for (int j= startSampleNo; j<=endSampleNo;j++) {
 			// extract sample number from the array list
