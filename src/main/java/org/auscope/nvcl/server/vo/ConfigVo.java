@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.service.TSGDownloadRequestSvc;
+import org.auscope.nvcl.server.util.Utility;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,7 @@ import org.springframework.stereotype.Component;
  */
 
 @Component
-@ConfigurationProperties()
+@ConfigurationProperties(ignoreInvalidFields = true)
 public class ConfigVo {
 
 		//Spring will populate these fields through Dependency Injection.
@@ -60,6 +61,13 @@ public class ConfigVo {
 
 		@Value("${azureStorageConnectionString:}")
 		private String azureBlobStoreConnectionString;
+
+		@Value("${azureStorageEndPoint:}")
+		private String azureStorageEndPoint;
+
+		@Value("${azureContainerName:nvcldatasets}")
+		private String azureContainerName;
+
 		@Value("${downloadFileMirror:}")
 		private String downloadFileMirror;
 		
@@ -235,6 +243,22 @@ public class ConfigVo {
 
 		public void setAzureBlobStoreConnectionString(String azureBlobStoreConnectionString) {
 			this.azureBlobStoreConnectionString = azureBlobStoreConnectionString;
+		}
+
+		public String getAzureStorageEndPoint() {
+			return azureStorageEndPoint;
+		}
+
+		public void setAzureStorageEndPoint(String azureStorageEndPoint) {
+			this.azureStorageEndPoint = azureStorageEndPoint;
+		}
+		
+		public String getAzureContainerName() {
+			return azureContainerName;
+		}
+
+		public void setAzureContainerName(String azureContainerName) {
+			this.azureContainerName = Utility.stringIsBlankorNull(azureContainerName)?"nvcldatasets":azureContainerName;
 		}
 
 		public String getDownloadFileMirror() {

@@ -560,6 +560,89 @@ public class NVCLDataSvcDao {
 	
 	}
 
+    public SpectralLogCollectionVo getSpectralLogsDatainBlobStore(String datasetId) {
+		String sql = "select logs.LOG_ID,logs.LOGNAME, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.DOMAINLOG_ID) as samplecount, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
+		RowMapper<SpectralLogVo> mapper = new RowMapper<SpectralLogVo>(){
+			public SpectralLogVo mapRow(ResultSet rs, int rowNum)
+			throws SQLException {
+				SpectralLogVo spectralLog = new SpectralLogVo();
+				spectralLog.setLogID(rs.getString("LOG_ID"));
+				spectralLog.setLogName(rs.getString("LOGNAME"));
+				spectralLog.setSampleCount(rs.getInt("samplecount"));
+				spectralLog.setScript(rs.getString("customscript"));
+				
+				Blob specblob = rs.getBlob("SPECTRALSAMPLINGPOINTS");
+				if (!rs.wasNull() && specblob!=null){
+					FloatBuffer floatbuf = ByteBuffer.wrap( specblob.getBytes(1,(int)specblob.length())).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
+					float[] floatArray = new float[floatbuf.limit()];
+					floatbuf.get(floatArray);
+					spectralLog.setWavelengths(floatArray);
+				}
+				Blob fwhmblob = rs.getBlob("fwhm");
+				if (!rs.wasNull() && fwhmblob!=null){
+					FloatBuffer fwhmfloatbuf = ByteBuffer.wrap( fwhmblob.getBytes(1,(int)fwhmblob.length())).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
+					float[] fwhmfloatArray = new float[fwhmfloatbuf.limit()];
+					fwhmfloatbuf.get(fwhmfloatArray);
+					spectralLog.setFwhm(fwhmfloatArray);
+				}
+				Blob tirqblob = rs.getBlob("tirq");
+				if (!rs.wasNull() && tirqblob!=null){
+					FloatBuffer tirqfloatbuf = ByteBuffer.wrap( tirqblob.getBytes(1,(int)tirqblob.length())).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
+					float[] tirqfloatArray = new float[tirqfloatbuf.limit()];
+					tirqfloatbuf.get(tirqfloatArray);
+					spectralLog.setTirq(tirqfloatArray);
+				}
+				
+				spectralLog.setWavelengthUnits(rs.getString("SPECTRALUNITS"));
+				return spectralLog;
+			}
+		};
+		return new SpectralLogCollectionVo((ArrayList<SpectralLogVo>)this.jdbcTemplate.query(sql, mapper, datasetId));
+	
+	}
+
+
+    public SpectralLogCollectionVo getSpectralLogsNoSampCount(String datasetId) {
+		String sql = "select logs.LOG_ID,logs.LOGNAME, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
+		RowMapper<SpectralLogVo> mapper = new RowMapper<SpectralLogVo>(){
+			public SpectralLogVo mapRow(ResultSet rs, int rowNum)
+			throws SQLException {
+				SpectralLogVo spectralLog = new SpectralLogVo();
+				spectralLog.setLogID(rs.getString("LOG_ID"));
+				spectralLog.setLogName(rs.getString("LOGNAME"));
+				spectralLog.setScript(rs.getString("customscript"));
+				
+				Blob specblob = rs.getBlob("SPECTRALSAMPLINGPOINTS");
+				if (!rs.wasNull() && specblob!=null){
+					FloatBuffer floatbuf = ByteBuffer.wrap( specblob.getBytes(1,(int)specblob.length())).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
+					float[] floatArray = new float[floatbuf.limit()];
+					floatbuf.get(floatArray);
+					spectralLog.setWavelengths(floatArray);
+				}
+				Blob fwhmblob = rs.getBlob("fwhm");
+				if (!rs.wasNull() && fwhmblob!=null){
+					FloatBuffer fwhmfloatbuf = ByteBuffer.wrap( fwhmblob.getBytes(1,(int)fwhmblob.length())).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
+					float[] fwhmfloatArray = new float[fwhmfloatbuf.limit()];
+					fwhmfloatbuf.get(fwhmfloatArray);
+					spectralLog.setFwhm(fwhmfloatArray);
+				}
+				Blob tirqblob = rs.getBlob("tirq");
+				if (!rs.wasNull() && tirqblob!=null){
+					FloatBuffer tirqfloatbuf = ByteBuffer.wrap( tirqblob.getBytes(1,(int)tirqblob.length())).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
+					float[] tirqfloatArray = new float[tirqfloatbuf.limit()];
+					tirqfloatbuf.get(tirqfloatArray);
+					spectralLog.setTirq(tirqfloatArray);
+				}
+				
+				spectralLog.setWavelengthUnits(rs.getString("SPECTRALUNITS"));
+				return spectralLog;
+			}
+		};
+		return new SpectralLogCollectionVo((ArrayList<SpectralLogVo>)this.jdbcTemplate.query(sql, mapper, datasetId));
+	
+	}
+
+
 	public ProfLogCollectionVo getProfLogs(String datasetId) {
 		String sql = "select logs.LOG_ID, logs.LOGNAME, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, PROFLOGS.FLOATSPERSAMPLE, PROFLOGS.MINVAL, PROFLOGS.MAXVAL from logs inner join PROFLOGS on logs.log_id=PROFLOGS.LOG_ID where logs.dataset_id=? and logtype =4";
 		RowMapper<ProfLogVo> mapper = new RowMapper<ProfLogVo>(){

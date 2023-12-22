@@ -45,6 +45,7 @@ import org.auscope.nvcl.server.vo.ProfDataCollectionVo;
 import org.auscope.nvcl.server.vo.ProfLogCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralDataCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralLogCollectionVo;
+import org.auscope.nvcl.server.vo.SpectralLogVo;
 import org.auscope.nvcl.server.vo.TraySectionsVo;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -952,7 +953,17 @@ public class NVCLDataSvc {
     }
 
 	public SpectralLogCollectionVo getSpectralLogCollection(String datasetId) {
-		return nvclDataSvcDao.getSpectralLogs(datasetId);
+		if (nvclBlobStoreAccessSvc.isConnected) {
+           /* SpectralLogCollectionVo speclogs= nvclDataSvcDao.getSpectralLogsNoSampCount(datasetId);
+            for(SpectralLogVo speclog : speclogs.getSpectralLogCollection()){
+                speclog.setSampleCount(nvclBlobStoreAccessSvc.getSpectralDataCount(datasetId,speclog.getLogID()));
+            }
+            return speclogs;*/
+            return nvclDataSvcDao.getSpectralLogsDatainBlobStore(datasetId);
+        }
+        else {
+            return nvclDataSvcDao.getSpectralLogs(datasetId);
+        }
 	}
 
     public ProfDataCollectionVo getProfData(String proflogid, int startsampleno, int endsampleno)

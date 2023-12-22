@@ -76,6 +76,7 @@ public class NVCLDownloadSvc {
 			output.println("operation download ");
 			output.println("Connection_string " + config.getJdbcURL());
 			if (!Utility.stringIsBlankorNull(config.getAzureBlobStoreConnectionString())) output.println("AzureBlobStore " + config.getAzureBlobStoreConnectionString());
+			if (!Utility.stringIsBlankorNull(config.getAzureContainerName())) output.println("AZURECONTAINERNAME " + config.getAzureContainerName());	
 			output.println("Database_type " + config.getJdbcDbType());
 			output.println("Username " + config.getJdbcUsername());
 			output.println("Password " + config.getJdbcPassword());

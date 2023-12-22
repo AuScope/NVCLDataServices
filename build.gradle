@@ -1,11 +1,11 @@
 plugins {
-	id 'org.springframework.boot' version '2.6.6'
+	id 'org.springframework.boot' version '2.7.8'
 	id 'java'
 	id 'war'
 }
 
 group = 'org.auscope'
-version = '2.2.2'
+version = '2.2.3'
 
 apply plugin: 'io.spring.dependency-management'
 
@@ -25,7 +25,8 @@ sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 
 dependencies {
-    implementation "com.azure:azure-storage-blob:12.19.0"
+    implementation "com.azure:azure-storage-blob:12.25.0"
+    implementation "com.azure:azure-identity:1.11.1"
     implementation "org.springframework.boot:spring-boot-starter-web"
 	implementation "org.springframework.boot:spring-boot-starter-activemq"
 	implementation "org.springframework.boot:spring-boot-starter-jdbc"
