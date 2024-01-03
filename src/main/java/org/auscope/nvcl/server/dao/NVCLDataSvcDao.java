@@ -306,14 +306,16 @@ public class NVCLDataSvcDao {
                 dataset.setDatasetID(rs.getString("dataset_id"));
                 dataset.setDatasetName(rs.getString("datasetname"));
                 dataset.setDescription(rs.getString("dsdescription"));
-                dataset.setModifiedDate(rs.getDate("modifieddate"));
+                dataset.setBoreholeURI(rs.getString("holedatasourcename")+rs.getString("holeidentifier"));
                 dataset.setTrayID(rs.getString("traylog_id"));
                 dataset.setSectionID(rs.getString("sectionlog_id"));
                 dataset.setDomainID(rs.getString("domain_id"));
+                dataset.setModifiedDate(rs.getDate("modifieddate"));
+                dataset.setCreatedDate(rs.getDate("createddate"));
                 return dataset;
             }
         };
-        sql= "select dataset_id, datasetname, dsdescription, traylog_id, sectionlog_id, domain_id, modifieddate from publisheddatasets where dataset_ID= ?";
+        sql= "select dataset_id, datasetname,holedatasourcename, holeidentifier, dsdescription, traylog_id, sectionlog_id, domain_id, modifieddate, createddate from publisheddatasets where dataset_ID= ?";
     	return new DatasetCollectionVo( (ArrayList<DatasetVo>) this.jdbcTemplate.query(sql, mapper, datasetId));	
 
     }
