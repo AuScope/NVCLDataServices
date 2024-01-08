@@ -1193,7 +1193,7 @@ CREATE FUNCTION [dbo].[GETDOMAINDATAFUNC]
 )
 RETURNS 
 @Temp TABLE
-       (samplenumber   integer,
+       (samplenumber   integer INDEX IX1 CLUSTERED,
         startvalue     numeric(18,5),
         endvalue       numeric(18,5),
         samplename     varchar(4000))
