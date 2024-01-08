@@ -75,7 +75,11 @@ public class NVCLDownloadSvc {
 			output.println("task_begin");
 			output.println("operation download ");
 			output.println("Connection_string " + config.getJdbcURL());
+			// use azure blob store connection string
 			if (!Utility.stringIsBlankorNull(config.getAzureBlobStoreConnectionString())) output.println("AzureBlobStore " + config.getAzureBlobStoreConnectionString());
+			// or use other azure auth on the azure blob store endpoint 
+			// TSG accepts either an endpoint or connection string on the same parameter : AzureBlobStore
+			else if (!Utility.stringIsBlankorNull(config.getAzureStorageEndPoint())) output.println("AzureBlobStore " + config.getAzureStorageEndPoint());
 			if (!Utility.stringIsBlankorNull(config.getAzureContainerName())) output.println("AZURECONTAINERNAME " + config.getAzureContainerName());	
 			output.println("Database_type " + config.getJdbcDbType());
 			output.println("Username " + config.getJdbcUsername());
