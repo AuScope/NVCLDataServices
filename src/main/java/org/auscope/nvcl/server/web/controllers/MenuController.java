@@ -236,6 +236,7 @@ public class MenuController {
 				}
 			}
 		}
+		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		if(outputformat != null && outputformat.equals("json")){
 			response.setContentType("application/json");
 			response.setCharacterEncoding("UTF-8");
@@ -295,6 +296,7 @@ public class MenuController {
 		// process list of logs id and name
 		logger.debug("start processing...");
 
+		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		if (mosaicSvc.equals("yes")) {
 			ImageLogCollectionVo imglogList = nvclDataSvc.getImageLogCollection(datasetId);
 
@@ -586,6 +588,7 @@ public class MenuController {
 			catch (Exception ex) {
 				logger.warn(ex.getMessage());
 				imgData = imagedata.getImgData();
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 				response.setContentType("image/jpeg");
 
 				int imgLength = (int) imgData.length;
@@ -597,6 +600,7 @@ public class MenuController {
 		}
 		else {
 			imgData = imagedata.getImgData();
+			response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 			response.setContentType("image/jpeg");
 
 			int imgLength = (int) imgData.length;
@@ -653,6 +657,7 @@ public class MenuController {
 		// log id
 		DomainDataCollectionVo domainDataList = nvclDataSvc.getDomainData(domainlogId);
 
+		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		response.setContentType("text/xml");
 		this.marshaller.marshal(domainDataList, new StreamResult(response.getOutputStream()));
 
@@ -1146,6 +1151,7 @@ public class MenuController {
 			} else {
 				response.setContentType("application/json");
 				response.setCharacterEncoding("UTF-8");
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 				new ObjectMapper().writeValue(response.getOutputStream(),scalarDetailList);
 			}
 			return null;
@@ -1674,6 +1680,7 @@ public class MenuController {
 		response.setHeader("Access-Control-Allow-Origin", "*");
 
 		int totalbytes = 0;
+		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		if (outputformat.equals("json")){
 			response.setContentType("application/json");
 			new ObjectMapper().writeValue(response.getOutputStream(),spectraldata.getSpectralDataCollection());
@@ -1731,6 +1738,7 @@ public class MenuController {
 		// process list of logs id and name
 		logger.debug("start processing...");
 
+		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		SpectralLogCollectionVo logList = nvclDataSvc.getSpectralLogCollection(datasetId);
 		if (outputformat.equals("json")) {
 			response.setContentType("application/json; charset=UTF-8");
@@ -1849,6 +1857,7 @@ public class MenuController {
 			}
 		}
 
+		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		response.setContentType("image/bmp");
 
 		ImageIO.write(bm, "bmp", response.getOutputStream());
@@ -1931,6 +1940,7 @@ public class MenuController {
 			ArrayList<BinnedClassDataVo> ds = nvclDataSvc.getdownSampledClassData(logId, startDepth, endDepth,
 					interval, 0.0F);
 			if (outputformat.equals("csv")) {
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 				response.setContentType("text/csv");
 				response.setHeader("Content-Disposition", "attachment; filename=\"scalar.csv\"");
 
@@ -1948,6 +1958,7 @@ public class MenuController {
 			} 
 			else
 			{
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 				response.setContentType("application/json");
 				response.setCharacterEncoding("UTF-8");
 				new ObjectMapper().writeValue(response.getOutputStream(),ds);
@@ -1959,6 +1970,7 @@ public class MenuController {
 			ArrayList<AveragedFloatDataVo> ds2 = nvclDataSvc.getdownSampledFloatDataDao(logId, startDepth, endDepth,
 					interval);
 			if (outputformat.equals("csv")) {
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 				response.setContentType("text/csv");
 				response.setHeader("Content-Disposition", "attachment; filename=\"scalar.csv\"");
 
@@ -1974,7 +1986,8 @@ public class MenuController {
 				}
 				writer.close();
 			} else {
-				response.setContentType("application/json");
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
+				response.setContentType("application/json");;
 				response.setCharacterEncoding("UTF-8");
 				new ObjectMapper().writeValue(response.getOutputStream(),ds2);
 			}
@@ -2068,6 +2081,7 @@ public class MenuController {
 
 		String datasetid = nvclDataSvc.getLogDetails(logId).getDatasetID();
 		if (datasetid != null) {
+			response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 			response.setContentType("application/json");
 			response.setCharacterEncoding("UTF-8");
 			ObjectMapper mapper = new ObjectMapper();
@@ -2106,6 +2120,7 @@ public class MenuController {
 			}
 		}
 		if(wavelengths.length()>0){
+			response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 			response.setContentType("application/json");
 			response.setCharacterEncoding("UTF-8");
 			ObjectMapper mapper = new ObjectMapper();
@@ -2132,6 +2147,7 @@ public class MenuController {
 			return new ModelAndView("getSampleNumberFromDepthusage", "errmsg", errMsg);
 		}
 		Integer sampleno = nvclDataSvc.getSampleNumberFromDepth(datasetid, depth);
+		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
 
@@ -2150,10 +2166,12 @@ public class MenuController {
 
 		AlgorithmCollectionVo algcol = nvclDataSvc.getAlgorithmsCollection();
 		if (outputformat.equals("json")) {
+			response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 			response.setContentType("application/json");
 			new ObjectMapper().writeValue(response.getOutputStream(),algcol);
 			
 		} else {
+			response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 			response.setContentType("text/xml");
 			this.marshaller.marshal(algcol, new StreamResult(response.getOutputStream()));
 		}
@@ -2177,9 +2195,11 @@ public class MenuController {
 
 		if (classcol!=null){
 			if (outputformat.equals("json")) {
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 				response.setContentType("application/json");
 				new ObjectMapper().writeValue(response.getOutputStream(),classcol);
 			} else {
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 				response.setContentType("text/xml");
 				this.marshaller.marshal(classcol, new StreamResult(response.getOutputStream()));
 			}
@@ -2201,9 +2221,11 @@ public class MenuController {
 		DepthRangeVo depthrange = nvclDataSvc.getDatasetDepthRange(datasetid);
 		
 		if (outputformat.equals("json")) {
+			response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 			response.setContentType("application/json");
 			new ObjectMapper().writeValue(response.getOutputStream(),depthrange);
 		} else {
+			response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 			response.setContentType("text/xml");
 			this.marshaller.marshal(depthrange, new StreamResult(response.getOutputStream()));
 		}
@@ -2260,6 +2282,7 @@ public class MenuController {
 		profdata=nvclDataSvc.getProfData(proflogid, startsampleNo, endsampleNo);
 
 		int totalbytes = 0;
+		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		if (outputformat.equals("json")){
 			response.setContentType("application/json");
 			new ObjectMapper().writeValue(response.getOutputStream(),profdata.getProfDataCollection());
