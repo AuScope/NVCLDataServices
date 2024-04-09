@@ -16,7 +16,7 @@ steps:
     tasks: 'build'
     publishJUnitResults: false
     javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.11'
+    jdkVersionOption: '1.17'
     gradleOptions: '-Xmx3072m'
     sonarQubeRunAnalysis: false
 
