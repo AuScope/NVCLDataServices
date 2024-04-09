@@ -8,6 +8,7 @@ import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -415,7 +416,7 @@ public class NVCLDataSvcDao {
      */
     public byte[] getImgHistogramData(String logID) {
         String sql = "select imghistogram from imagelogs where log_id = ?";
-        return (byte[]) this.jdbcTemplate.queryForObject(sql,new Object[] { logID }, byte[].class);
+        return (byte[]) this.jdbcTemplate.queryForObject(sql,byte[].class,logID );
     }
 
 
@@ -427,13 +428,10 @@ public class NVCLDataSvcDao {
      *                      else return false
      */
     public boolean validateLogId(String[] logIdList) {
-        String sql = "select count(*) from logs where log_id in (?";
-        for (int i = 1; i < logIdList.length; i++) {
-               sql = sql + ",?";
-        }
-        sql = sql + ")";
-        int logCount = this.jdbcTemplate.queryForObject(sql,(Object[])logIdList,Integer.class);
-        if (logCount == logIdList.length)
+        String sql = String.format("select count(*) from logs where log_id in (%s)",String.join(",", Collections.nCopies(logIdList.length, "?")));
+
+        int logCount = this.jdbcTemplate.queryForObject(sql,Integer.class,(Object[])logIdList);
+        if (logCount== logIdList.length)
             return true;
         else
             return false;
@@ -449,12 +447,9 @@ public class NVCLDataSvcDao {
      *                      else return false
      */
     public boolean validateDomainlogId(String[] logIdList) {
-        String sql = "select count(distinct domainlog_id) from logs where log_id in (?";
-        for (int i = 1; i < logIdList.length; i++) {
-               sql = sql + ",?";
-        }
-        sql = sql + ")";
-        int logCount = this.jdbcTemplate.queryForObject(sql,(Object[])logIdList,Integer.class);
+        String sql = String.format("select count(distinct domainlog_id) from logs where log_id in (%s)",String.join(",", Collections.nCopies(logIdList.length, "?")));
+
+        int logCount = this.jdbcTemplate.queryForObject(sql,Integer.class,(Object[])logIdList);
         if (logCount == 1)
             return true;
         else
@@ -487,7 +482,7 @@ public class NVCLDataSvcDao {
     public String getImageDomainlogId(String imagelogId) throws SQLException,
     DataAccessException {
         String sql = "select domainlog_id from logs where log_id=?";
-        String domainlogId  = (String) this.jdbcTemplate.queryForObject(sql,new Object[] { imagelogId }, String.class);
+        String domainlogId  = (String) this.jdbcTemplate.queryForObject(sql, String.class,imagelogId );
         return domainlogId;
     }
 
@@ -857,7 +852,7 @@ public class NVCLDataSvcDao {
 
     public String getDatasetIdfromLogId(String logId) {
         String sql = "select dataset_id from logs where log_id=?";
-        return (String) this.jdbcTemplate.queryForObject(sql,new Object[] { logId }, String.class);
+        return (String) this.jdbcTemplate.queryForObject(sql,String.class, logId);
     }
 
     public Integer getLastsampleNumber(String domainlogId, Integer startSampleNo, Integer endSampleNo) {
