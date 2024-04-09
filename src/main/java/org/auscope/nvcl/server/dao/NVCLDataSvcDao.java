@@ -808,11 +808,11 @@ public class NVCLDataSvcDao {
      *
      */
     public AlgorithmCollectionVo getAlgorithmsCollection() {
-        String sql = "select algorithms.ALGORITHM_ID,algorithms.ALGORITHMNAME,algorithmoutputs.ALGORITHMOUTPUTNAME,algorithmoutputs.ALGORITHMOUTPUT_ID,algorithmoutputs.ALGVERSION from algorithms inner join algorithmoutputs on algorithms.ALGORITHM_ID=algorithmoutputs.algorithm_id";
+        String sql = "select algorithms.ALGORITHM_ID,algorithms.ALGORITHMNAME,algorithmoutputs.ALGORITHMOUTPUTNAME,algorithmoutputs.ALGORITHMOUTPUT_ID,algorithmoutputs.ALGVERSION from algorithms inner join algorithmoutputs on algorithms.ALGORITHM_ID=algorithmoutputs.algorithm_id ORDER by algorithmoutputs.ALGORITHMOUTPUT_ID";
         AlgorithmCollectionVo algcol = new AlgorithmCollectionVo();
         
         List<Map<String, Object>> rows = this.jdbcTemplate.queryForList(sql);  
-        for (Map row : rows) {  
+        for (Map<String, Object> row : rows) {  
         	algcol.addAlgorithm((String)row.get("ALGORITHMNAME"),row.get("ALGORITHM_ID") instanceof BigDecimal ? ((BigDecimal)row.get("ALGORITHM_ID")).intValue():(Integer)row.get("ALGORITHM_ID") , (String)row.get("ALGORITHMOUTPUTNAME"), row.get("ALGORITHMOUTPUT_ID") instanceof BigDecimal ? ((BigDecimal)row.get("ALGORITHMOUTPUT_ID")).intValue():((Integer)row.get("ALGORITHMOUTPUT_ID")).intValue(),row.get("ALGVERSION") instanceof BigDecimal ? ((BigDecimal)row.get("ALGVERSION")).intValue():((Integer)row.get("ALGVERSION")).intValue()); 
         }  
 
