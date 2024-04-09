@@ -3,7 +3,6 @@ package org.auscope.nvcl.server.dao;
 import java.sql.*;
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
@@ -59,7 +58,6 @@ public class DownSampledClassDataDao extends StoredProcedure {
      * @param dataSource
      * @throws SQLException 
      */
-    @Autowired
     public DownSampledClassDataDao(BasicDataSource dataSource) throws SQLException {
         super();
         setDataSource(dataSource);

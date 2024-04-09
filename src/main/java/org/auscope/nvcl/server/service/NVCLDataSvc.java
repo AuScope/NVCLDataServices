@@ -30,7 +30,6 @@ import org.auscope.nvcl.server.vo.AveragedFloatDataVo;
 import org.auscope.nvcl.server.vo.BinnedClassDataVo;
 import org.auscope.nvcl.server.vo.ClassDataVo;
 import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
-import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.DepthRangeVo;
 import org.auscope.nvcl.server.vo.DomainDataCollectionVo;
@@ -45,7 +44,6 @@ import org.auscope.nvcl.server.vo.ProfDataCollectionVo;
 import org.auscope.nvcl.server.vo.ProfLogCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralDataCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralLogCollectionVo;
-import org.auscope.nvcl.server.vo.SpectralLogVo;
 import org.auscope.nvcl.server.vo.TraySectionsVo;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -112,10 +110,6 @@ public class NVCLDataSvc {
         this.nvclBlobStoreAccessSvc = nvclBlobStoreAccessSvc;
     }
 
-    private ConfigVo config;
-	public void setConfig(ConfigVo config) {
-			this.config = config;
-	}
 
     /**
      * Configure the DownSampledClassDataDao (Data Access Object)
@@ -1043,13 +1037,13 @@ public class NVCLDataSvc {
 			int sections = Integer.parseInt(values[1]);
 			int borderwidth = Integer.parseInt(values[6])+1;
 			int borderheight = Integer.parseInt(values[7]);
-			int totalheight = 0;
+			//int totalheight = 0;
 			List<Integer> sectionstartheights=new ArrayList<Integer>();
 			sectionstartheights.add(borderheight);
 			int maxwidth =0;
 			for(int i =0;i<sections;i++){
 				sectionstartheights.add(sectionstartheights.get(sectionstartheights.size()-1)+Integer.parseInt(values[8+(3*i)]));
-				totalheight+= Integer.parseInt(values[8+(3*i)]);
+				//totalheight+= Integer.parseInt(values[8+(3*i)]);
 				maxwidth = Math.max(Integer.parseInt(values[10+(3*i)])-Integer.parseInt(values[9+(3*i)]),maxwidth);
 			}
 			y=Math.max(y, sectionstartheights.get(0));

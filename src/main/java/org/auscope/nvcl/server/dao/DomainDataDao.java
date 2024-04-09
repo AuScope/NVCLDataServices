@@ -3,7 +3,6 @@ package org.auscope.nvcl.server.dao;
 import java.sql.*;
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
@@ -51,7 +50,6 @@ public class DomainDataDao extends StoredProcedure {
      * @param dataSource
      * @param configVo
      */
-    @Autowired
     public DomainDataDao(BasicDataSource dataSource) {
         super();
         setDataSource(dataSource);

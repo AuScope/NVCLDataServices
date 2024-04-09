@@ -121,7 +121,6 @@ public class Application extends SpringBootServletInitializer  {
         if (this.nvclDataSvc==null) {
             this.nvclDataSvc = new NVCLDataSvc();
             this.nvclDataSvc.setNVCLBlobStoreAccessSvc(nvclBlobStoreAccessSvc());
-            this.nvclDataSvc.setConfig(createConfig());
             return this.nvclDataSvc;
         }
         else {

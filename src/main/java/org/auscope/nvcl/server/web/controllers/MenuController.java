@@ -9,7 +9,6 @@ import java.awt.Menu;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -2035,7 +2034,7 @@ public class MenuController {
 			@RequestParam(required = false, value = "endsampleno", defaultValue = "0") Integer endSampleNo,
 			@RequestParam(required = false, value = "height", defaultValue = "800") Integer height,
 			@RequestParam(required = false, value = "width", defaultValue = "1460") Integer width)
-			throws ServletException, IOException, SQLException, ImageProcessingException {
+			throws ServletException, IOException, SQLException {
 
 		for (Iterator<String> it = logId.iterator(); it.hasNext();) {
 			String speclogid = it.next();
@@ -2047,11 +2046,6 @@ public class MenuController {
 		if (startSampleNo == null || startSampleNo < 0)
 			startSampleNo = 0;
 
-		String logidstring;
-		
-		logidstring ="['"+logId.get(0)+"'";
-		if (logId.size()>1) logidstring+=",'"+logId.get(1)+"'";
-		logidstring+="]";
 		
 		Map<String, Object> msgMap = new HashMap<String, Object>();
 		msgMap.put("startSampleNo", startSampleNo);
@@ -2066,7 +2060,7 @@ public class MenuController {
 	@RequestMapping(value = "/getDatasetID.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getDatasetID(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId) throws ServletException, IOException,
-			SQLException, ImageProcessingException {
+			SQLException {
 		if (!Utility.isAlphanumericOrHyphen(logId)) {
 			String errMsg = "Logid is not valid.";
 			return new ModelAndView("getDatasetIDusage", "errmsg", errMsg);
@@ -2087,7 +2081,7 @@ public class MenuController {
 	@RequestMapping(value = "/getSpectralLogSamplingPoints.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getSpectralLogSamplingPoints(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "speclogid") List<String> speclogIds) throws ServletException,
-			IOException, SQLException, ImageProcessingException {
+			IOException, SQLException {
 		if (speclogIds== null ){
 			String errMsg = "Spectral logid is not valid.";
 			return new ModelAndView("getSpectralLogSamplingPointsusage", "errmsg", errMsg);
@@ -2127,7 +2121,7 @@ public class MenuController {
 	public ModelAndView getSampleNumberFromDepth(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "datasetid") String datasetid,
 			@RequestParam(required = false, value = "depth") Float depth) throws ServletException, IOException,
-			SQLException, ImageProcessingException {
+			SQLException {
 		if (!Utility.isAlphanumericOrHyphen(datasetid)) {
 			String errMsg = "Datasetid is not valid.";
 			return new ModelAndView("getSampleNumberFromDepthusage", "errmsg", errMsg);
