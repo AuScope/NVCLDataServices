@@ -84,7 +84,7 @@ table.NVCLDSTable thead {
 .floatingGraph {
 	position: absolute;
 	z-index: 99;
-	width:800px;
+	width:1200px;
 	background:white;
 	overflow: hidden;
   display:none;
@@ -162,7 +162,7 @@ background-color:black;
 {
   transform: rotate(270deg);
   transform-origin: top left;
-  width: 75%;
+  width: 50%;
   top:100%;
   position: absolute;
 

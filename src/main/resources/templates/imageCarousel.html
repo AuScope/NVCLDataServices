@@ -270,25 +270,25 @@
 			if (imgsstillloading==0) applyHistotrim(startNo,EndNo);
 		}
 
-		function drawgraph(k, wavelengths, startSampleNo, endSampleNo, width, height,counter) {
-			return function (result) {
+		function drawgraph(result,k, wavelengths, startSampleNo, endSampleNo, width, height,counter) {
 				var data = [];
-
-				//var floats = new Float32Array(result);
-				var spectracount = result.length// result.byteLength/(4*wavelengths.length);
+				var spectracount = result[0].length;
 				var palette = new Rickshaw.Color.Palette({ scheme: 'munin' });
-				for (var j = 0; j < spectracount; j++) {
-					var d1 = [];
+				for (var l =0;l<result.length;l++) {
+					for (var j = 0; j < spectracount; j++) {
+						var d1 = [];
+						
+						for (var i = 0; i < result[l][j].floatspectraldata.length; i++) {
+							d1.push({ x: parseInt(wavelengths[l][i]), y: result[l][j].floatspectraldata[i] });
+						}
 
-					for (var i = 0; i < result[j].floatspectraldata.length; i++) {
-						d1.push({ x: parseInt(wavelengths[i]), y: result[j].floatspectraldata[i] });
+						var dataname="";
+						if (spectracount < 3 && startSampleNo==0){
+							dataname=sampletext[j+1]+l;
+						}
+						else dataname=sampletext[j]+l;
+						data.push({ data: d1, name: dataname , color: palette.color(j%3) });
 					}
-					var dataname="";
-					if (spectracount < 3 && startSampleNo==0){
-						dataname=sampletext[j+1];
-					}
-					else dataname=sampletext[j];
-					data.push({ data: d1, name: dataname , color: palette.color() });
 				}
 				var graph = new Rickshaw.Graph({
 					element: document.getElementById("chart" + startSampleNo + "_" + k),
@@ -343,7 +343,7 @@
 					if (typeof imgsliceheight !== "undefined" && imgsliceheight>0) {
 						graph.configure({
 							width: newwidth - 20 - imgsliceheight*5,
-							height: (newheight-24)/2 - 20
+							height: (newheight-24) - 20
 						});
 						graph.render();
 					}
@@ -354,23 +354,22 @@
 				setTimeout(resizegraph,500);
 				setTimeout(resizegraph,2000);
 				graph.render();
-			}
+			
 		}
 
 		function resizewindow(plotcontainer) {
 			var plotcontainerwidth = plotcontainer.width();
 			var plotcontainerheight =  plotcontainer.height();
-			if (plotcontainerwidth > (plotcontainerheight-24)*1.3333) plotcontainerwidth = (plotcontainerheight-24)*1.3333;
-			else plotcontainerheight = (plotcontainerwidth/1.333)+24;
+			if (plotcontainerwidth > (plotcontainerheight-24)*2) plotcontainerwidth = (plotcontainerheight-24)*2;
+			else plotcontainerheight = (plotcontainerwidth/2)+24;
 			plotcontainer.width(plotcontainerwidth+'px');
 			plotcontainer.height(plotcontainerheight+'px');
 			plotcontainer.find('.LSImageSlice').each(function(index) {
 				if ($(this).height()==0) setTimeout(resizewindow,500,plotcontainer);
 				else {
 					$(this).height('');
-					var maxLSwidth = Math.ceil((plotcontainerwidth*0.4)/5); // max size of linescan display 40% of total window
-					if ($(this).prop('naturalHeight') < maxLSwidth) $(this).height(maxLSwidth);
-					else $(this).height(Math.min(Math.ceil($(this).height()),maxLSwidth));
+					var maxLSwidth = Math.ceil((plotcontainerwidth*0.2)/5); // max size of linescan display 20% of total window
+					$(this).height(Math.min(Math.ceil($(this).height()),maxLSwidth));
 					if (index ==0) plotcontainer.find('.plotspectracontainer').first().css({ left: ($(this).height()*5) +'px'});
 				}
 			});
@@ -398,18 +397,25 @@
 			}
 			imgslices.append(imglink);
 			$('#plotspectra' + startSampleNo).append(imgslices);
-			$('#plotspectra' + startSampleNo).append('<div id="plotspectra'+startSampleNo+'div" class="plotspectracontainer"></div>');			
-			specids.forEach(function (speclogid, k) {
-
-				$('#plotspectra'+startSampleNo+'div').append("<div id=\"chart_container" + startSampleNo + "_" + k + "\" class=\"chart_container\"><div id=\"chart" + startSampleNo + "_" + k + "\" class=\"chart\"></div><div id=\"legend" + startSampleNo + "_" + k + "\" class=\"legend\"></div></div>");
-
-				$.getJSON("getSpectralLogSamplingPoints.html?speclogid=" + speclogid, function (specwvldata) {
-					var wavelengths = specwvldata["wavelengths"].split(",");
-
-					$.getJSON("getspectraldata.html?speclogid=" + speclogid + "&startsampleno=" + startSampleNo + "&endsampleno=" + endSampleNo + "&outputformat=json", drawgraph(k, wavelengths, startSampleNo, endSampleNo, width, height,counter));
-				});
-
+			$('#plotspectra' + startSampleNo).append('<div id="plotspectra'+startSampleNo+'div" class="plotspectracontainer"></div>');
+			const arraydata = new Array();
+			const arraywvl = new Array();
+			$.ajaxSetup({
+    			async: false
 			});
+			specids.forEach(function (speclogid, k) {
+				$('#plotspectra'+startSampleNo+'div').append("<div id=\"chart_container" + startSampleNo + "_" + k + "\" class=\"chart_container\"><div id=\"chart" + startSampleNo + "_" + k + "\" class=\"chart\"></div><div id=\"legend" + startSampleNo + "_" + k + "\" class=\"legend\"></div></div>");
+				const jres = $.getJSON("getSpectralLogSamplingPoints.html?speclogid=" + speclogid, function (specwvldata) {
+					arraywvl[k] = specwvldata["wavelengths"].split(",");
+					arraydata[k] = $.getJSON("getspectraldata.html?speclogid=" + speclogid + "&startsampleno=" + startSampleNo + "&endsampleno=" + endSampleNo + "&outputformat=json").responseJSON;
+				});
+			});
+
+			$.ajaxSetup({
+    			async: true
+			});
+			drawgraph(arraydata,0, arraywvl, startSampleNo, endSampleNo, width, height,counter);
+
 		}
 
 		showspectra = function (event) {
@@ -433,17 +439,13 @@
 				$.getJSON("getDatasetID.html?" + logid, function (dsdata) {
 					var dsid = dsdata["datasetid"];
 					$.getJSON("getDatasetCollection.html?datasetid=" + dsid + "&outputformat=json", function (speclogsdata) {
-						var swirspectra = "";
-						var tirspectra = "";
 						var LSimageID = "";
 						var maxsampleno=0;
+						var allspectra = "";
 						$.each(speclogsdata.datasetCollection[0].spectralLogCollection.SpectralLogCollection, function (key, value) {
-							if (value["logName"] == "Reflectance") {
-								swirspectra = value["logID"];
-								if(typeof value["sampleCount"] !== "undefined")	maxsampleno = Math.max(value["sampleCount"]-1,maxsampleno);
-							}
-							else if (value["logName"] == "Base Refl") {
-								tirspectra = value["logID"];
+							if (value["logName"] == "Reflectance" || value["logID"] == "Base Refl") {
+								if (allspectra.length>0 ) allspectra=allspectra+','+value["logID"];
+								else allspectra=value["logID"];
 								if(typeof value["sampleCount"] !== "undefined")	maxsampleno = Math.max(value["sampleCount"]-1,maxsampleno);
 							}
 						});
@@ -453,7 +455,6 @@
 								if(typeof value["sampleCount"] !== "undefined")	maxsampleno = Math.max(value["sampleCount"]-1,maxsampleno);
 							}
 						});
-						var allspectra = swirspectra + (tirspectra.length > 0 ? "," + tirspectra : "");
 						counter++;
 						if ($("#plotspectra" + Math.max((specsamplenumber - 1), 0)).length != 0) {
 							var plotspecwid = "#plotspectra" + Math.max((specsamplenumber - 1), 0);
