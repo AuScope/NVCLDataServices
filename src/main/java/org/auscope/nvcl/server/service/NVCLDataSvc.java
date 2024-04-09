@@ -1018,7 +1018,7 @@ public class NVCLDataSvc {
 				imgwidth=actualwidth;
 				imgheight=actualheight;
 			}
-			else if (imgwidth<actualwidth || imgheight < actualheight){
+			else if (imgwidth!=actualwidth || imgheight != actualheight){
 				x = (int) ((double)x*((double)actualwidth/(double)imgwidth));
 				y = (int) ((double)y*((double)actualheight/(double)imgheight));
 			}
