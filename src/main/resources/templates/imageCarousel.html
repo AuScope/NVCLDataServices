@@ -443,7 +443,7 @@
 						var maxsampleno=0;
 						var allspectra = "";
 						$.each(speclogsdata.datasetCollection[0].spectralLogCollection.SpectralLogCollection, function (key, value) {
-							if (value["logName"] == "Reflectance" || value["logID"] == "Base Refl") {
+							if (value["logName"] == "Reflectance" || value["logName"] == "Base Refl") {
 								if (allspectra.length>0 ) allspectra=allspectra+','+value["logID"];
 								else allspectra=value["logID"];
 								if(typeof value["sampleCount"] !== "undefined")	maxsampleno = Math.max(value["sampleCount"]-1,maxsampleno);
