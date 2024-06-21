@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -149,6 +151,7 @@ public class TSGDownloadRequestSvc {
 					Files.move(preparedzip.toPath(), downloadfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					messageVo.setStatus("Success");
 					messageVo.setDescription(downloadURL + fileName + ".zip");
+					nvclDownloadSvc.findDatasetInAnyCache( messageVo.getScriptFileNameNoExt(), messageVo.getDatasetname(), Instant.now().minus(2, ChronoUnit.HOURS).toEpochMilli(), true);
 				}
 				catch (IOException e) {
 					logger.error("IOException occured while moving file to download folder: " + e);

@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -24,6 +26,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.ConfigVo;
+import org.auscope.nvcl.server.vo.DatasetCollectionVo;
+import org.auscope.nvcl.server.vo.DatasetVo;
 import org.auscope.nvcl.server.vo.MessageVo;
 import org.auscope.nvcl.server.vo.TsgParamVo;
 import org.springframework.jms.core.JmsTemplate;
@@ -46,6 +50,8 @@ public class NVCLDownloadSvc {
 
 	
 	private static final Logger logger = LogManager.getLogger(NVCLDownloadSvc.class);
+	private ConcurrentMap<String,String> cacheurls = new ConcurrentHashMap<>();
+
 
 	/**
 	 * Creating a script file with file name base on : datasetiddd.txt
@@ -468,22 +474,40 @@ public class NVCLDownloadSvc {
 	 * @param	modifiedDate Last modified date of dataset to ensure the cached copy is fresh
 	 * @return	String 		if found return url in string format
 	 */
-	public String findDatasetInAnyCache(String datasetID, String datasetName, Long modifiedDate)
+	public String findDatasetInAnyCache(String datasetID, String datasetName, Long modifiedDate, boolean forcerefresh)
 	 {
+		if (!forcerefresh && cacheurls.containsKey(datasetID)) {
+			logger.debug("cache hit : "+ datasetID);
+			return (String) cacheurls.get(datasetID);
+		}
 		File dldir = new File(config.getDownloadRootPath());
 		File cachedTSGFile = new File(dldir, datasetID+".zip");
 		if (cachedTSGFile.exists() && cachedTSGFile.lastModified() > modifiedDate)
 		{
-			return (config.getDownloadURL()+datasetID+".zip");
+			String dlurl = config.getDownloadURL()+datasetID+".zip";
+			cacheurls.put(datasetID, dlurl);
+			return dlurl;
 		}
 		else {
-			return this.findDatasetInMirror(datasetID,datasetName, modifiedDate);
+			String dlurl = this.findDatasetInMirror(datasetID,datasetName, modifiedDate);
+			if (Utility.stringIsBlankorNull(dlurl)) dlurl ="";
+			cacheurls.put(datasetID, dlurl);
+			return dlurl;
 		}
 	}
 	
 	private ConfigVo config;
 	public void setConfig(ConfigVo config) {
 			this.config = config;
+	}
+
+
+	public void buildDownloadUrlHasMap(DatasetCollectionVo datasets) {
+		
+		for(DatasetVo dataset : datasets.getDatasetCollection()){
+			this.findDatasetInAnyCache(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime(), true);
+		}
+
 	}
 	
 }

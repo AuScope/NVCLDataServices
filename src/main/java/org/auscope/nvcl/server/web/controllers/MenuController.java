@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 import javax.jms.Destination;
@@ -77,6 +81,7 @@ import org.auscope.nvcl.server.vo.SpectralLogCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralLogVo;
 import org.auscope.nvcl.server.vo.TraySectionsVo;
 import org.auscope.nvcl.server.vo.TsgParamVo;
+import org.auscope.nvcl.server.vo.downloadUrl;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.DefaultTableXYDataset;
@@ -216,7 +221,7 @@ public class MenuController {
 				dataset.setLogCollection(nvclDataSvc.getLogCollection(dataset.getDatasetID()));
 				dataset.setProfLogCollection(nvclDataSvc.getProfLogCollection(dataset.getDatasetID()));
 				try {
-					String cacheurl= nvclDownloadSvc.findDatasetInAnyCache(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime());
+					String cacheurl= nvclDownloadSvc.findDatasetInAnyCache(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime(), false);
 					if (!Utility.stringIsBlankorNull(cacheurl)) dataset.setDownloadLink(new URI(cacheurl));
 				}
 				catch (URISyntaxException e) {
@@ -225,16 +230,22 @@ public class MenuController {
 			}
 		}
 		else if (checkdownloadavailable.equals("yes")){
-			for (Iterator<DatasetVo> it2 = datasetList.getDatasetCollection().iterator(); it2.hasNext();) {
-				DatasetVo dataset = it2.next();
-				try {
-					String cacheurl= nvclDownloadSvc.findDatasetInAnyCache(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime());
-					if (!Utility.stringIsBlankorNull(cacheurl)) dataset.setDownloadLink(new URI(cacheurl));
-				}
-				catch (URISyntaxException e) {
-					logger.debug("no valid cache url found");
-				}
+			ExecutorService executorService = Executors.newFixedThreadPool(20);
+			List<CompletableFuture<Void>> futures = new ArrayList<>();
+			for (DatasetVo dataset : datasetList.getDatasetCollection()) {
+				CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+					try {
+						String cacheurl= nvclDownloadSvc.findDatasetInAnyCache(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime(),false );
+						if (!Utility.stringIsBlankorNull(cacheurl)) dataset.setDownloadLink(new URI(cacheurl));
+					}
+					catch (URISyntaxException e) {
+						logger.debug("no valid cache url found");
+					}
+				}, executorService);
+				futures.add(future);
 			}
+			CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+			executorService.shutdown();
 		}
 		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		if(outputformat != null && outputformat.equals("json")){
