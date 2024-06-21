@@ -463,7 +463,7 @@
 							$("#marker" + currentcounter).remove();
 							plotspeccontainer.remove();
 						}
-						$('<div id="marker' + counter + '" style="px;background:' + colors[counter % 7] + '" class="circle"><div class="flabel-center">' + counter + '</div></div><div id="plot' + counter + 'container" class="floatingGraph" ><div onmousedown="dragstart(event);" style="width:100%;background:' + colors[counter % 7] + ';text-align:center;" >Drag to move<div style="float:right;"><span onclick=closeplot(' + counter + '); class="m-1"><i class="fa fa-window-close fa-lg" style="margin:3px"></i></span></div></div><div id="plotspectra' + (specsamplenumber - 1) + '" style="height: 600px"></div></div>').appendTo($('#plotcontainer'));
+						$('<div id="marker' + counter + '" style="px;background:' + colors[counter % 7] + '" class="circle"><div class="flabel-center">' + counter + '</div></div><div id="plot' + counter + 'container" class="floatingGraph" style="border-left: 3px solid '+colors[counter % 7] +';border-right: 3px solid '+colors[counter % 7] +';border-bottom: 3px solid '+colors[counter % 7] +'" ><div onmousedown="dragstart(event);" style="width:100%;background:' + colors[counter % 7] + ';text-align:center;" >Drag to move<div style="float:right;"><span onclick=closeplot(' + counter + '); class="m-1"><i class="fa fa-window-close fa-lg" style="margin:3px"></i></span></div></div><div id="plotspectra' + (specsamplenumber - 1) + '" style="height: 600px"></div></div>').appendTo($('#plotcontainer'));
 						var graphwidth = 540;
 						var graphheight = 280;
 						var parentcontainer = $('#plot' + counter + 'container');
