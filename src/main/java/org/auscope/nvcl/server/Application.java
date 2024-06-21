@@ -20,13 +20,16 @@ import org.auscope.nvcl.server.service.NVCLDownloadSvc;
 import org.auscope.nvcl.server.service.TSGDownloadRequestSvc;
 import org.auscope.nvcl.server.vo.BoreholeViewVo;
 import org.auscope.nvcl.server.vo.ConfigVo;
+import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.gmlPointVo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.SimpleMessageListenerContainer;
 import org.springframework.jms.listener.adapter.MessageListenerAdapter;
@@ -35,6 +38,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.view.xslt.XsltViewResolver;
 
 @SpringBootApplication
 @Configuration
@@ -286,7 +290,7 @@ public class Application extends SpringBootServletInitializer  {
             org.auscope.nvcl.server.vo.DatasetCollectionVo.class,
             org.auscope.nvcl.server.vo.ImageLogCollectionVo.class,
             org.auscope.nvcl.server.vo.LogCollectionVo.class,
-                org.auscope.nvcl.server.vo.DomainDataCollectionVo.class,
+            org.auscope.nvcl.server.vo.DomainDataCollectionVo.class,
             BoreholeViewVo.class,
             gmlPointVo.class,
             org.auscope.nvcl.server.vo.FeatureCollectionVo.class,
@@ -296,7 +300,8 @@ public class Application extends SpringBootServletInitializer  {
             org.auscope.nvcl.server.vo.ProfLogCollectionVo.class,
             org.auscope.nvcl.server.vo.AlgorithmCollectionVo.class,
             org.auscope.nvcl.server.vo.ClassificationsCollectionVo.class,
-            org.auscope.nvcl.server.vo.DepthRangeVo.class
+            org.auscope.nvcl.server.vo.DepthRangeVo.class,
+            org.auscope.nvcl.server.vo.downloadUrl.class
         });
 
         return marshaller;

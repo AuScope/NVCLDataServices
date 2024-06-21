@@ -322,6 +322,40 @@ public class NVCLDataSvcDao {
     }
 
         /**
+     * Getting the list of dataset id and dataset name from Datasets table by datasetID
+     *
+     * @param datasetID
+     *            datasetID is the identifier of a nvcl dataset.
+     * @return List a List of DatasetCollectionVo value object consists of
+     *         datasetID and datasetName.
+     *
+     */
+
+     public DatasetCollectionVo getDatasetCollectionbyDatasetName(String datasetName) {
+    	String sql;
+
+        RowMapper<DatasetVo> mapper = new RowMapper<DatasetVo>() {
+            public DatasetVo mapRow(ResultSet rs, int rowNum)
+                    throws SQLException {
+                DatasetVo dataset = new DatasetVo();
+                dataset.setDatasetID(rs.getString("dataset_id"));
+                dataset.setDatasetName(rs.getString("datasetname"));
+                dataset.setDescription(rs.getString("dsdescription"));
+                dataset.setBoreholeURI(rs.getString("holedatasourcename")+rs.getString("holeidentifier"));
+                dataset.setTrayID(rs.getString("traylog_id"));
+                dataset.setSectionID(rs.getString("sectionlog_id"));
+                dataset.setDomainID(rs.getString("domain_id"));
+                dataset.setModifiedDate(rs.getDate("modifieddate"));
+                dataset.setCreatedDate(rs.getDate("createddate"));
+                return dataset;
+            }
+        };
+        sql= "select dataset_id, datasetname,holedatasourcename, holeidentifier, dsdescription, traylog_id, sectionlog_id, domain_id, modifieddate, createddate from publisheddatasets where datasetname= ?";
+    	return new DatasetCollectionVo( (ArrayList<DatasetVo>) this.jdbcTemplate.query(sql, mapper, datasetName));	
+
+    }
+
+        /**
      * Getting the hole URI from Datasets table by datasetID
      *
      * @param datasetID

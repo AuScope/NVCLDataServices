@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>NVCL Data Services :: isdownloadavailable</title>
+    <link rel="stylesheet" href="style/style.css" type="text/css"/>
+  </head>
+  <body  class="NVCLDSBody">
+  <h2 class="NVCLDSh2">NVCL Data Services : isdownloadavailable</h2>
+  <h2 style="color:red" th:text="${errmsg}">Error</h2>
+  <p>isdownloadavailable service will check if the dataset identified by its name or ID has a TSG file available for download and if so get its download url. It requires either a datasetid or datasetname.</p>
+  <p>Usage: isdownloadavailable.html?parameter1=value</p>
+
+  <table class="usageTable"><tr><th>Parameter</th><th>Description</th><th>Required</th><th>Example values</th></tr>
+  <tr><td>datasetid</td><td>UUID of the dataset</td><td>no</td><td>6dd70215-fe38-457c-be42-3b165fd98c7</td></tr>
+  <tr><td>datasetname</td><td>Alternatively you can provide the dataset's name</td><td>no</td><td>WTB5</td></tr>
+  <tr><td>outputformat</td><td>change output format from xml</td><td>no</td><td>json</td></tr>
+  </table>
+  <h3>Example Queries:</h3>
+  <p>A standard query : isdownloadavailable.html?datasetid=6dd70215-fe38-457c-be42-3b165fd98c7</p>
+  </body>
+</html>

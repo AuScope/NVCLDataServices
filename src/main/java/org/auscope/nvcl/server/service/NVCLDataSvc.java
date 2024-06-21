@@ -238,6 +238,18 @@ public class NVCLDataSvc {
     	return nvclDataSvcDao.getDatasetCollectionbyDatasetId(datasetId);
     }
 
+      /**
+     * Get single dataset from table datasetsets by its datasets name
+     *
+     * @param datasetName
+     *            datasetName is the human readable name of a nvcl dataset.
+     * @return DatasetCollectionVo value object that consists of a collection of
+     *         dataset id and dataset name from datasets table.
+     */
+    public DatasetCollectionVo getDatasetCollectionbyDatasetName(String datasetName) {
+    	return nvclDataSvcDao.getDatasetCollectionbyDatasetName(datasetName);
+    }
+
     /**
      * Get the boreholeURI from datasets table by datasetid
      *

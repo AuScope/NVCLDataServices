@@ -2300,5 +2300,59 @@ public class MenuController {
 		return null;
 	}
 
+	@RequestMapping(value = "/isdownloadavailable.html" ,method = { RequestMethod.GET, RequestMethod.POST })
+	public ModelAndView isdownloadavailable(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam(required = false, value = "datasetid") String datasetid,
+			@RequestParam(required = false, value = "datasetname") String datasetname,
+			@RequestParam(required = false, value = "outputformat", defaultValue = "xml") String outputformat)
+			throws ServletException, IOException, SQLException {
+		
+		// mandatory field : holeIdentifier - validate if holeIdentifier is null
+		if (Utility.stringIsBlankorNull(datasetid) && Utility.stringIsBlankorNull(datasetname)) {
+			String errMsg = "datasetid or datasetname required";
+			return new ModelAndView("isdownloadavailableusage", "errmsg", errMsg);
+		}
+
+		DatasetCollectionVo datasets;
+
+		if (Utility.stringIsBlankorNull(datasetid) ) {
+			datasets=nvclDataSvc.getDatasetCollectionbyDatasetName(datasetname);
+		}
+		else {
+			datasets = nvclDataSvc.getDatasetCollectionbyDatasetId(datasetid);
+		}
+		
+
+		if (datasets.getDatasetCollection().size() !=1 ) {
+			String errMsg = "dataset not found";
+			return new ModelAndView("isdownloadavailableusage", "errmsg", errMsg);
+		}
+
+		try {
+			String cacheurl= nvclDownloadSvc.findDatasetInAnyCache(datasets.getDatasetCollection().get(0).getDatasetID(), datasets.getDatasetCollection().get(0).getDatasetName(), datasets.getDatasetCollection().get(0).getModifiedDate().getTime(),false );
+			//if (!Utility.stringIsBlankorNull(cacheurl)) dataset.setDownloadLink(new URI(cacheurl));
+			downloadUrl dlurl = new downloadUrl();
+			dlurl.setUrl(new URI(cacheurl));
+			dlurl.setDatasetID(datasets.getDatasetCollection().get(0).getDatasetID());
+			dlurl.setDatasetName(datasets.getDatasetCollection().get(0).getDatasetName());
+
+			if (outputformat.equals("json")) {
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
+				response.setContentType("application/json");
+				new ObjectMapper().writeValue(response.getOutputStream(),dlurl);
+			} else {
+				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
+				response.setContentType("text/xml");
+				this.marshaller.marshal(dlurl, new StreamResult(response.getOutputStream()));
+			}
+		}
+		catch (Exception e) {
+			logger.debug("no valid cache url found");
+		}
+
+		return null;
+		
+	}
+
 }
 
