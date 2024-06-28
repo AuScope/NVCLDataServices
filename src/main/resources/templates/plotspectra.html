@@ -5,73 +5,29 @@
 <head> 
  	<title>Spectral Data Plot</title>
 
-<script	src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"	type="text/javascript"></script>
 <script src="script/d3.min.js"></script>
 <script src="script/rickshaw.min.js"></script>
 <link rel="stylesheet" href="style/rickshaw.min.css">
 
-	<script type="text/javascript" th:inline="javascript">
-$.ajaxTransport("+*", function(options, originalOptions, jqXHR){
-    // Test for the conditions that mean we can/want to send/receive blobs or arraybuffers - we need XMLHttpRequest
-    // level 2 (so feature-detect against window.FormData), feature detect against window.Blob or window.ArrayBuffer,
-    // and then check to see if the dataType is blob/arraybuffer or the data itself is a Blob/ArrayBuffer
-    if (window.FormData && ((options.dataType && (options.dataType == 'blob' || options.dataType == 'arraybuffer'))
-        || (options.data && ((window.Blob && options.data instanceof Blob)
-            || (window.ArrayBuffer && options.data instanceof ArrayBuffer)))
-        ))
-    {
-        return {
-            /**
-             * Return a transport capable of sending and/or receiving blobs - in this case, we instantiate
-             * a new XMLHttpRequest and use it to actually perform the request, and funnel the result back
-             * into the jquery complete callback (such as the success function, done blocks, etc.)
-             *
-             * @param headers
-             * @param completeCallback
-             */
-            send: function(headers, completeCallback){
-                var xhr = new XMLHttpRequest(),
-                    url = options.url || window.location.href,
-                    type = options.type || 'GET',
-                    dataType = options.dataType || 'text',
-                    data = options.data || null,
-                    async = options.async || true;
- 
-                xhr.addEventListener('load', function(){
-                    var res = {};
- 
-                    res[dataType] = xhr.response;
-                    completeCallback(xhr.status, xhr.statusText, res, xhr.getAllResponseHeaders());
-                });
- 
-                xhr.open(type, url, async);
-                xhr.responseType = dataType;
-                xhr.send(data);
-            },
-            abort: function(){
-                jqXHR.abort();
-            }
-        };
-    }
-});
-function drawgraph(k,wavelengths) {
-	return function(result){
+<script type="text/javascript" th:inline="javascript">
+
+function drawgraph(specdata,wavelengths,speclogidindex) {
+
 	var data = [];
 
-	//var floats = new Float32Array(result);
-	var spectracount = result.length// result.byteLength/(4*wavelengths.length);
+	var spectracount = specdata.length;
 	var palette = new Rickshaw.Color.Palette( { scheme: 'munin' } );
 	for (var j=0;j<spectracount;j++)
 	{
 		var d1 =[];
 		
-		for (var i = 0; i < result[j].floatspectraldata.length; i++) {
-			d1.push({x:parseInt(wavelengths[i]), y: result[j].floatspectraldata[i]});
+		for (var i = 0; i < specdata[j].floatspectraldata.length; i++) {
+			d1.push({x:parseInt(wavelengths[i]), y: specdata[j].floatspectraldata[i]});
 		}
 		data.push({data:d1,name:"Reflectance Sample "+((j-Math.floor(spectracount/2))>0? "+"+ (j-Math.floor(spectracount/2)):(j-Math.floor(spectracount/2))) ,color:palette.color()});
 	}
 	var graph = new Rickshaw.Graph( {
-		element: document.getElementById("chart"+[[${msgMap['startSampleNo']}]]+"_"+k),
+		element: document.getElementById("chart"+[[${msgMap['startSampleNo']}]]+"_"+speclogidindex),
 		width: [[${msgMap['width']}]],
 		height: [[${msgMap['height']}]],
 		renderer: 'line',
@@ -89,7 +45,7 @@ function drawgraph(k,wavelengths) {
         tickFormat:d3.format('.0f')
     } );
 	var legend = new Rickshaw.Graph.Legend( {
-        element: document.querySelector("#legend"+[[${msgMap['startSampleNo']}]]+"_"+k),
+        element: document.querySelector("#legend"+[[${msgMap['startSampleNo']}]]+"_"+speclogidindex),
         graph: graph
     } );
 	var shelving = new Rickshaw.Graph.Behavior.Series.Toggle( {
@@ -103,34 +59,10 @@ function drawgraph(k,wavelengths) {
 		}
 	} );
 	graph.render();
-	}
 }
 
-	$(function() {
-		$.ajaxSetup({
-		    async: false
-		});
-		
-		var specids= [[${msgMap['logId']}]];
-		var startSampleNo = [[${msgMap['startSampleNo']}]];
 
-		var k;
-		for (k=0; k<specids.length;k++)
-		{
-
-			var wavelengths;
-			$('#plotspectra'+startSampleNo).append("<div id=\"chart_container"+startSampleNo+"_"+k+"\" class=\"chart_container\"><div id=\"chart"+startSampleNo+"_"+k+"\" class=\"chart\"></div><div id=\"legend"+startSampleNo+"_"+k+"\" class=\"legend\"></div></div>");
-			
-			$.getJSON("getSpectralLogSamplingPoints.html?speclogid="+specids[k],function(specwvldata) {
-				wavelengths = specwvldata["wavelengths"].split(",");
-
-				$.getJSON("getspectraldata.html?speclogid="+specids[k]+"&startsampleno="+startSampleNo+"&endsampleno="+[[${msgMap['endSampleNo']}]]+"&outputformat=json", drawgraph(k,wavelengths));
- 			});
-			
-		}
-	});
-
-	</script>
+</script>
 <style th:inline="css">
 .chart_container
 {
@@ -151,5 +83,33 @@ display:none;
 
 <body style="overflow:hidden">
 		<div id="plotspectra" th:attrappend="id=${msgMap['startSampleNo']}"></div>
+
+<script input th:inline="javascript">
+
+(async function() {
+
+	var specids= [[${msgMap['logId']}]];
+	var startSampleNo = [[${msgMap['startSampleNo']}]];
+	var endSampleNo = [[${msgMap['endSampleNo']}]];
+
+	var k;
+	for (k=0; k<specids.length;k++)
+	{
+
+		var wavelengths;
+
+		document.querySelector('#plotspectra'+startSampleNo).innerHTML ="<div id=\"chart_container"+startSampleNo+"_"+k+"\" class=\"chart_container\"><div id=\"chart"+startSampleNo+"_"+k+"\" class=\"chart\"></div><div id=\"legend"+startSampleNo+"_"+k+"\" class=\"legend\"></div></div>";
+		const response = await fetch("getSpectralLogSamplingPoints.html?speclogid="+specids[k]);
+		const data = await response.json();
+		wavelengths = data["wavelengths"].split(",");
+		
+		const dataresponse = await fetch("getspectraldata.html?speclogid="+specids[k]+"&startsampleno="+startSampleNo+"&endsampleno="+endSampleNo+"&outputformat=json");
+		const specdata = await dataresponse.json();
+		drawgraph(specdata,wavelengths,k)
+		
+	}
+})();
+
+</script>
 </body>
 </html>
