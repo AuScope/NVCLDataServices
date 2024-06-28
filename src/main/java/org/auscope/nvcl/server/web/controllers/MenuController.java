@@ -37,7 +37,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
-
 import com.drew.imaging.ImageProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -256,6 +255,14 @@ public class MenuController {
 		}
 		else {
 			response.setContentType("text/xml");
+			try {
+
+				this.marshaller.setMarshallerProperties(Collections.<String, Object>singletonMap("com.sun.xml.bind.xmlHeaders", (datasetList.getDatasetCollection().size() ==1 && !headersonly.equals("yes"))?"<?xml-stylesheet type='text/xsl' href='./xsl/dataset.xsl' ?>":"<?xml-stylesheet type='text/xsl' href='./xsl/alldatasets.xsl' ?>"));
+				
+			}
+			catch (Exception e ) {
+				logger.error(e.getMessage());
+			}
 			this.marshaller.marshal(datasetList, new StreamResult(response.getOutputStream()));
 		}
 		return null;
