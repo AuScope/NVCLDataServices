@@ -194,7 +194,7 @@ public class MenuController {
 			@RequestParam(required = false, value = "holeidentifier") String holeIdentifier,
 			@RequestParam(required = false, value = "datasetid") String datasetid,
 			@RequestParam(value = "outputformat", required = false) String outputformat,
-			@RequestParam(required = false, value = "headersonly", defaultValue="no") String headersonly,
+			@RequestParam(required = false, value = "headersonly") String headersonly,
 			@RequestParam(required = false, value = "checkdownloadavailable", defaultValue="no") String checkdownloadavailable) throws ServletException,
 			IOException, SQLException, ParserConfigurationException, TransformerException {
 
@@ -202,6 +202,11 @@ public class MenuController {
 		if (Utility.stringIsBlankorNull(holeIdentifier) && Utility.stringIsBlankorNull(datasetid)) {
 			String errMsg = "holeidentifier or datasetid must be provided.";
 			return new ModelAndView("getDatasetCollectionUsage", "errmsg", errMsg);
+		}
+
+		if(Utility.stringIsBlankorNull(headersonly)) {
+			if (!Utility.stringIsBlankorNull(holeIdentifier) && holeIdentifier.equals("all")) headersonly="yes";
+			else headersonly="no";
 		}
 
 		// process list of dataset id and name
