@@ -76,8 +76,23 @@ public class DownSampledClassDataDao extends StoredProcedure {
                     new LogTypeOneRowMapper()));
         }
         Boolean mintThreshParamPresent=false;
-        ResultSet rs = dataSource.getConnection().getMetaData().getProcedureColumns(null, null,SQL , null);
-        while (rs.next()) {
+        int attemptsleft =3;
+        boolean connected=false;
+        ResultSet rs=null;
+        while (attemptsleft>0 && connected==false)
+        {
+            try {
+                rs = dataSource.getConnection().getMetaData().getProcedureColumns(null, null,SQL , null);
+                connected=true;
+            }
+            catch (Exception e) {
+                logger.error("Database connection Failed. Error was:"+e.getMessage());
+                attemptsleft-=1;
+                if (attemptsleft>0) logger.info("retrying connection "+attemptsleft+" attempts remain.");
+                else throw e;
+            }
+        }
+        while (rs!=null && rs.next()) {
             if(rs.getString("COLUMN_NAME")!=null && rs.getString("COLUMN_NAME").toLowerCase().contains(MINTHRESHOLD.toLowerCase())) mintThreshParamPresent=true;
         }
         declareParameter(new SqlParameter(LOGID, Types.VARCHAR));
