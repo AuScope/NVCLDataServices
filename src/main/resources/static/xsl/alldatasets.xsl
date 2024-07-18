@@ -42,7 +42,7 @@
 					<tbody>
 						<xsl:for-each select="DatasetCollection/Dataset">
 							<tr>
-							<td ><a><xsl:attribute name="href">./getDatasetCollection.html?datasetid=<xsl:value-of select="DatasetID" />&amp;outputformat=html</xsl:attribute><xsl:value-of select="DatasetID" /></a></td>
+							<td ><a><xsl:attribute name="href">./getDatasetCollection.html?datasetid=<xsl:value-of select="DatasetID" /></xsl:attribute><xsl:value-of select="DatasetID" /></a></td>
 							<td><xsl:value-of select="boreholeURI" /></td>
 							<td><xsl:value-of select="DatasetName" /></td>
 							<td><xsl:value-of select="description" /></td>
