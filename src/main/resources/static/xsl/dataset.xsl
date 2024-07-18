@@ -114,11 +114,11 @@
 										</xsl:otherwise>
 										</xsl:choose>
 									</dd>
-									<dt class="col-sm-4">Mid</dt>
+									<dt class="col-sm-4">Mir</dt>
 									<dd class="col-sm-8">
 									<xsl:choose>
 										<xsl:when  test="SpectralLogs/SpectralLog[logName = 'Mir Reflectance']">
-											<xsl:value-of select="SpectralLogs/SpectralLog[logName = 'Mir Reflectance']/logID" />&#160;&#160;<a><xsl:attribute name="href">./plotspectra.html?speclogid=<xsl:value-of select="SpectralLogs/SpectralLog[logName = 'Mid Reflectance']/logID" />&amp;startsampleno=0&amp;endsampleno=2</xsl:attribute>First 3 spectra</a>
+											<xsl:value-of select="SpectralLogs/SpectralLog[logName = 'Mir Reflectance']/logID" />&#160;&#160;<a><xsl:attribute name="href">./plotspectra.html?speclogid=<xsl:value-of select="SpectralLogs/SpectralLog[logName = 'Mir Reflectance']/logID" />&amp;startsampleno=0&amp;endsampleno=2</xsl:attribute>First 3 spectra</a>
 										</xsl:when >
 										<xsl:otherwise>
 										<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="red" class="bi bi-x" viewBox="0 0 16 16">
