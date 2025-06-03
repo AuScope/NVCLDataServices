@@ -88,7 +88,7 @@ public class DownSampledClassDataDao extends StoredProcedure {
             catch (Exception e) {
                 logger.error("Database connection Failed. Error was:"+e.getMessage());
                 attemptsleft-=1;
-                if (attemptsleft>0) logger.info("retrying connection "+attemptsleft+" attempts remain.");
+                if (attemptsleft>0) logger.debug("retrying connection "+attemptsleft+" attempts remain.");
                 else throw e;
             }
         }
@@ -157,7 +157,7 @@ public class DownSampledClassDataDao extends StoredProcedure {
             inputs.put(ENDDEPTH, endDepth);
             inputs.put(INTERVAL, samplingInterval);
             inputs.put(MINTHRESHOLD, minthreshold);
-            logger.info("inputs : " + inputs);
+            logger.debug("inputs : " + inputs);
             outs = (ArrayList<BinnedClassDataVo>) super.execute(inputs).get(OUTPARAMNAME);
         } catch (Exception e) {
             logger.error("Exception : " + e);

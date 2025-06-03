@@ -129,7 +129,7 @@ public class DownSampledFloatDataDao extends StoredProcedure {
             inputs.put(STARTDEPTH, startDepth);
             inputs.put(ENDDEPTH, endDepth);
             inputs.put(INTERVAL, samplingInterval);
-            logger.info("inputs : " + inputs);
+            logger.debug("inputs : " + inputs);
             outs = (ArrayList<AveragedFloatDataVo>) super.execute(inputs).get(OUTPARAMNAME);
         } catch (Exception e) {
             e.printStackTrace();

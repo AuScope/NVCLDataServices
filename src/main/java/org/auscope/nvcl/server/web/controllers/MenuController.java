@@ -313,8 +313,8 @@ public class MenuController {
 			return new ModelAndView("getLogCollectionUsage", "errmsg", errMsg);
 		}
 
-		logger.info("datasetID : " + datasetId);
-		logger.info("get image log collection : " + mosaicSvc);
+		logger.debug("datasetID : " + datasetId);
+		logger.debug("get image log collection : " + mosaicSvc);
 
 		// process list of logs id and name
 		logger.debug("start processing...");
@@ -1205,7 +1205,7 @@ public class MenuController {
 
 		CustomRestTemplate client = new CustomRestTemplate();
 		
-		logger.info("requesting: " + WFSbuilder.toUriString());
+		logger.debug("requesting: " + WFSbuilder.toUriString());
 
 		ResponseEntity<FeatureCollectionVo> WFSresponse = client.exchange(new URI(WFSbuilder.toUriString()), HttpMethod.GET, null, FeatureCollectionVo.class);
 		
@@ -1244,7 +1244,7 @@ public class MenuController {
 			int totalboreholes = scannedboreholes.getBoreholeViewCollection().size();
 			DatasetCollectionVo datasets = DSresponse.getBody();
 			totaldatasets = datasets.getDatasetCollection().size();
-			logger.info("found " + totalboreholes + " boreholes and " + totaldatasets + " datasets");
+			logger.debug("found " + totalboreholes + " boreholes and " + totaldatasets + " datasets");
 			/*for (int i = 0; i < totalboreholes; i++) {
 				BoreholeViewVo borehole = scannedboreholes.getBoreholeViewCollection().get(i);
 				String BoreholeID = borehole.getIdentifier().substring(borehole.getIdentifier().lastIndexOf('/') + 1);
@@ -1756,7 +1756,7 @@ public class MenuController {
 			outputformat = "xml";
 		}
 
-		logger.info("datasetID : " + datasetId);
+		logger.debug("datasetID : " + datasetId);
 
 		// process list of logs id and name
 		logger.debug("start processing...");

@@ -147,7 +147,7 @@ public class TSGFileCacheBuilderSvc  {
                     DatasetCollectionVo dataset = nvclDataSvc.getDatasetCollectionbyDatasetId(fileEntry.getName().replace(".zip",""));
                     if (dataset.getDatasetCollection().size()==1 && dataset.getDatasetCollection().get(0).getModifiedDate().getTime()>fileEntry.lastModified()){
                         fileEntry.delete();
-                        logger.info("deleted file "+fileEntry.getName() + " because it was created before the last modified date for this dataset");
+                        logger.debug("deleted file "+fileEntry.getName() + " because it was created before the last modified date for this dataset");
                     }
                 } 
             }

@@ -94,7 +94,7 @@ public class NVCLBlobStoreAccessSvc {
         //int count=0;
         AtomicInteger count = new AtomicInteger();
         this.blobServiceClient.getBlobContainerClient(containerName).listBlobsByHierarchy(blobName).forEach(blob -> count.getAndIncrement());
-        logger.info("speci id is "+ speclogid + " count is "+ count.get());
+        logger.debug("speci id is "+ speclogid + " count is "+ count.get());
         return count.get();
     }
 

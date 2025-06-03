@@ -449,7 +449,7 @@ public class NVCLDownloadSvc {
 				HttpURLConnection http = (HttpURLConnection)url.openConnection();
 				http.setRequestMethod("HEAD");
 				if (http.getResponseCode()==200 && http.getLastModified() > modifiedDate) {
-					logger.info("found file by its datasetID " + datasetID+".zip"+ " on the file mirror");
+					logger.debug("found file by its datasetID " + datasetID+".zip"+ " on the file mirror");
 					return url.toString();
 				}
 				else if (!Utility.stringIsBlankorNull(datasetName)) {
@@ -457,7 +457,7 @@ public class NVCLDownloadSvc {
 					HttpURLConnection dsnamehttp = (HttpURLConnection)dsnameurl.openConnection();
 					dsnamehttp.setRequestMethod("HEAD");
 					if (dsnamehttp.getResponseCode()==200 && dsnamehttp.getLastModified() > modifiedDate) {
-						logger.info("found file by its dataset name " + datasetName+".zip"+ " on the file mirror");
+						logger.debug("found file by its dataset name " + datasetName+".zip"+ " on the file mirror");
 						return dsnameurl.toString();
 					}
 				}

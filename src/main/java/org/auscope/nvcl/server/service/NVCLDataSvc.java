@@ -627,7 +627,7 @@ public class NVCLDataSvc {
             String title, ArrayList<Integer> arrSeriesColor, float samplingInterval,
             float start_range, float end_range, int showLegend)
             throws Exception {
-        logger.info("create multiple series ScatterChart.... ");
+        logger.debug("create multiple series ScatterChart.... ");
         JFreeChart chart;
 
         NumberAxis domainAxis = new NumberAxis("Depth (m)");
@@ -680,7 +680,7 @@ public class NVCLDataSvc {
     public JFreeChart createScatterChart(XYSeriesCollection dataSet,
             String title, float samplingInterval, float start_range,
             float end_range, int showLegend) throws Exception {
-        logger.info("createScatterChart.... ");
+        logger.debug("createScatterChart.... ");
 
         NumberAxis domainAxis = new NumberAxis("Depth (m)");
         domainAxis.setInverted(true);
@@ -726,7 +726,7 @@ public class NVCLDataSvc {
     public JFreeChart createXYBarChart(IntervalXYDataset dataSet, String title,
             float samplingInterval, float start_range, float end_range,
             int showLegend) throws Exception {
-        logger.info("createBarChart.... ");
+        logger.debug("createBarChart.... ");
 
         NumberAxis domainAxis = new NumberAxis("Depth (m)");
         domainAxis.setInverted(true);
@@ -799,7 +799,7 @@ public class NVCLDataSvc {
     public JFreeChart createLineChart(XYSeriesCollection dataSet, String title,
             ArrayList<Integer> arrSeriesColor, float samplingInterval,
             float start_range, float end_range, int showLegend) {
-        logger.info("createMultipleLinesChart.... ");
+        logger.debug("createMultipleLinesChart.... ");
 
         JFreeChart chart = ChartFactory.createXYLineChart(title, "Depth (m)",
                 "Meter Averages", dataSet, PlotOrientation.HORIZONTAL, true,
@@ -846,7 +846,7 @@ public class NVCLDataSvc {
     public JFreeChart createLineChart(XYSeriesCollection dataSet, String title,
             float samplingInterval, float start_range, float end_range,
             int showLegend) throws Exception {
-        logger.info("createLineChart.... ");
+        logger.debug("createLineChart.... ");
 
         JFreeChart chart = ChartFactory.createXYLineChart(title, "Depth (m)",
                 "Meter Averages", dataSet, PlotOrientation.HORIZONTAL, true,
