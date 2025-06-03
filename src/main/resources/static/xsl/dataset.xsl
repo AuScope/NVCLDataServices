@@ -11,8 +11,6 @@
 				<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 				
-				<script type="text/javascript" src="https://www.bing.com/api/maps/mapcontrol?callback=GetMap&amp;key=Ai63k9UsFBpMEP_8jghm-kjsSFw1zmGgXSpX8QBqLfSSnilSAeIq47ayJnZkb1R2" async="async" defer="defer"></script>
-			
 			</head>
 			<body>
 				<h1>NVCL Data: <xsl:value-of select="DatasetName" /></h1>
