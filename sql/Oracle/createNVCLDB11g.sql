@@ -4273,3 +4273,9 @@ Insert into NVCL.MACHINES (MACHINE_ID,MACHINENAME,NAMESPACEID) values (22,'HyLog
 Insert into NVCL.MACHINES (MACHINE_ID,MACHINENAME,NAMESPACEID) values (23,'HyLogger 3-6','urn:cgi:object:CSIRO:HyLogger'); -- Tas
 Insert into NVCL.MACHINES (MACHINE_ID,MACHINENAME,NAMESPACEID) values (24,'HyLogger 3-7','urn:cgi:object:CSIRO:HyLogger'); -- NT
 Insert into NVCL.MACHINES (MACHINE_ID,MACHINENAME,NAMESPACEID) values (25,'HyLogger 3-8','urn:cgi:object:CSIRO:HyLogger'); -- Vic
+Insert into NVCL.MACHINES (MACHINE_ID,MACHINENAME,NAMESPACEID) values (2301,'HyLogger 4-2301','urn:cgi:object:CSIRO:HyLogger'); -- NSW HL4
+Insert into NVCL.MACHINES (MACHINE_ID,MACHINENAME,NAMESPACEID) values (2302,'HyLogger 4-2302','urn:cgi:object:CSIRO:HyLogger'); -- SA HL4
+Insert into NVCL.MACHINES (MACHINE_ID,MACHINENAME,NAMESPACEID) values (2303,'HyLogger 4-2303','urn:cgi:object:CSIRO:HyLogger');
+Insert into NVCL.MACHINES (MACHINE_ID,MACHINENAME,NAMESPACEID) values (2501,'HyLogger 4-2501','urn:cgi:object:CSIRO:HyLogger');
+Insert into NVCL.MACHINES (MACHINE_ID,MACHINENAME,NAMESPACEID) values (2502,'HyLogger 4-2502','urn:cgi:object:CSIRO:HyLogger');
+
