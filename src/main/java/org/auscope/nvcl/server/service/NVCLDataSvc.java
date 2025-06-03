@@ -960,6 +960,23 @@ public class NVCLDataSvc {
 
     }
 
+        /**
+     * Execute the function call in DomainDataDao class.
+     * Extract the record set in the returned Map and return
+     * the Map to MenuController.
+     *
+     * @param domainlogId
+     *            domainlog_id for a specified image tray
+     * @return ArrayList this ArrayList consists of a list of DomainDataVo
+     */
+    public DomainDataCollectionVo getDomainDataRelativetoBaseDomain(String domainlogId) {
+
+
+        return nvclDataSvcDao.getDomainDataRelativetoBaseDomain(domainlogId);
+
+    }
+
+
     public SpectralDataCollectionVo getSpectralData(String speclogid, int startsampleno, int endsampleno)
     {
         if (nvclBlobStoreAccessSvc.isConnected) {
