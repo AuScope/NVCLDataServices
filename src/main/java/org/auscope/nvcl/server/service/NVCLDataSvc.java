@@ -33,6 +33,7 @@ import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.DepthRangeVo;
 import org.auscope.nvcl.server.vo.DomainDataCollectionVo;
+import org.auscope.nvcl.server.vo.DomainLogCollectionVo;
 import org.auscope.nvcl.server.vo.FloatDataVo;
 import org.auscope.nvcl.server.vo.ImageDataVo;
 import org.auscope.nvcl.server.vo.ImageLogCollectionVo;
@@ -286,6 +287,20 @@ public class NVCLDataSvc {
      */
     public ImageLogCollectionVo getImageLogCollection(String datasetId) {
         return nvclDataSvcDao.getImageLogCollection(datasetId);
+    }
+
+        /**
+     * Getting the list of log id and log name and sample number
+     * from LOGS table filtered by dataset id and where
+     * logtype=0. 
+     *
+     * @param datasetID
+     *            dataset id for retrieving a list of log_id and logName
+     * @return List a List of LogCollectionMosaicVo value object consisting
+     *            of logID, logName and sample number in the above order.
+     */
+    public DomainLogCollectionVo getDomainLogCollection(String datasetId) {
+        return nvclDataSvcDao.getDomainLogCollection(datasetId);
     }
 
     /**

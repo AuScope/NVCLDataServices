@@ -40,12 +40,9 @@ import javax.xml.transform.stream.StreamResult;
 import com.drew.imaging.ImageProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.auscope.nvcl.server.service.NVCLDataSvc;
-import org.auscope.nvcl.server.service.NVCLDownloadGateway;
-import org.auscope.nvcl.server.service.NVCLDownloadSvc;
+import org.auscope.nvcl.server.service.*;
 import org.auscope.nvcl.server.util.CustomRestTemplate;
 import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.AlgorithmCollectionVo;
@@ -61,6 +58,8 @@ import org.auscope.nvcl.server.vo.DatasetVo;
 import org.auscope.nvcl.server.vo.DepthRangeVo;
 import org.auscope.nvcl.server.vo.DomainDataCollectionVo;
 import org.auscope.nvcl.server.vo.DomainDataVo;
+import org.auscope.nvcl.server.vo.DomainLogCollectionVo;
+import org.auscope.nvcl.server.vo.DomainLogVo;
 import org.auscope.nvcl.server.vo.FeatureCollectionVo;
 import org.auscope.nvcl.server.vo.FloatDataVo;
 import org.auscope.nvcl.server.vo.ImageDataURLVo;
@@ -195,6 +194,7 @@ public class MenuController {
 			@RequestParam(required = false, value = "datasetid") String datasetid,
 			@RequestParam(value = "outputformat", required = false) String outputformat,
 			@RequestParam(required = false, value = "headersonly") String headersonly,
+			@RequestParam(required = false, value = "includedomains", defaultValue="no") String includedomains,
 			@RequestParam(required = false, value = "checkdownloadavailable", defaultValue="no") String checkdownloadavailable) throws ServletException,
 			IOException, SQLException, ParserConfigurationException, TransformerException {
 
@@ -224,6 +224,29 @@ public class MenuController {
 				dataset.setImageLogCollection(nvclDataSvc.getImageLogCollection(dataset.getDatasetID()));
 				dataset.setLogCollection(nvclDataSvc.getLogCollection(dataset.getDatasetID()));
 				dataset.setProfLogCollection(nvclDataSvc.getProfLogCollection(dataset.getDatasetID()));
+
+				if (!Utility.stringIsBlankorNull(includedomains) && includedomains.equals("yes")) {
+					dataset.setDomainLogCollection(nvclDataSvc.getDomainLogCollection(dataset.getDatasetID()));
+
+
+					for(DomainLogVo domain : dataset.getDomainLogCollection().getdomainLogCollection()) {
+						if ( Utility.isAlphanumericOrHyphen(domain.getSubdomainoflogid())) {
+							DomainDataCollectionVo domdata = nvclDataSvc.getDomainDataRelativetoBaseDomain(domain.getLogID());
+							DomainDataCollectionVo domdatadepths = nvclDataSvc.getDomainData(domain.getLogID());
+							for (DomainDataVo singledomsegment :domdata.getDomainDataCollection()){
+								for (DomainDataVo singledomdepthsegment :domdatadepths.getDomainDataCollection()){
+									if (singledomsegment.getSampleNo() == singledomdepthsegment.getSampleNo()){
+										singledomsegment.setStartValue(singledomdepthsegment.getStartValue());
+										singledomsegment.setEndValue(singledomdepthsegment.getEndValue());
+										break;
+									}
+								}
+							}
+							domain.setdomaindata(domdata.getDomainDataCollection());
+						}
+					}
+				}
+
 				try {
 					String cacheurl= nvclDownloadSvc.findDatasetInAnyCache(dataset.getDatasetID(), dataset.getDatasetName(), dataset.getModifiedDate().getTime(), false);
 					if (!Utility.stringIsBlankorNull(cacheurl)) dataset.setDownloadLink(new URI(cacheurl));
@@ -2375,6 +2398,55 @@ public class MenuController {
 
 		return null;
 		
+	}
+
+
+	
+
+	@RequestMapping(value = "/getDomains.html" ,method = { RequestMethod.GET, RequestMethod.POST })
+	public ModelAndView getDomainsHandler(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam(required = false, value = "datasetid") String datasetid,
+			@RequestParam(value = "outputformat", required = false) String outputformat)
+			throws ServletException, IOException, SQLException {
+				
+		if (!Utility.isAlphanumericOrHyphen(datasetid) ) {
+			String errMsg = "datasetid required";
+			return new ModelAndView("getDatasetDepthRangeusage", "errmsg", errMsg);
+		}
+
+		DomainLogCollectionVo domains = nvclDataSvc.getDomainLogCollection(datasetid);
+
+		for(DomainLogVo domain : domains.getdomainLogCollection()) {
+			if ( Utility.isAlphanumericOrHyphen(domain.getSubdomainoflogid())) {
+				DomainDataCollectionVo domdata = nvclDataSvc.getDomainDataRelativetoBaseDomain(domain.getLogID());
+				DomainDataCollectionVo domdatadepths = nvclDataSvc.getDomainData(domain.getLogID());
+				for (DomainDataVo singledomsegment :domdata.getDomainDataCollection()){
+					for (DomainDataVo singledomdepthsegment :domdatadepths.getDomainDataCollection()){
+						if (singledomsegment.getSampleNo() == singledomdepthsegment.getSampleNo()){
+							singledomsegment.setStartValue(singledomdepthsegment.getStartValue());
+							singledomsegment.setEndValue(singledomdepthsegment.getEndValue());
+							break;
+						}
+					}
+				}
+				domain.setdomaindata(domdata.getDomainDataCollection());
+			}
+		}
+
+		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
+		if(outputformat != null && outputformat.equals("json")){
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+			new ObjectMapper().writeValue(response.getOutputStream(),domains);
+			return null;
+		}
+		else {
+			response.setContentType("text/xml");
+			this.marshaller.marshal(domains, new StreamResult(response.getOutputStream()));
+		}
+
+		return  null;
+
 	}
 
 }

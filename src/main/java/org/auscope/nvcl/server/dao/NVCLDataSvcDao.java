@@ -24,6 +24,10 @@ import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetVo;
 import org.auscope.nvcl.server.vo.DepthRangeVo;
+import org.auscope.nvcl.server.vo.DomainDataCollectionVo;
+import org.auscope.nvcl.server.vo.DomainDataVo;
+import org.auscope.nvcl.server.vo.DomainLogCollectionVo;
+import org.auscope.nvcl.server.vo.DomainLogVo;
 import org.auscope.nvcl.server.vo.FloatDataVo;
 import org.auscope.nvcl.server.vo.ImageDataVo;
 import org.auscope.nvcl.server.vo.ImageLogCollectionVo;
@@ -135,6 +139,42 @@ public class NVCLDataSvcDao {
             }
         };
         return new ImageLogCollectionVo((ArrayList<ImageLogVo>) this.jdbcTemplate.query(sql, mapper, datasetId));
+    }
+
+
+    /**
+     * Getting the list of log id and log name from LOGS table for Image
+     * service. It will return logs with logtype=3 only and order the result
+     * in the following order :
+     * <ol>
+     * <li>1.Mosaic
+     * <li>2.Tray Thumbnail Images
+     * <li>3.Tray Images
+     * <li>4.holeing
+     * <li>5.anything else
+     * </ol>
+     *
+     * @param datasetID
+     *            dataset id for retrieving a list of log_id and logName
+     * @return List a List of LogCollectionMosaicVo value object consists of logID,
+     *         logName and samplecount
+     */
+
+     public DomainLogCollectionVo getDomainLogCollection(String datasetId) {
+        String sql = "select logs.log_id, logs.logname, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, domainlogs.ISSUBDOMAINOFLOG_ID from logs inner join DOMAINLOGS on logs.LOG_ID=domainlogs.LOG_ID where logs.dataset_id=? and logs.logtype=0";
+
+        RowMapper<DomainLogVo> mapper = new RowMapper<DomainLogVo>() {
+            public DomainLogVo mapRow(ResultSet rs, int rowNum)
+                    throws SQLException {
+                DomainLogVo domlog = new DomainLogVo();
+                domlog.setLogID(rs.getString("log_id"));
+                domlog.setLogName(rs.getString("logname"));
+                domlog.setSubdomainoflogid(rs.getString("ISSUBDOMAINOFLOG_ID"));
+                domlog.setSampleCount(rs.getInt("samplecount"));
+                return domlog;
+            }
+        };
+        return new DomainLogCollectionVo((ArrayList<DomainLogVo>) this.jdbcTemplate.query(sql, mapper, datasetId));
     }
 
     /**
@@ -899,6 +939,22 @@ public class NVCLDataSvcDao {
             }
         };
         return this.jdbcTemplate.queryForObject(sql,mapper, domainlogId, startSampleNo,endSampleNo);
+    }
+
+    public DomainDataCollectionVo getDomainDataRelativetoBaseDomain(String domainlogId) {
+        String sql = "select DOMAINLOGDATA.samplenumber,DOMAINLOGDATA.STARTVALUE,DOMAINLOGDATA.ENDVALUE from domainlogdata WHERE Domainlogdata.log_id = ? order by Domainlogdata.samplenumber";
+        RowMapper<DomainDataVo> mapper = new RowMapper<DomainDataVo>() {
+            public DomainDataVo mapRow(ResultSet rs, int rowNum)
+                    throws SQLException {
+                        DomainDataVo domainData = new DomainDataVo();
+            	domainData.setSampleNo(rs.getInt("samplenumber"));
+            	domainData.setstartIndex(rs.getInt("STARTVALUE"));
+                domainData.setendIndex(rs.getInt("ENDVALUE"));
+                return domainData;
+            }
+        };
+        return new DomainDataCollectionVo((ArrayList<DomainDataVo>) this.jdbcTemplate.query(sql, mapper, domainlogId));
+    
     }
     
 }

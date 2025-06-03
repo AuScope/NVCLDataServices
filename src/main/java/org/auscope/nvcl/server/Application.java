@@ -289,6 +289,7 @@ public class Application extends SpringBootServletInitializer  {
         marshaller.setClassesToBeBound(new Class[]{
             org.auscope.nvcl.server.vo.DatasetCollectionVo.class,
             org.auscope.nvcl.server.vo.ImageLogCollectionVo.class,
+            org.auscope.nvcl.server.vo.DomainLogCollectionVo.class,
             org.auscope.nvcl.server.vo.LogCollectionVo.class,
             org.auscope.nvcl.server.vo.DomainDataCollectionVo.class,
             BoreholeViewVo.class,

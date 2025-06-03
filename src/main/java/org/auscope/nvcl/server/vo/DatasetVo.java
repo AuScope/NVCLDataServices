@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "Dataset")
-@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","createdDate","modifiedDate","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection","downloadLink"})
+@XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","createdDate","modifiedDate","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection","domainLogCollection","downloadLink"})
 public class DatasetVo {
 
     private String datasetID;
@@ -19,6 +19,7 @@ public class DatasetVo {
 	private ImageLogCollectionVo imageLogCollection;
 	private ProfLogCollectionVo profLogCollection;
 	private LogCollectionVo logCollection;
+	private DomainLogCollectionVo domainLogCollection;
 	private DepthRangeVo depthRange;
 	private String trayID;
 	private String sectionID;
@@ -129,4 +130,13 @@ public class DatasetVo {
 	public void setDownloadLink(URI downloadLink) {
 		DownloadLink = downloadLink;
 	}
+
+	public DomainLogCollectionVo getDomainLogCollection() {
+		return domainLogCollection;
+	}
+
+	@XmlElement(name = "DomainLogs")
+    public void setDomainLogCollection(DomainLogCollectionVo domainLogCollection) {
+        this.domainLogCollection=domainLogCollection;
+    }
 }
