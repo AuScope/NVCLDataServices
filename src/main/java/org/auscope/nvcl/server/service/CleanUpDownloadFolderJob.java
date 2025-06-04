@@ -23,25 +23,6 @@ public class CleanUpDownloadFolderJob {
 
 	private static final Logger logger = LogManager.getLogger(CleanUpDownloadFolderJob.class);
 
-	private long days;
-	private String downloadfolderpath;
-	private String cachefolderpath;
-
-    @Value("${download.cachepath}")
-	public void setCachefolderpath(String cachefolderpath) {
-		this.cachefolderpath = cachefolderpath;
-	}
-	
-    @Value("${msgTimetoLiveDays}") 
-	public void setDays(long days) {
-		this.days = days;
-	}
-
-    @Value("${download.rootpath}")
-	public void setDownloadfolderpath(String downloadfolderpath) {
-		this.downloadfolderpath = downloadfolderpath;
-	}
-
 	@Autowired
 	@Qualifier(value = "createConfig")
 	private ConfigVo config;
@@ -49,11 +30,15 @@ public class CleanUpDownloadFolderJob {
 	@Scheduled(cron="0 */10 * * * ?")
 	protected void executeInternal() throws JobExecutionException {
 		int filescleaned = 0;
-		logger.debug("Download Folder cleaner running on download folder " + this.downloadfolderpath);
-		File downloadsFolder = new File(this.downloadfolderpath);
+		long days = this.config.getMsgTimetoLiveDays();
+		String cachefolderpath = this.config.getDownloadCachePath();
+		String downloadsfolderpath=this.config.getDownloadRootPath();
+		long minDiskspaceinBytes = ((long)this.config.getMinDiskspace())*1000000000L;
+		logger.debug("Download Folder cleaner running on download folder " + downloadsfolderpath);
+		File downloadsFolder = new File(downloadsfolderpath);
         long usablespace = downloadsFolder.getUsableSpace(); 
 		logger.debug("usable disk space is "+usablespace/(1000000000)+"Gb.");
-		if ( usablespace<10000000000L ) {
+		if ( usablespace<minDiskspaceinBytes ) {
 			if (downloadsFolder.exists()) {
 				File[] files = downloadsFolder.listFiles();
 				Arrays.sort(files, Comparator.comparingLong(File::lastModified));
@@ -75,8 +60,8 @@ public class CleanUpDownloadFolderJob {
 						}
 					}
         			long newusablespace = downloadsFolder.getUsableSpace();
-					if ( newusablespace>10000000000L ) {
-						logger.info("Cache cleaner has clean enough files.  Usable space is now : "+newusablespace);
+					if ( newusablespace>minDiskspaceinBytes ) {
+						logger.debug("Cache cleaner has clean enough files.  Usable space is now : "+newusablespace);
 						break;
 					}
 				}
@@ -87,9 +72,9 @@ public class CleanUpDownloadFolderJob {
 		}
 		logger.debug("Download Folder cleaner complete, " + filescleaned + " file(s) deleted.");
 
-		logger.debug("Cache Folder cleaner running on cache folder " + this.cachefolderpath);
+		logger.debug("Cache Folder cleaner running on cache folder " + cachefolderpath);
 		int cachefolderscleaned = 0;
-		File cacheFolder = new File(this.cachefolderpath);
+		File cacheFolder = new File(cachefolderpath);
 		if (cacheFolder.exists()) {
 			File[] CachelistFiles = cacheFolder.listFiles();
 			Arrays.sort(CachelistFiles, Comparator.comparingLong(File::lastModified));

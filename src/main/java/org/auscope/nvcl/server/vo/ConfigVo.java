@@ -70,6 +70,9 @@ public class ConfigVo {
 
 		@Value("${downloadFileMirror:}")
 		private String downloadFileMirror;
+
+		@Value("${minimumDiskspaceinGb:10}")
+		private int MinDiskspace;
 		
 		private List<String> autoCacheFailedDatasetsList= new ArrayList<String>();
 
@@ -275,7 +278,7 @@ public class ConfigVo {
 				HttpURLConnection http = (HttpURLConnection)url.openConnection();
 				http.setRequestMethod("HEAD");
 				if (http.getResponseCode()==200 ) {
-					logger.info("mirror url looks good.");
+					logger.info("mirror url looks good.  Download requests that can be redirected to the mirror will be.");
 				}
 				else {
 					logger.warn("mirror url appears to be inaccessible. falling back to no mirror connection");
@@ -286,6 +289,14 @@ public class ConfigVo {
 				logger.warn("mirror url appears to be inaccessible. falling back to no mirror connection");
 				this.downloadFileMirror="";
 			}
+		}
+
+		public int getMinDiskspace() {
+			return MinDiskspace;
+		}
+
+		public void setMinDiskspace(int minDiskspace) {
+			MinDiskspace = minDiskspace;
 		}
 
 }
