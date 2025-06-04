@@ -314,13 +314,15 @@ public class NVCLDataSvc {
      * @return ImageLogsVo the image logs value object which consists a
      *         thumbnail image in blob data type
      */
-    public ImageDataVo getImageData(String logID, int sampleNo) {
+    public ImageDataVo getImageData(String logID,String datasetid, int sampleNo, Boolean applycorrection) {
         logger.debug("getImageData start...");
         if (nvclBlobStoreAccessSvc.isConnected) {
-            String datasetid = this.getDatasetIdfromLogId(logID);
+            if (!Utility.isAlphanumericOrHyphen(datasetid)) datasetid = this.getDatasetIdfromLogId(logID);
             ImageDataVo imgdata=nvclBlobStoreAccessSvc.getImgData(datasetid,logID, sampleNo);
-            byte[] histo = nvclDataSvcDao.getImgHistogramData(logID);
-            if (histo!=null && histo.length>0) imgdata.setImgHistogramLUT(histo);
+            if (applycorrection){
+                byte[] histo = nvclDataSvcDao.getImgHistogramData(logID);
+                if (histo!=null && histo.length>0) imgdata.setImgHistogramLUT(histo);
+            }
             return imgdata;
         }
         else {      
@@ -1045,7 +1047,7 @@ public class NVCLDataSvc {
     public Integer getSampleNumberfromTrayPictureXY(String imglogId,int SampleNo,int x,int y,int imgwidth,int imgheight)
     {
 		
-		ImageDataVo imagedata = this.getImageData(imglogId, SampleNo);
+		ImageDataVo imagedata = this.getImageData(imglogId,"", SampleNo,false);
 
 		Metadata metadata;
 		try {

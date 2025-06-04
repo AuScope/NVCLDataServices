@@ -564,6 +564,7 @@ public class MenuController {
 	@RequestMapping(value = {"/Display_Tray_Thumb.html","/getImage.html"} ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView TrayThumbHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId,
+			@RequestParam(required = false, value = "datasetid") String datasetid,
 			@RequestParam(required = false, value = "sampleno") Integer sampleNo,
 			@RequestParam(required = false, value = "uncorrected") String uncorrected) throws ServletException, IOException,
 			SQLException {
@@ -580,9 +581,15 @@ public class MenuController {
 			String errMsg = "sampleno must be a non-negative integer.";
 			return new ModelAndView("displaytraythumbusage", "errmsg", errMsg);
 		}
+
+		Boolean applycorrection = true;
+		if (!Utility.stringIsBlankorNull(uncorrected) && uncorrected.equals("yes")){
+			applycorrection=false;
+		}
+
 		ImageDataVo imagedata = null;
         try {
-            imagedata = nvclDataSvc.getImageData(logId, sampleNo);
+            imagedata = nvclDataSvc.getImageData(logId,datasetid, sampleNo,applycorrection);
         }
         catch (EmptyResultDataAccessException ex )
         {
@@ -597,7 +604,7 @@ public class MenuController {
 		}
 		logger.debug("processing the blob data...");
 		byte[] imgData = null;
-		if ((Utility.stringIsBlankorNull(uncorrected) || !uncorrected.equals("yes")) && imagedata.getImgHistogramLUT() != null && imagedata.getImgHistogramLUT().length==256){
+		if (applycorrection && imagedata.getImgHistogramLUT() != null && imagedata.getImgHistogramLUT().length==256){
 			try {
 				byte[] histogramLUT = imagedata.getImgHistogramLUT();
 

@@ -12,6 +12,7 @@
 
   <table class="usageTable"><tr><th>Parameter</th><th>Description</th><th>Required</th><th>Example values</th></tr>
   <tr><td>logid</td><td>obtained through calling the getLogCollection service, with mosaicsvc URL parameter set to yes.</td><td>yes</td><td>63d31981-bd0c-44dd-a118-6a3406c5d68</td></tr>
+  <tr><td>datasetid</td><td>providing the datasetid can improve perfoamance under certain conditions</td><td>no</td><td>6dd70215-fe38-457c-be42-3b165fd98c7</td></tr>
   <tr><td>sampleno</td><td>sample number of the image to retrieve from database (0 based index)</td><td>yes</td><td>0</td></tr>
   <tr><td>uncorrected</td><td>images are automatically corrected if a histogram look up table exists in the database, use this paramater to override the correction and deliver the image raw.</td><td>no</td><td>yes</td></tr>
 </table>
