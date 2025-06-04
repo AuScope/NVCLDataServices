@@ -1,6 +1,9 @@
 package org.auscope.nvcl.server.service;
 
 import java.awt.Color;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -1145,5 +1148,25 @@ public class NVCLDataSvc {
 
     public Integer getLastsampleNumber(String domainlogId, Integer startSampleNo, Integer endSampleNo) {
         return nvclDataSvcDao.getLastsampleNumber(domainlogId, startSampleNo, endSampleNo);
+    }
+
+    public static BufferedImage rotateImageBy90DegreesAnticlockwise(BufferedImage originalImage) {
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+
+        // Create a new image with swapped dimensions
+        BufferedImage rotatedImage = new BufferedImage(height, width, originalImage.getType());
+
+        // Create the transformation
+        AffineTransform transform = new AffineTransform();
+        transform.translate(height / 2.0, width / 2.0);
+        transform.rotate(Math.toRadians(-90)); // Rotate anticlockwise
+        transform.translate(-width / 2.0, -height / 2.0);
+
+        // Apply the transformation
+        AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
+        op.filter(originalImage, rotatedImage);
+
+        return rotatedImage;
     }
 }

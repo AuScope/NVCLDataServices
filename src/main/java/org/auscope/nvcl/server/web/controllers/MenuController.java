@@ -24,9 +24,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
 
 import javax.imageio.ImageIO;
 import javax.jms.Destination;
@@ -115,6 +118,8 @@ import au.com.bytecode.opencsv.CSVWriter;
 public class MenuController {
 
 	private static final Logger logger = LogManager.getLogger(MenuController.class);
+
+	private Semaphore sectionImageGenerator = new Semaphore(1);
 
 	@Autowired
 	@Qualifier(value = "createConfig")
@@ -2408,7 +2413,157 @@ public class MenuController {
 	}
 
 
-	
+	@RequestMapping(value = "/getImageSection.html" ,method = { RequestMethod.GET, RequestMethod.POST })
+	public ModelAndView getImageSectionHandler(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam(required = false, value = "logid") String logId,
+			@RequestParam(required = false, value = "datasetid") String datasetid,
+			@RequestParam(required = false, value = "horizontal", defaultValue = "no") String horiz,
+			@RequestParam(required = false, value = "uncorrected") String uncorrected,
+			@RequestParam(required = false, value = "sectionno", defaultValue = "0") Integer sectionNo)
+			throws ServletException, IOException, SQLException {
+				
+		if (!Utility.isAlphanumericOrHyphen(datasetid) ) {
+			String errMsg = "datasetid required";
+			return new ModelAndView("getimagesectionusage", "errmsg", errMsg);
+		}
+
+		Boolean applycorrection = true;
+		if (!Utility.stringIsBlankorNull(uncorrected) && uncorrected.equals("yes")){
+			applycorrection=false;
+		}
+
+		DomainLogCollectionVo domains = nvclDataSvc.getDomainLogCollection(datasetid);
+
+		ImageLogCollectionVo imglogs = nvclDataSvc.getImageLogCollection(datasetid);
+		
+		ImageLogVo foundImagery = null;
+
+		for(ImageLogVo imglog : imglogs.getimageLogCollection()) {
+			if ( imglog.getLogName().equals("Imagery")) {
+				foundImagery = imglog;
+				break;
+			}
+		}
+
+		DomainLogVo foundDomain = null;
+
+		for(DomainLogVo domain : domains.getdomainLogCollection()) {
+			if ( domain.getLogName().equals("Section Domain")) {
+				foundDomain = domain;
+				DomainDataCollectionVo domdata = nvclDataSvc.getDomainDataRelativetoBaseDomain(domain.getLogID());
+				foundDomain.setdomaindata(domdata.getDomainDataCollection());
+				break;
+			}
+		}
+		if (foundDomain!=null && foundImagery!=null){
+			// validate if sectionNo is in range
+			if (sectionNo <0 || sectionNo>= foundDomain.getSampleCount()) {
+				String errMsg = "section number out of range. it must be between 0 and "+(foundDomain.getSampleCount()-1);
+				return new ModelAndView("getimagesectionusage", "errmsg", errMsg);
+			}
+
+			DomainDataVo foundSection = null;
+
+			for(DomainDataVo domaindetails : foundDomain.getdomaindata()) {
+				if ( domaindetails.getSampleNo()==sectionNo) {
+					foundSection = domaindetails;
+					break;
+				}
+			}
+
+			final ImageLogVo finalfoundImagery = foundImagery;
+			final Boolean finalapplycorrection = applycorrection;
+
+			//List<ImageDataVo> imglist = new CopyOnWriteArrayList<ImageDataVo>();
+			Map<Integer,ImageDataVo> concurrentMap = new ConcurrentHashMap<>();
+			//List<ImageDataVo> imglist = new CopyOnWriteArrayList<>();
+			if (foundSection!=null) {
+				/*for (int i=foundSection.getstartIndex();i<=foundSection.getendIndex();i++){
+					imglist.add(nvclDataSvc.getImageData(foundImagery.getLogID(),datasetid, i));
+				}*/
+
+				int numberOfThreads = 20;
+
+				// Create an ExecutorService with a fixed thread pool
+				ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+
+
+				// Submit tasks to the executor service
+				for (int i = foundSection.getstartIndex(); i <= foundSection.getendIndex(); i++) {
+					final int index = i;
+					executorService.submit(() -> {
+						concurrentMap.put(index,nvclDataSvc.getImageData(finalfoundImagery.getLogID(),datasetid, index,finalapplycorrection));
+					});
+				}
+
+				// Shutdown the executor service
+				executorService.shutdown();
+				try {
+					// Wait for all tasks to complete
+					if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+						executorService.shutdownNow();
+					}
+				} catch (InterruptedException e) {
+					executorService.shutdownNow();
+				}
+
+			}
+
+
+			try {
+				// Acquire a permit
+				sectionImageGenerator.acquire();
+				logger.debug("Entering section image generator critical section to generate section "+sectionNo+" section of dataset " + datasetid);
+
+				if (concurrentMap.size()>0) {
+					final int initialsampleno = foundSection.getstartIndex();
+					ByteArrayInputStream bais = new ByteArrayInputStream(concurrentMap.get(initialsampleno).getImgData());
+					BufferedImage firstImage = ImageIO.read(bais);
+					// Determine the width and height of the final image
+					int totalWidth = firstImage.getWidth();
+					int maxHeight = firstImage.getHeight()*(foundSection.getendIndex()-foundSection.getstartIndex()+1);
+					int height = firstImage.getHeight();
+			
+					// Create a new image with the combined dimensions
+					BufferedImage combinedImage = new BufferedImage(totalWidth, maxHeight, BufferedImage.TYPE_INT_RGB);
+					Graphics2D g2d = combinedImage.createGraphics();
+					
+
+					concurrentMap.forEach((key, value) -> {
+						ByteArrayInputStream imagebais = new ByteArrayInputStream(value.getImgData());
+						BufferedImage bufimage;
+						try {
+							bufimage = ImageIO.read(imagebais);
+							g2d.drawImage(bufimage,0, height*(key-initialsampleno), null);
+						} catch (IOException e) {
+							logger.error(e.toString());
+						}
+
+					});
+					g2d.dispose();
+					if (horiz.equals("yes")){
+						BufferedImage rotatedImg = NVCLDataSvc.rotateImageBy90DegreesAnticlockwise(combinedImage);
+						ImageIO.write(rotatedImg, "jpg", response.getOutputStream());
+					}
+					else {
+						ImageIO.write(combinedImage, "jpg", response.getOutputStream());
+					}
+				}
+			} 
+			catch (InterruptedException e) {
+				logger.error(e.toString());;
+			}
+			finally {
+				// Release the permit
+				sectionImageGenerator.release();
+				logger.debug("Leaving section image generator critical section after generating section "+sectionNo+" section of dataset " + datasetid);
+			}
+
+		}
+
+		return null;
+
+	}
 
 	@RequestMapping(value = "/getDomains.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getDomainsHandler(HttpServletRequest request, HttpServletResponse response,

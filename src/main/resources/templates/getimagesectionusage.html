@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>NVCL Data Services :: Get Image Section Service</title>
+    <link rel="stylesheet" href="style/style.css" type="text/css"/>
+  </head>
+  <body  class="NVCLDSBody">
+  <h2 class="NVCLDSh2">NVCL Data Services : Get Image Section Service</h2>
+  <h2 style="color:red" th:text="${errmsg}">Error</h2>
+  <p>Given a valid dataset id and section number, this service builds the corresponding section's image and returns it as a JPEG.</p>
+  <p>Usage: getImageSection.html?parameter1=value&amp;parameter2=value</p>
+
+  <table class="usageTable"><tr><th>Parameter</th><th>Description</th><th>Required</th><th>Example values</th></tr>
+  <tr><td>datasetid</td><td>the dataset's ID </td><td>yes</td><td>6dd70215-fe38-457c-be42-3b165fd98c7</td></tr>
+  <tr><td>sectionno</td><td>section number of the section you want to retrieve(0 based index)</td><td>yes</td><td>0</td></tr>
+  <tr><td>horizontal</td><td>turn the vertical downhole image horizontal as it would appear in a tray</td><td>no</td><td>yes</td></tr>
+</table>
+  <h3>Example Queries:</h3>
+  <p>A stadard query for retrieve the first section of imagery from a dataset: getImageSection.html?datasetid=6dd70215-fe38-457c-be42-3b165fd98c7&amp;sectionno=0</p>
+  <p>the same query as above but rotated horizontally : getImageSection.html?datasetid=6dd70215-fe38-457c-be42-3b165fd98c7&amp;sectionno=0&amp;horizontal=yes</p>
+  </body>
+</html>
