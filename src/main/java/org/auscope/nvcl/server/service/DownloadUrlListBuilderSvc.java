@@ -17,7 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 @EnableScheduling
 public class DownloadUrlListBuilderSvc  {
 
-	private static final Logger logger = LogManager.getLogger(CleanUpDownloadFolderJob.class);
+	private static final Logger logger = LogManager.getLogger(DownloadUrlListBuilderSvc.class);
 
 
 	@Autowired
