@@ -18,6 +18,8 @@ import org.auscope.nvcl.server.service.SpringFrameworkJmsSender.ReferenceHolderM
 import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.ConfigVo;
 import org.auscope.nvcl.server.vo.MessageVo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
@@ -43,6 +45,10 @@ public class TSGDownloadRequestSvc {
 	
 	private static final Logger logger = LogManager.getLogger(TSGDownloadRequestSvc.class);
 	
+	@Autowired
+	@Qualifier(value = "nvclDataSvc")
+	private NVCLDataSvc nvclDataSvc;
+
 	public void processRequest(MessageVo messageVo) {
 		logger.debug("in TSGDonwloadRequestSvc.processRequest...");
 		logger.debug("Check if requested dataset exists in download dir before download process start ........");
@@ -64,8 +70,15 @@ public class TSGDownloadRequestSvc {
 
 			}
 		}
-		
-		if (!skipcaches && !messageVo.getStatus().equals("Success") && fullpath.exists()) {
+		if(!skipcaches && !messageVo.getStatus().equals("Success") && config.getWritePrepedDSstoAzureBlobStore() && nvclDataSvc.blobExists(fileName + ".zip", config.getPrepedDSsAzureBlobStoreContainerName(),0)) {
+			logger.debug("File exists in Azure blob store cache. set reply message....");
+			nvclDataSvc.touchBlob(fileName + ".zip", config.getPrepedDSsAzureBlobStoreContainerName());
+			messageVo.setStatus("Success");
+			messageVo.setDescription(donwloadURL + fileName + ".zip");
+			messageVo.setResultfromcache(true);
+		}
+
+		else if (!skipcaches && !messageVo.getStatus().equals("Success") && fullpath.exists()) {
 			logger.debug("File exists in local cache. set reply message....");
 			fullpath.setLastModified(System.currentTimeMillis());
 			messageVo.setStatus("Success");
@@ -146,15 +159,27 @@ public class TSGDownloadRequestSvc {
 			int zipFolder = nvclDownloadSvc.zipFolder(downloadCachePath,fileName);
 			if ( zipFolder == 0 ) {
 				File preparedzip = new File(downloadCachePath+fileName+".zip");
-				File downloadfile= new File(downloadRootPath + fileName+".zip");
+
 				try {
-					Files.move(preparedzip.toPath(), downloadfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					if (config.getWritePrepedDSstoAzureBlobStore()) {
+						nvclDataSvc.UploadTSGFileBundletoAzureBlobContainer(fileName+".zip",config.getPrepedDSsAzureBlobStoreContainerName(),preparedzip);
+						Files.delete(preparedzip.toPath());
+					}
+					else {
+						File downloadfile= new File(downloadRootPath + fileName+".zip");
+						Files.move(preparedzip.toPath(), downloadfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					}
 					messageVo.setStatus("Success");
 					messageVo.setDescription(downloadURL + fileName + ".zip");
 					nvclDownloadSvc.findDatasetInAnyCache( messageVo.getScriptFileNameNoExt(), messageVo.getDatasetname(), Instant.now().minus(2, ChronoUnit.HOURS).toEpochMilli(), true);
 				}
 				catch (IOException e) {
 					logger.error("IOException occured while moving file to download folder: " + e);
+					messageVo.setStatus("Failed");
+					messageVo.setDescription("Failed to move zip file to target root path");
+				}
+				catch (Exception ex) {
+					logger.error("Exception occured while moving file to download folder: " + ex);
 					messageVo.setStatus("Failed");
 					messageVo.setDescription("Failed to move zip file to target root path");
 				}

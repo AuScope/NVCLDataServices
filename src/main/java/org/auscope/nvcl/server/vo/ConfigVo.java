@@ -73,7 +73,17 @@ public class ConfigVo {
 
 		@Value("${minimumDiskspaceinGb:10}")
 		private int MinDiskspace;
+
+		@Value("${writePrepedDSstoAzureBlobStore:false}")
+		private Boolean writePrepedDSstoAzureBlobStore;
+
+		@Value("${maxSpacetoUseinGB:100}")
+		private int maxSpacetoUseinGB;
+
+		@Value("${PrepedDSsAzureBlobStoreContainerName:nvclprepareddownloads}")
+		private String prepedDSsAzureBlobStoreContainerName;
 		
+
 		private List<String> autoCacheFailedDatasetsList= new ArrayList<String>();
 
 		private static final Logger logger = LogManager.getLogger(TSGDownloadRequestSvc.class);
@@ -297,6 +307,30 @@ public class ConfigVo {
 
 		public void setMinDiskspace(int minDiskspace) {
 			MinDiskspace = minDiskspace;
+		}
+
+		public Boolean getWritePrepedDSstoAzureBlobStore() {
+			return writePrepedDSstoAzureBlobStore;
+		}
+
+		public void setWritePrepedDSstoAzureBlobStore(Boolean writePrepedDSstoAzureBlobStore) {
+			this.writePrepedDSstoAzureBlobStore = writePrepedDSstoAzureBlobStore;
+		}
+
+		public int getMaxSpacetoUseinGB() {
+			return maxSpacetoUseinGB;
+		}
+
+		public void setMaxSpacetoUseinGB(int maxSpacetoUseinGB) {
+			this.maxSpacetoUseinGB = maxSpacetoUseinGB;
+		}
+
+		public String getPrepedDSsAzureBlobStoreContainerName() {
+			return prepedDSsAzureBlobStoreContainerName;
+		}
+
+		public void setPrepedDSsAzureBlobStoreContainerName(String prepedDSsAzureBlobStoreContainerName) {
+			this.prepedDSsAzureBlobStoreContainerName = prepedDSsAzureBlobStoreContainerName;
 		}
 
 }

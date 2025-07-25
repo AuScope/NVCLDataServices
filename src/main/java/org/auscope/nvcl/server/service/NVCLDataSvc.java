@@ -5,14 +5,21 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.models.BlobItem;
+import com.azure.storage.blob.specialized.BlockBlobClient;
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
@@ -1168,5 +1175,21 @@ public class NVCLDataSvc {
         op.filter(originalImage, rotatedImage);
 
         return rotatedImage;
+    }
+
+    public Boolean blobExists(String blobName,String containerName, long modifieddate) {
+        return nvclBlobStoreAccessSvc.blobExists(blobName,containerName,modifieddate);
+    }
+
+    public void UploadTSGFileBundletoAzureBlobContainer(String blobName,String containerName, File localFile) {
+        nvclBlobStoreAccessSvc.UploadTSGFileBundletoAzureBlobContainer(blobName, containerName,  localFile);
+    }
+
+    public void touchBlob(String blobName,String containerName) {
+        nvclBlobStoreAccessSvc.touchBlob(blobName, containerName);
+    }
+
+    public int cleanupoldestblobsinAzureContainer(int daysToKeep, String containerName, int maxGBstoRetain){
+        return nvclBlobStoreAccessSvc.cleanupoldestblobsinAzureContainer(daysToKeep, containerName, maxGBstoRetain);
     }
 }

@@ -30,6 +30,8 @@ import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetVo;
 import org.auscope.nvcl.server.vo.MessageVo;
 import org.auscope.nvcl.server.vo.TsgParamVo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.core.JmsTemplate;
 
 /**
@@ -52,6 +54,9 @@ public class NVCLDownloadSvc {
 	private static final Logger logger = LogManager.getLogger(NVCLDownloadSvc.class);
 	private ConcurrentMap<String,String> cacheurls = new ConcurrentHashMap<>();
 
+	@Autowired
+	@Qualifier(value = "nvclDataSvc")
+	private NVCLDataSvc nvclDataSvc;
 
 	/**
 	 * Creating a script file with file name base on : datasetiddd.txt
@@ -462,7 +467,9 @@ public class NVCLDownloadSvc {
 					}
 				}
 			}
-			catch (Exception e)	{}
+			catch (Exception e)	{
+				logger.debug("Exception: "+e.getMessage());
+			}
 		}
 		return null;
 	}
@@ -480,20 +487,33 @@ public class NVCLDownloadSvc {
 			logger.debug("cache hit : "+ datasetID);
 			return (String) cacheurls.get(datasetID);
 		}
-		File dldir = new File(config.getDownloadRootPath());
-		File cachedTSGFile = new File(dldir, datasetID+".zip");
-		if (cachedTSGFile.exists() && cachedTSGFile.lastModified() > modifiedDate)
+		// try azure storage
+		if (config.getWritePrepedDSstoAzureBlobStore())
 		{
-			String dlurl = config.getDownloadURL()+datasetID+".zip";
-			cacheurls.put(datasetID, dlurl);
-			return dlurl;
+			if (this.nvclDataSvc.blobExists(datasetID+".zip",config.getPrepedDSsAzureBlobStoreContainerName(),modifiedDate)){
+				String dlurl = config.getDownloadURL()+datasetID+".zip";
+				cacheurls.put(datasetID, dlurl);
+				return dlurl;
+			}
 		}
-		else {
-			String dlurl = this.findDatasetInMirror(datasetID,datasetName, modifiedDate);
-			if (Utility.stringIsBlankorNull(dlurl)) dlurl ="";
-			cacheurls.put(datasetID, dlurl);
-			return dlurl;
+		// try local storage
+		if (!Utility.stringIsBlankorNull(config.getDownloadRootPath()))
+		{
+			File dldir = new File(config.getDownloadRootPath());
+			File cachedTSGFile = new File(dldir, datasetID+".zip");
+			if (cachedTSGFile.exists() && cachedTSGFile.lastModified() > modifiedDate)
+			{
+				String dlurl = config.getDownloadURL()+datasetID+".zip";
+				cacheurls.put(datasetID, dlurl);
+				return dlurl;
+			}
 		}
+		// last resort check the nvcl cache
+		String dlurl = this.findDatasetInMirror(datasetID,datasetName, modifiedDate);
+		if (Utility.stringIsBlankorNull(dlurl)) dlurl ="";
+		cacheurls.put(datasetID, dlurl);
+		return dlurl;
+
 	}
 	
 	private ConfigVo config;

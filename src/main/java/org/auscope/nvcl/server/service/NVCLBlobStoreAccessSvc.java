@@ -1,11 +1,24 @@
 package org.auscope.nvcl.server.service;
 
+import java.io.File;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.azure.core.credential.TokenCredential;
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobContainerClientBuilder;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobItem;
+import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.azure.identity.EnvironmentCredentialBuilder;
@@ -96,6 +109,81 @@ public class NVCLBlobStoreAccessSvc {
         this.blobServiceClient.getBlobContainerClient(containerName).listBlobsByHierarchy(blobName).forEach(blob -> count.getAndIncrement());
         logger.debug("speci id is "+ speclogid + " count is "+ count.get());
         return count.get();
+    }
+
+    public Boolean blobExists(String blobName,String containerName,long modifieddate) {
+
+        BlockBlobClient blobClient = this.blobServiceClient.getBlobContainerClient(containerName).getBlobClient(blobName).getBlockBlobClient();
+        
+        OffsetDateTime dateTime = Instant.ofEpochMilli(modifieddate).atOffset(ZoneOffset.UTC);
+        
+        if ( blobClient.exists() && blobClient.getProperties().getLastModified().isAfter(dateTime)) {
+
+            return true;
+        }
+        
+        return false;
+    }
+
+    public void UploadTSGFileBundletoAzureBlobContainer(String blobName,String containerName, File localFile) {
+
+        BlobClient blobClient = this.blobServiceClient.getBlobContainerClient(containerName).getBlobClient(blobName);
+
+        blobClient.uploadFromFile(localFile.getAbsolutePath(), true); // true = overwrite if exists
+
+    }
+
+    public void touchBlob(String blobName,String containerName) {
+
+        BlockBlobClient blobClient = this.blobServiceClient.getBlobContainerClient(containerName).getBlobClient(blobName).getBlockBlobClient();
+        
+        if ( blobClient.exists()) {
+            
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("updated", String.valueOf(System.currentTimeMillis()));
+
+            blobClient.setMetadata(metadata);
+        }
+    }
+
+    public int cleanupoldestblobsinAzureContainer(int daysToKeep, String containerName, int maxGBstoRetain){
+        OffsetDateTime cutoffDate = OffsetDateTime.now().minusDays(daysToKeep); 
+
+        BlobContainerClient containerClient = this.blobServiceClient.getBlobContainerClient(containerName);
+
+        
+        long totalSize = 0;
+        long maxSizeinBytes = (long)maxGBstoRetain*1024L*1024L*1024L;
+
+        for (BlobItem blobItem : containerClient.listBlobs()) {
+            BlobClient blobClient = containerClient.getBlobClient(blobItem.getName());
+            BlobProperties properties = blobClient.getProperties();
+            totalSize += properties.getBlobSize();
+        }
+        
+        int blobscleaned=0;
+
+        if (totalSize>maxSizeinBytes) {
+            logger.warn("Blob storage size "+ (totalSize/(1024L*1024L*1024L)) +"GB has exceeded the maximum "+maxGBstoRetain+"GB.  The oldest files will now be removed until the total size falls bellow the limit");
+            List<BlobItem> blobList = new ArrayList<>();
+            containerClient.listBlobs().forEach(blobList::add);
+
+            // Sort blobs by LastModified date (oldest to newest)
+            blobList.sort(Comparator.comparing(blob -> blob.getProperties().getLastModified()));
+
+
+            for (BlobItem blobItem : blobList) {
+                if (blobItem.getProperties().getLastModified().isBefore(cutoffDate) && blobItem.getName().endsWith(".zip") ) {
+                    String blobName = blobItem.getName();
+                    totalSize -= blobItem.getProperties().getContentLength();
+                    containerClient.getBlobClient(blobName).delete();
+                    logger.debug(" - " + blobName + " (Modified: " + blobItem.getProperties().getLastModified() + ") DELETED");
+                    blobscleaned++;
+                    if (totalSize<maxSizeinBytes) break;
+                }
+            }
+        }
+        return blobscleaned;
     }
 
 }

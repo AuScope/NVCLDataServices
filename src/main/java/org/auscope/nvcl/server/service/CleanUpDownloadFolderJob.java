@@ -24,6 +24,10 @@ public class CleanUpDownloadFolderJob {
 	private static final Logger logger = LogManager.getLogger(CleanUpDownloadFolderJob.class);
 
 	@Autowired
+	@Qualifier(value = "nvclDataSvc")
+	private NVCLDataSvc nvclDataSvc;
+
+	@Autowired
 	@Qualifier(value = "createConfig")
 	private ConfigVo config;
 
@@ -32,43 +36,49 @@ public class CleanUpDownloadFolderJob {
 		int filescleaned = 0;
 		long days = this.config.getMsgTimetoLiveDays();
 		String cachefolderpath = this.config.getDownloadCachePath();
-		String downloadsfolderpath=this.config.getDownloadRootPath();
-		long minDiskspaceinBytes = ((long)this.config.getMinDiskspace())*1000000000L;
-		logger.debug("Download Folder cleaner running on download folder " + downloadsfolderpath);
-		File downloadsFolder = new File(downloadsfolderpath);
-        long usablespace = downloadsFolder.getUsableSpace(); 
-		logger.debug("usable disk space is "+usablespace/(1000000000)+"Gb.");
-		if ( usablespace<minDiskspaceinBytes ) {
-			if (downloadsFolder.exists()) {
-				File[] files = downloadsFolder.listFiles();
-				Arrays.sort(files, Comparator.comparingLong(File::lastModified));
-				for (File listFile : files) {
-					logger.debug("checking :"+listFile.getName());
-					if (listFile.getName().toLowerCase().endsWith(".zip")) {
-						if (this.config.getAggressiveCacheClearing() || listFile.lastModified() < System.currentTimeMillis() - (days * 86400000)) {
-							if (listFile.lastModified() > System.currentTimeMillis() - (days * 86400000)) {
-								logger.warn("WARNING: Aggressive Cache Clearing is deleting a file before the user's time to download it has expired.  This may annoy users.  Increase the size of your cache!");
+		if (config.getWritePrepedDSstoAzureBlobStore())
+		{
+			filescleaned = this.nvclDataSvc.cleanupoldestblobsinAzureContainer(this.config.getMsgTimetoLiveDays(),this.config.getPrepedDSsAzureBlobStoreContainerName(),config.getMaxSpacetoUseinGB());
+		}
+		else {
+			String downloadsfolderpath=this.config.getDownloadRootPath();
+			long minDiskspaceinBytes = ((long)this.config.getMinDiskspace())*1000000000L;
+			logger.debug("Download Folder cleaner running on download folder " + downloadsfolderpath);
+			File downloadsFolder = new File(downloadsfolderpath);
+			long usablespace = downloadsFolder.getUsableSpace(); 
+			logger.debug("usable disk space is "+usablespace/(1000000000)+"Gb.");
+			if ( usablespace<minDiskspaceinBytes ) {
+				if (downloadsFolder.exists()) {
+					File[] files = downloadsFolder.listFiles();
+					Arrays.sort(files, Comparator.comparingLong(File::lastModified));
+					for (File listFile : files) {
+						logger.debug("checking :"+listFile.getName());
+						if (listFile.getName().toLowerCase().endsWith(".zip")) {
+							if (this.config.getAggressiveCacheClearing() || listFile.lastModified() < System.currentTimeMillis() - (days * 86400000)) {
+								if (listFile.lastModified() > System.currentTimeMillis() - (days * 86400000)) {
+									logger.warn("WARNING: Aggressive Cache Clearing is deleting a file before the user's time to download it has expired.  This may annoy users.  Increase the size of your cache!");
+								}
+								logger.debug("deleting file :" + listFile.getName());
+								try{
+									listFile.delete();
+								}
+								catch (Exception e) {
+									logger.warn("couldnt delete file.  probably an IO issue.  Ignore for now and try again later.");
+								}
+								filescleaned++;
 							}
-							logger.debug("deleting file :" + listFile.getName());
-							try{
-								listFile.delete();
-							}
-							catch (Exception e) {
-								logger.warn("couldnt delete file.  probably an IO issue.  Ignore for now and try again later.");
-							}
-							filescleaned++;
 						}
-					}
-        			long newusablespace = downloadsFolder.getUsableSpace();
-					if ( newusablespace>minDiskspaceinBytes ) {
-						logger.debug("Cache cleaner has clean enough files.  Usable space is now : "+newusablespace);
-						break;
+						long newusablespace = downloadsFolder.getUsableSpace();
+						if ( newusablespace>minDiskspaceinBytes ) {
+							logger.debug("Cache cleaner has clean enough files.  Usable space is now : "+newusablespace);
+							break;
+						}
 					}
 				}
 			}
-		}
-		else {
-			logger.debug("cleanup skipped as sufficent disk space remains");
+			else {
+				logger.debug("cleanup skipped as sufficent disk space remains");
+			}
 		}
 		logger.debug("Download Folder cleaner complete, " + filescleaned + " file(s) deleted.");
 
