@@ -33,6 +33,12 @@ import org.auscope.nvcl.server.vo.ImageDataVo;
 import org.auscope.nvcl.server.vo.SpectralDataCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralDataVo;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+
 
 public class NVCLBlobStoreAccessSvc {
     private static final Logger logger = LogManager.getLogger(NVCLBlobStoreAccessSvc.class);
@@ -81,24 +87,48 @@ public class NVCLBlobStoreAccessSvc {
         return imageDataVo;
     }
 
+
     public SpectralDataCollectionVo getSpectralData(String datasetid, String speclogid, int startsampleno, int endsampleno) {
         String containerName = this.config.getAzureContainerName();
-        ArrayList<SpectralDataVo> spectralist = new ArrayList<SpectralDataVo>();
-        for (int i=startsampleno;i<=endsampleno;i++){
+        BlobContainerClient containerClient = this.blobServiceClient.getBlobContainerClient(containerName);
 
-            String blobName = "tsgdataset-" + datasetid+"/spectralLogData/"+speclogid+"/"+i+".bin";
-            
-            BlockBlobClient blobClient = this.blobServiceClient.getBlobContainerClient(containerName).getBlobClient(blobName).getBlockBlobClient();
-            
-            SpectralDataVo spectralData = new SpectralDataVo();
-            spectralData.setSampleNo(i);
-            if ( blobClient.exists()) {
-                spectralData.setSpectraldata(blobClient.downloadContent().toBytes());
-            }
-            spectralist.add(spectralData);
+        int threadCount = 100; // Adjust based on expected load and system capacity
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+        List<CompletableFuture<SpectralDataVo>> futures = new ArrayList<>();
+
+        for (int i = startsampleno; i <= endsampleno; i++) {
+            final int sampleNo = i;
+            futures.add(CompletableFuture.supplyAsync(() -> {
+                String blobName = String.format("tsgdataset-%s/spectralLogData/%s/%d.bin", datasetid, speclogid, sampleNo);
+                BlockBlobClient blobClient = containerClient.getBlobClient(blobName).getBlockBlobClient();
+
+                SpectralDataVo spectralData = new SpectralDataVo();
+                spectralData.setSampleNo(sampleNo);
+
+                if (blobClient.exists()) {
+                    try {
+                        spectralData.setSpectraldata(blobClient.downloadContent().toBytes());
+                    } catch (Exception e) {
+                        logger.warn("Failed to download blob: {}", blobName, e);
+                    }
+                }
+
+                return spectralData;
+            }, executor));
         }
-        return new SpectralDataCollectionVo(spectralist);
+
+        ArrayList<SpectralDataVo> spectralList = futures.stream()
+            .map(CompletableFuture::join)
+            .collect(Collectors.toCollection(ArrayList::new));
+
+
+        executor.shutdown();
+
+        return new SpectralDataCollectionVo(spectralList);
     }
+
+
 
     public int getSpectralDataCount(String datasetid, String speclogid) {
         String containerName = this.config.getAzureContainerName();
