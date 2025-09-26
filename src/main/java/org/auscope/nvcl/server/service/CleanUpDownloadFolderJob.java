@@ -88,8 +88,9 @@ public class CleanUpDownloadFolderJob {
 		if (cacheFolder.exists()) {
 			File[] CachelistFiles = cacheFolder.listFiles();
 			Arrays.sort(CachelistFiles, Comparator.comparingLong(File::lastModified));
-			// clean all but the most recent folder incase its still being processed
-			for (int i=0; i <CachelistFiles.length-1;i++) {
+
+			// clean all but the most recent folder and file incase its still being processed
+			for (int i=0; i <CachelistFiles.length-2;i++) {
 				File CachelistFile =CachelistFiles[i];
 				if (CachelistFile.isDirectory()) {
 					try {
@@ -100,9 +101,13 @@ public class CleanUpDownloadFolderJob {
 						logger.debug("cleanup cache folder " + CachelistFile + " failed");
 					}
 				}
+				else {
+					CachelistFile.delete();
+					cachefolderscleaned++;
+				}
 			}
 		}
-		logger.debug("Cache Folder cleaner complete, " + cachefolderscleaned + " folder(s) deleted.");
+		logger.debug("Cache Folder cleaner complete, " + cachefolderscleaned + " folder(s)/file(s) deleted.");
 	}
 
 }
