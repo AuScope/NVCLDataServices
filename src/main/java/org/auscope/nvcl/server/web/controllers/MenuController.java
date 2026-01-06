@@ -284,19 +284,33 @@ public class MenuController {
 			response.setContentType("application/json");
 			response.setCharacterEncoding("UTF-8");
 			new ObjectMapper().writeValue(response.getOutputStream(),datasetList);
+			response.getOutputStream().flush();
 			return null;
 		}
 		else {
 			response.setContentType("text/xml");
 			try {
 
-				this.marshaller.setMarshallerProperties(Collections.<String, Object>singletonMap("com.sun.xml.bind.xmlHeaders", (datasetList.getDatasetCollection().size() ==1 && !headersonly.equals("yes"))?"<?xml-stylesheet type='text/xsl' href='./xsl/dataset.xsl' ?>":"<?xml-stylesheet type='text/xsl' href='./xsl/alldatasets.xsl' ?>"));
-				
+				// dont use the default marshaller property as it is static for all requests
+				JAXBContext ctx = JAXBContext.newInstance(DatasetCollectionVo.class);
+
+				javax.xml.bind.Marshaller m = ctx.createMarshaller();
+    			m.setProperty(javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+				if (datasetList.getDatasetCollection().size() ==1 && !Objects.equals(headersonly, "yes")) {
+					m.setProperty("com.sun.xml.bind.xmlHeaders",
+								"<?xml-stylesheet type='text/xsl' href='./xsl/dataset.xsl' ?>");
+				} else {
+						m.setProperty("com.sun.xml.bind.xmlHeaders",
+								"<?xml-stylesheet type='text/xsl' href='./xsl/alldatasets.xsl' ?>");
+				}
+
+				m.marshal(datasetList,  new StreamResult(response.getOutputStream()));
+				response.getOutputStream().flush();
 			}
 			catch (Exception e ) {
 				logger.error(e.getMessage());
 			}
-			this.marshaller.marshal(datasetList, new StreamResult(response.getOutputStream()));
 		}
 		return null;
 
