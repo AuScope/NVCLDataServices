@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +37,7 @@ import javax.jms.Destination;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -90,18 +92,22 @@ import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -153,11 +159,27 @@ public class MenuController {
 	@Qualifier(value = "marshaller")
 	private Jaxb2Marshaller marshaller;
 
-	@RequestMapping("/")
-	public String index(HttpServletRequest request, HttpServletResponse response) {
+	@Autowired(required = false)
+    private BuildProperties buildProperties;
 
-		return "index";
+	@RequestMapping("/")
+	public ModelAndView index(HttpServletRequest request, HttpServletResponse response) {
+
+		if (buildProperties != null) {
+            // This pulls from the META-INF/build-info.properties baked into your JAR
+            return new ModelAndView("index","version", buildProperties.getVersion());
+        }
+        return new ModelAndView("index", "version", "unknown");
 	}
+
+	@GetMapping(value="/version", produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public Object getVersion(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (buildProperties != null) {
+			return buildProperties;
+        }
+        return new ModelAndView("error", "errmsg", "Build properties not available.");
+    }
 
 	/**
 	 * Handling error code 403 and error code 500
