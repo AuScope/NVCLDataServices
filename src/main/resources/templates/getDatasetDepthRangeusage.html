@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+		<title>NVCL Data Services : Get Dataset Depth Range</title>
+		<link rel="stylesheet" href="style/style.css" type="text/css"/>
+  </head>
+  <body  class="NVCLDSBody">
+  <h2 class="NVCLDSh2">NVCL Data Services : Get Dataset Depth Range</h2>
+  <h2 style="color:red" th:text="${errmsg}">Error</h2>
+  <p>the getDatasetDepthRange service will return the dataset depth range for a provided dataset id. It requires a datasetid as the mandatory URL parameter. The datasetid can be obtained through the <a href="getDatasetCollection.html">getDatasetCollection</a> service.</p>
+
+  <table class="usageTable"><tr><th>Parameter</th><th>Description</th><th>Required</th><th>Example values</th></tr>
+  <tr><td>datasetid</td><td>obtained through calling the getDatasetCollection service</td><td>yes</td><td>0bf74ac7-1642-481c-b0fc-689d2d3f904</td></tr>
+  
+  </table>
+  <h3>Example Queries:</h3>
+  <p>A query for the dataset range with dataset id 0bf74ac7-1642-481c-b0fc-689d2d3f904 : getDatasetDepthRange.html?datasetid=0bf74ac7-1642-481c-b0fc-689d2d3f904</p>
+  </body>
+</html>
