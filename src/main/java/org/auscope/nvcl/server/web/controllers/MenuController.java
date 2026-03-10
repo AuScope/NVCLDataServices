@@ -18,6 +18,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1883,10 +1884,16 @@ public class MenuController {
 		}
 
 		BufferedImage bm = new BufferedImage(imgmaxwidth, imgheight, BufferedImage.TYPE_INT_RGB);
-		Graphics2D graphics = bm.createGraphics();
+		// Convert Color(136,136,136) to packed int
+		int grey = (136 << 16) | (136 << 8) | 136;
 
-		graphics.setPaint(new Color(136, 136, 136));
-		graphics.fillRect(0, 0, bm.getWidth(), bm.getHeight());
+		// Fill one row, then reuse for all rows (fast)
+		int[] row = new int[imgmaxwidth];
+		Arrays.fill(row, grey);
+
+		for (int y = 0; y < imgheight; y++) {
+			bm.setRGB(0, y, imgmaxwidth, 1, row, 0, imgmaxwidth);
+		}
 
 		if (logdetails.getLogType() == 1) {
 			List<ClassDataVo> classdata = nvclDataSvc.getClassLogData(logid, startsampleno, endsampleno);
