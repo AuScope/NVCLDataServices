@@ -1855,7 +1855,7 @@ public class MenuController {
 
 		if (!Utility.isAlphanumericOrHyphen(logid)) {
 			String errMsg = "logid is not valid.";
-			return new ModelAndView("gettraymapUsage", "errmsg", errMsg);
+			return new ModelAndView("gettraymapusage", "errmsg", errMsg);
 		}
 
 		if (trayindex == null || trayindex < 0) {
@@ -1976,7 +1976,7 @@ public class MenuController {
 
 		if (!Utility.isAlphanumericOrHyphen(logid)) {
 			String errMsg = "logid is not valid.";
-			return new ModelAndView("gettraymaphtmlUsage", "errmsg", errMsg);
+			return new ModelAndView("gettraymaphtmlusage", "errmsg", errMsg);
 		}
 
 		if (trayindex == null || trayindex < 0) {
