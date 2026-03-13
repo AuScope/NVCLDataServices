@@ -34,6 +34,7 @@ import org.auscope.nvcl.server.vo.ImageLogCollectionVo;
 import org.auscope.nvcl.server.vo.ImageLogVo;
 import org.auscope.nvcl.server.vo.LogCollectionVo;
 import org.auscope.nvcl.server.vo.LogDetailsVo;
+import org.auscope.nvcl.server.vo.LogExtentsVo;
 import org.auscope.nvcl.server.vo.LogVo;
 import org.auscope.nvcl.server.vo.MaskDataVo;
 import org.auscope.nvcl.server.vo.ProfDataCollectionVo;
@@ -956,5 +957,47 @@ public class NVCLDataSvcDao {
         return new DomainDataCollectionVo((ArrayList<DomainDataVo>) this.jdbcTemplate.query(sql, mapper, domainlogId));
     
     }
-    
+
+       public LogExtentsVo getlogExtents(String logId) {
+        String sql = """
+            SELECT
+                CASE 
+                    WHEN L.LOGTYPE = 0 THEN D.min_start
+                    WHEN L.LOGTYPE = 1 THEN C.min_val
+                    WHEN L.LOGTYPE = 2 THEN X.min_dec
+                    ELSE 0
+                END AS minval,
+                CASE 
+                    WHEN L.LOGTYPE = 0 THEN D.max_end
+                    WHEN L.LOGTYPE = 1 THEN C.max_val
+                    WHEN L.LOGTYPE = 2 THEN X.max_dec
+                    ELSE 0
+                END AS maxval
+            FROM LOGS L
+            LEFT JOIN (
+                SELECT LOG_ID, MIN(STARTVALUE) AS min_start, MAX(ENDVALUE) AS max_end
+                FROM DOMAINLOGDATA
+                GROUP BY LOG_ID
+            ) D ON D.LOG_ID = L.LOG_ID
+            LEFT JOIN (
+                SELECT LOG_ID, MIN(CLASSLOGVALUE) AS min_val, MAX(CLASSLOGVALUE) AS max_val
+                FROM CLASSLOGDATA
+                GROUP BY LOG_ID
+            ) C ON C.LOG_ID = L.LOG_ID
+            LEFT JOIN (
+                SELECT LOG_ID, MIN(DECIMALVALUE) AS min_dec, MAX(DECIMALVALUE) AS max_dec
+                FROM DECIMALLOGDATA
+                GROUP BY LOG_ID
+            ) X ON X.LOG_ID = L.LOG_ID
+            WHERE L.LOG_ID = ?;
+            """;
+        RowMapper<LogExtentsVo> mapper = new RowMapper<LogExtentsVo>() {
+            public LogExtentsVo mapRow(ResultSet rs, int rowNum)
+                throws SQLException {
+                LogExtentsVo floatPair = new LogExtentsVo(rs.getFloat("minval"), rs.getFloat("maxval"));
+                return floatPair;
+            }
+        };
+        return this.jdbcTemplate.queryForObject(sql,mapper, logId);
+    }
 }

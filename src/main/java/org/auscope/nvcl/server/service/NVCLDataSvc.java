@@ -1047,7 +1047,7 @@ public class NVCLDataSvc {
      * @return LogExtentsVo this LogExtentsVo consists of min and max values
      */
     public LogExtentsVo getLogExtents(String logID) {
-        return logExtentsDao.execute(logID);
+        return nvclDataSvcDao.getlogExtents(logID);
     }
 	
     public List<MaskDataVo> getMaskLogData(String logID, int startSampleNo,int endSampleNo){
@@ -1192,4 +1192,5 @@ public class NVCLDataSvc {
     public int cleanupoldestblobsinAzureContainer(int daysToKeep, String containerName, int maxGBstoRetain){
         return nvclBlobStoreAccessSvc.cleanupoldestblobsinAzureContainer(daysToKeep, containerName, maxGBstoRetain);
     }
+
 }
