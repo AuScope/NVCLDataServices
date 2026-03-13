@@ -53,14 +53,9 @@ public class NVCLBlobStoreAccessSvc {
     public NVCLBlobStoreAccessSvc(ConfigVo config) {
         this.setConfig(config);
         if (!Utility.stringIsBlankorNull(config.getAzureStorageEndPoint())) {
-            TokenCredential managedIdentityCredential = new ManagedIdentityCredentialBuilder().build();
-            TokenCredential environmentCredential = new EnvironmentCredentialBuilder().build();
-            TokenCredential azureCliCredential = new AzureCliCredentialBuilder().build();
-            TokenCredential credential = new ChainedTokenCredentialBuilder()
-                .addLast(managedIdentityCredential)
-                .addLast(environmentCredential)
-                .addLast(azureCliCredential)
-                .build();
+
+            TokenCredential credential = new DefaultAzureCredentialBuilder().build();
+
             this.blobServiceClient = new BlobServiceClientBuilder().endpoint(config.getAzureStorageEndPoint()).credential(credential).buildClient();
             this.isConnected=true;
         }
