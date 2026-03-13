@@ -19,11 +19,14 @@ import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobProperties;
+import com.azure.storage.blob.models.BlobStorageException;
+import com.azure.storage.blob.models.DeleteSnapshotsOptionType;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.azure.identity.EnvironmentCredentialBuilder;
 import com.azure.identity.AzureCliCredentialBuilder;
 import com.azure.identity.ChainedTokenCredentialBuilder;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -201,9 +204,18 @@ public class NVCLBlobStoreAccessSvc {
                 if (blobItem.getProperties().getLastModified().isBefore(cutoffDate) && blobItem.getName().endsWith(".zip") ) {
                     String blobName = blobItem.getName();
                     totalSize -= blobItem.getProperties().getContentLength();
-                    containerClient.getBlobClient(blobName).delete();
-                    logger.debug(" - " + blobName + " (Modified: " + blobItem.getProperties().getLastModified() + ") DELETED");
-                    blobscleaned++;
+                    try {
+                        containerClient.getBlobClient(blobName).deleteIfExistsWithResponse(
+                            DeleteSnapshotsOptionType.INCLUDE,
+                            null,
+                            null,
+                            null
+                        );
+                        logger.debug(" - " + blobName + " (Modified: " + blobItem.getProperties().getLastModified() + ") DELETED");
+                        blobscleaned++;
+                    } catch (BlobStorageException ex) {
+                        logger.warn(" - " + blobName + " delete failed: " + ex.getMessage());
+                    }
                     if (totalSize<maxSizeinBytes) break;
                 }
             }
