@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    tags:
+      - '*'        # Triggers workflow on any tag (e.g., v1.0.0)
 
 jobs:
   build-and-upload:
@@ -32,12 +34,14 @@ jobs:
       - name: Build Boot WAR
         run: ./gradlew clean bootWar
 
-      - name: Rename WAR with commit SHA
+      - name: Prepare Artifact
         run: |
           mkdir artifacts
           cp build/libs/*.war artifacts/
 
+      # Only run the release upload when the event is a tag
       - name: Upload WAR to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: artifacts/*.war
