@@ -375,11 +375,11 @@
 			});
 		}
 
-		function buildPlots(specidsStr, startSampleNo, endSampleNo, width, height, LSimageID,counter,maxsampleno) {
+		function buildPlots(specidsStr, startSampleNo, endSampleNo, width, height, LSimageID,counter,maxsampleno,datasetId) {
 
 			var specids = specidsStr.split(",");
 			var imgslices = $('<div id="imgSlicesRotatedDiv'+startSampleNo+'" class="imgSlicesRotatedDiv"></div>');
-			var imglink = $('<a href="./mosaic.html?logid='+LSimageID+'&startsampleno='+Math.max((startSampleNo - 2), 0)+'&endsampleno='+(endSampleNo+2)+'&width=1" target="_blank" class="LSImageLink" ></a>');
+			var imglink = $('<a href="./mosaic.html?datasetid='+datasetId+'&logid='+LSimageID+'&startsampleno='+Math.max((startSampleNo - 2), 0)+'&endsampleno='+(endSampleNo+2)+'&width=1" target="_blank" class="LSImageLink" ></a>');
 			var extraimagesForHistogram = 5;
 			imgsstillloading = Math.min(endSampleNo+extraimagesForHistogram,maxsampleno) - Math.max(startSampleNo-extraimagesForHistogram,0)+1;
 			for (var i=Math.max(startSampleNo-extraimagesForHistogram,0);i<=Math.min(endSampleNo+extraimagesForHistogram,maxsampleno);i++) {
@@ -390,7 +390,7 @@
 				else LSimg.css('border-color', '#ffffff');
 				LSimg.attr('class','LSImageSlice');
 				LSimg.attr('hidden','true');
-				LSimg.attr('src', 'getImage.html?logid='+LSimageID+'&sampleno='+i);//+'&uncorrected=yes');
+				LSimg.attr('src', 'getImage.html?datasetid='+datasetId+'&logid='+LSimageID+'&sampleno='+i);//+'&uncorrected=yes');
 				if (i < (startSampleNo -1) || i > (endSampleNo+1)) LSimg.attr('class','hiddenLSImage');
 				LSimg.on('load',LSImageLoaded(i,Math.max(startSampleNo-extraimagesForHistogram,0),Math.min(endSampleNo+extraimagesForHistogram,maxsampleno),LSimg))
 				imglink.append(LSimg);
@@ -474,7 +474,7 @@
 						new ResizeSensor(parentcontainer, function(){
 							resizewindow(parentcontainer);
 						});
-						buildPlots(allspectra, specsamplenumber - 1, Math.min(specsamplenumber + 1,maxsampleno), graphwidth, graphheight, LSimageID,counter,maxsampleno);
+						buildPlots(allspectra, specsamplenumber - 1, Math.min(specsamplenumber + 1,maxsampleno), graphwidth, graphheight, LSimageID,counter,maxsampleno,dsid);
 						//$(".chart_container").css({ position: "relative", width: graphwidth });
 						$("#marker" + counter).css({ left: (event.pageX - 13), top: (event.pageY - 13) });
 						$("#plot" + counter + "container").css({ top: event.pageY, left: event.pageX, position: 'absolute', display: 'block' });				

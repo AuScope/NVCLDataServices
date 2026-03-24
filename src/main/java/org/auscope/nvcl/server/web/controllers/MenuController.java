@@ -478,13 +478,13 @@ public class MenuController {
 			logId = trayThumbnailLogId;
 			domainlogId = nvclDataSvc.getImageDomainlogId(logId);
 		} else {
+			datasetId = nvclDataSvc.getLogDetails(logId).getDatasetID();
 			domainlogId = nvclDataSvc.getImageDomainlogId(logId);
 			// check this is a tray domain based image log. Scalar try maps
 			// cannot be generated on other domains.
 			if (domainlogId == null || !nvclDataSvc.getLogDetails(domainlogId).getLogName().equals("Tray Domain")) {
 				scalarids.clear();
 			} else {
-				datasetId = nvclDataSvc.getLogDetails(logId).getDatasetID();
 				ImageLogCollectionVo imglogList = nvclDataSvc.getImageLogCollection(datasetId);
 				for (Iterator<ImageLogVo> it2 = imglogList.getimageLogCollection().iterator(); it2.hasNext();) {
 					ImageLogVo logCollectionMosaicVo = it2.next();
@@ -557,12 +557,12 @@ public class MenuController {
 			if (trayLogId != null) {
 				imageURL.append("<a href=\"" + srvroot + "/imageCarousel.html?logid=" + trayLogId + "&sampleno="
 						+j + "\" target=\"_blank\">" + "<img title=\"" + titletext
-						+ "\" class=\"NVCLMosaicImage\" " + "src=\"" + srvroot + "/getImage.html?logid="
+						+ "\" class=\"NVCLMosaicImage\" " + "src=\"" + srvroot + "/getImage.html?datasetid=" + datasetId + "&logid="
 						+ logId + "&sampleno=" + j + "\" alt=\"Core Image\" ></a></div>");
 
 			} else {
 				imageURL.append("<img title=\"" + titletext + "\" class=\"NVCLMosaicImage\" " + "src=\"" + srvroot
-						+ "/getImage.html?logid=" + logId + "&sampleno=" + j
+						+ "/getImage.html?datasetid=" + datasetId + "&logid=" + logId + "&sampleno=" + j
 						+ "\" alt=\"Core Image\" ></div>");
 
 			}
@@ -1685,6 +1685,8 @@ public class MenuController {
 
 		String domainlogid = nvclDataSvc.getImageDomainlogId(imglogId);
 
+		String datasetId = nvclDataSvc.getDatasetIdfromLogId(imglogId);
+
 		DomainDataCollectionVo sampleNoList = nvclDataSvc.getDomainData(domainlogid);
 
 		// .getSampleNo(imglogId,
@@ -1702,7 +1704,7 @@ public class MenuController {
 		for (Iterator<DomainDataVo> it1 = sampleNoList.getDomainDataCollection().iterator(); it1.hasNext();) {
 			DomainDataVo imageDataVo = it1.next();
 			ImageDataURLVo imgurl = new ImageDataURLVo();
-			imgurl.setURL(srvroot + "/getImage.html?logid=" + imglogId + "&sampleno="
+			imgurl.setURL(srvroot + "/getImage.html?datasetid=" + datasetId + "&logid=" + imglogId + "&sampleno="
 					+ imageDataVo.getSampleNo());
 			imgurl.setSampleNo(imageDataVo.getSampleNo());
 			imgslist.add(imgurl);
