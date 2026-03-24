@@ -43,6 +43,9 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-thymeleaf"
     implementation "org.apache.activemq:activemq-broker"
     implementation 'org.apache.activemq:activemq-kahadb-store'
+    implementation "org.apache.activemq:activemq-spring"
+    implementation "org.apache.activemq:activemq-client"
+    implementation "org.apache.xbean:xbean-spring"
 	implementation 'commons-io:commons-io:2.7'
 	implementation 'org.jfree:jfreechart:1.0.19'
 	implementation 'com.drewnoakes:metadata-extractor:2.19.0'

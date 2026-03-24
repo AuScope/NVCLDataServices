@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:amq="http://activemq.apache.org/schema/core"
+       xsi:schemaLocation="
+         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+  <!-- Embedded broker named 'embedded' so vm://embedded resolves to this -->
+  <amq:broker brokerName="embedded" useJmx="false" persistent="false" start="false">
+
+    <!-- Global usage limits -->
+    <amq:systemUsage>
+      <amq:systemUsage>
+
+        <amq:memoryUsage>
+          <amq:memoryUsage limit="64 mb"/>
+        </amq:memoryUsage>
+
+        <amq:storeUsage>
+          <amq:storeUsage limit="1 gb"/>
+        </amq:storeUsage>
+
+        <amq:tempUsage>
+          <amq:tempUsage limit="200 mb"/>
+        </amq:tempUsage>
+
+      </amq:systemUsage>
+    </amq:systemUsage>
+
+    <!-- Per‑destination policy: apply to all queues ('>'), with per‑queue memory and producer flow control -->
+    <amq:destinationPolicy>
+      <amq:policyMap>
+        <amq:policyEntries>
+          <amq:policyEntry
+              queue=">"
+              memoryLimit="32 mb"
+              producerFlowControl="true"/>
+        </amq:policyEntries>
+      </amq:policyMap>
+    </amq:destinationPolicy>
+
+    <!-- VM connector so vm://embedded can connect -->
+    <amq:transportConnectors>
+      <amq:transportConnector uri="vm://embedded"/>
+    </amq:transportConnectors>
+
+  </amq:broker>
+</beans>
