@@ -462,7 +462,7 @@ public class MenuController {
 			return new ModelAndView("mosaicusage", "errmsg", errMsg);
 		}
 		String domainlogId = null;
-		if (datasetId != null) {
+		if (!Utility.isAlphanumericOrHyphen(logId)) {
 			ImageLogCollectionVo imglogList = nvclDataSvc.getImageLogCollection(datasetId);
 			for (Iterator<ImageLogVo> it2 = imglogList.getimageLogCollection().iterator(); it2.hasNext();) {
 				ImageLogVo logCollectionMosaicVo = it2.next();
@@ -478,7 +478,7 @@ public class MenuController {
 			logId = trayThumbnailLogId;
 			domainlogId = nvclDataSvc.getImageDomainlogId(logId);
 		} else {
-			datasetId = nvclDataSvc.getLogDetails(logId).getDatasetID();
+			if (!Utility.isAlphanumericOrHyphen(datasetId)) datasetId = nvclDataSvc.getLogDetails(logId).getDatasetID();
 			domainlogId = nvclDataSvc.getImageDomainlogId(logId);
 			// check this is a tray domain based image log. Scalar try maps
 			// cannot be generated on other domains.
