@@ -2010,6 +2010,7 @@ public class MenuController {
 			@RequestParam(required = false, value = "interval", defaultValue = "1.0") Float interval,
 			@RequestParam(required = false, value = "startdepth", defaultValue = "0") Float startDepth,
 			@RequestParam(required = false, value = "enddepth", defaultValue = "999999") Float endDepth,
+			@RequestParam(required = false, value = "minthreshold", defaultValue = "0") Float minThreshold,
 			@RequestParam(required = false, value = "outputformat", defaultValue = "csv") String outputformat)
 			throws ServletException, IOException, Exception {
 		if (!Utility.isAlphanumericOrHyphen(logId)) {
@@ -2037,11 +2038,14 @@ public class MenuController {
 			String errMsg = "only class and decimal type logs can be requested through this service.";
 			return new ModelAndView("getdownsampleddatausage", "errmsg", errMsg);
 		}
-
+		LogExtentsVo logExtents = nvclDataSvc.getLogExtents(logId);
+		interval = Math.min(interval,logExtents.getMaxvalue()-logExtents.getMinvalue());
+		interval = Math.max(interval, 0.01f);
+		
 		switch (logDetail.getLogType()) {
 		case 1:
 			ArrayList<BinnedClassDataVo> ds = nvclDataSvc.getdownSampledClassData(logId, startDepth, endDepth,
-					interval, 0.0F);
+					interval, minThreshold);
 			if (outputformat.equals("csv")) {
 				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 				response.setContentType("text/csv");
