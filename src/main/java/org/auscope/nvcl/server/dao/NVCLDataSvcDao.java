@@ -989,7 +989,7 @@ public class NVCLDataSvcDao {
                 FROM DECIMALLOGDATA
                 GROUP BY LOG_ID
             ) X ON X.LOG_ID = L.LOG_ID
-            WHERE L.LOG_ID = ?;
+            WHERE L.LOG_ID = ?
             """;
         RowMapper<LogExtentsVo> mapper = new RowMapper<LogExtentsVo>() {
             public LogExtentsVo mapRow(ResultSet rs, int rowNum)
