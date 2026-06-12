@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+		<title>NVCL Data Services :: Display Stacked Tray Thumbnails Service</title>
+		<link rel="stylesheet" href="style/style.css" type="text/css"/>
+  </head>
+  <body  class="NVCLDSBody">
+  <h2 class="NVCLDSh2">NVCL Data Services : Display Stacked Tray Thumbnails Service</h2>
+  <h2 style="color:red" th:text="${errmsg}">Error</h2>
+  <p>Display Stacked Tray Thumbnails service will return tray thumbnail images stacked vertically. It requires a dataset id as the mandatory parameter. </p>
+
+  <p>Usage: displayStackedTrayThumbnails.html?parameter1=value</p>
+
+  <table class="usageTable"><tr><th>Parameter</th><th>Description</th><th>Required</th><th>Example values</th></tr>
+  <tr><td>datasetid</td><td>obtained through calling the getDatasetCollection service </td><td>yes</td><td>6dd70215-fe38-457c-be42-3b165fd98c7 </td></tr>
+
+  </table>
+  <h3>Example Queries:</h3>
+  <p>A stadard query for Display Stacked Tray Thumbnails: displayStackedTrayThumbnails.html?datasetid=6dd70215-fe38-457c-be42-3b165fd98c7</p>
+  
+
+  </body>
+</html>

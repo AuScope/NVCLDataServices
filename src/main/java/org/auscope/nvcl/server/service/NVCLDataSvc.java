@@ -43,7 +43,9 @@ import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
 import org.auscope.nvcl.server.vo.DatasetCollectionVo;
 import org.auscope.nvcl.server.vo.DepthRangeVo;
 import org.auscope.nvcl.server.vo.DomainDataCollectionVo;
+import org.auscope.nvcl.server.vo.DomainDataVo;
 import org.auscope.nvcl.server.vo.DomainLogCollectionVo;
+import org.auscope.nvcl.server.vo.DomainLogVo;
 import org.auscope.nvcl.server.vo.FloatDataVo;
 import org.auscope.nvcl.server.vo.ImageDataVo;
 import org.auscope.nvcl.server.vo.ImageLogCollectionVo;
@@ -53,6 +55,7 @@ import org.auscope.nvcl.server.vo.LogExtentsVo;
 import org.auscope.nvcl.server.vo.MaskDataVo;
 import org.auscope.nvcl.server.vo.ProfDataCollectionVo;
 import org.auscope.nvcl.server.vo.ProfLogCollectionVo;
+import org.auscope.nvcl.server.vo.SectionVo;
 import org.auscope.nvcl.server.vo.SpectralDataCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralLogCollectionVo;
 import org.auscope.nvcl.server.vo.TraySectionsVo;
@@ -1053,8 +1056,10 @@ public class NVCLDataSvc {
     public List<MaskDataVo> getMaskLogData(String logID, int startSampleNo,int endSampleNo){
 		return nvclDataSvcDao.getMaskLogData(logID, startSampleNo,endSampleNo);
     }
+
+    public record SampAndSecNumber(int samplenumber, int sectionnumber) {}
     
-    public Integer getSampleNumberfromTrayPictureXY(String imglogId,int SampleNo,int x,int y,int imgwidth,int imgheight)
+    public SampAndSecNumber getSampleNumberfromTrayPictureXY(String imglogId,int SampleNo,int x,int y,int imgwidth,int imgheight)
     {
 		
 		ImageDataVo imagedata = this.getImageData(imglogId,"", SampleNo,false);
@@ -1121,10 +1126,11 @@ public class NVCLDataSvc {
 			} catch (DataAccessException | SQLException e) {
 				return null;
 			}
-			int endsampno = secs.getSections().get(selectedsection).getEndsampleno();
-			int startsampno = secs.getSections().get(selectedsection).getStartsampleno();
+            SectionVo selectedsectionVo = secs.getSections().get(selectedsection);
+			int endsampno = selectedsectionVo.getEndsampleno();
+			int startsampno = selectedsectionVo.getStartsampleno();
 			int sampleno = (int) (((endsampno-startsampno)*distanceallongsectionpct)+startsampno);
-			return sampleno;
+			return new SampAndSecNumber(sampleno, selectedsectionVo.getSectionnumber());
 		}
 		return null;
     }
@@ -1191,6 +1197,29 @@ public class NVCLDataSvc {
 
     public int cleanupoldestblobsinAzureContainer(int daysToKeep, String containerName, int maxGBstoRetain){
         return nvclBlobStoreAccessSvc.cleanupoldestblobsinAzureContainer(daysToKeep, containerName, maxGBstoRetain);
+    }
+
+    public DomainLogCollectionVo getDomainLogCollectionWithData(String datasetid) {
+        
+        DomainLogCollectionVo domains = this.getDomainLogCollection(datasetid);
+
+        for(DomainLogVo domain : domains.getdomainLogCollection()) {
+			if ( Utility.isAlphanumericOrHyphen(domain.getSubdomainoflogid())) {
+				DomainDataCollectionVo domdata = this.getDomainDataRelativetoBaseDomain(domain.getLogID());
+				DomainDataCollectionVo domdatadepths = this.getDomainData(domain.getLogID());
+				for (DomainDataVo singledomsegment :domdata.getDomainDataCollection()){
+					for (DomainDataVo singledomdepthsegment :domdatadepths.getDomainDataCollection()){
+						if (singledomsegment.getSampleNo() == singledomdepthsegment.getSampleNo()){
+							singledomsegment.setStartValue(singledomdepthsegment.getStartValue());
+							singledomsegment.setEndValue(singledomdepthsegment.getEndValue());
+							break;
+						}
+					}
+				}
+				domain.setdomaindata(domdata.getDomainDataCollection());
+			}
+		}
+        return domains;
     }
 
 }

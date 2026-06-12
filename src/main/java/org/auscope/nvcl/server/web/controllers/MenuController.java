@@ -20,11 +20,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -49,9 +51,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.service.*;
+import org.auscope.nvcl.server.service.NVCLDataSvc.SampAndSecNumber;
 import org.auscope.nvcl.server.util.CustomRestTemplate;
 import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.AlgorithmCollectionVo;
+import org.auscope.nvcl.server.vo.AlgorithmOutputVersionVo;
+import org.auscope.nvcl.server.vo.AlgorithmOutputVo;
+import org.auscope.nvcl.server.vo.AlgorithmVo;
 import org.auscope.nvcl.server.vo.AveragedFloatDataVo;
 import org.auscope.nvcl.server.vo.BinnedClassDataVo;
 import org.auscope.nvcl.server.vo.BoreholeFeatureCollectionVo;
@@ -75,6 +81,7 @@ import org.auscope.nvcl.server.vo.ImageLogVo;
 import org.auscope.nvcl.server.vo.LogCollectionVo;
 import org.auscope.nvcl.server.vo.LogDetailsVo;
 import org.auscope.nvcl.server.vo.LogExtentsVo;
+import org.auscope.nvcl.server.vo.LogVo;
 import org.auscope.nvcl.server.vo.MaskDataVo;
 import org.auscope.nvcl.server.vo.MessageVo;
 import org.auscope.nvcl.server.vo.ProfDataCollectionVo;
@@ -583,6 +590,96 @@ public class MenuController {
 		imageURL.append("</div>");
 
 		return new ModelAndView("mosaic", "imageURL", imageURL);
+	}
+
+	@RequestMapping(value = "/displayStackedTrayThumbnails.html" ,method = { RequestMethod.GET, RequestMethod.POST })
+	public ModelAndView mosaicHandler(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam(required = false, value = "datasetid") String datasetId)
+			throws ServletException, IOException, SQLException {
+
+		// getting the URL details
+		String scheme = request.getScheme(); // http
+		String serverName = request.getServerName(); // hostname.com
+		int serverPort = request.getServerPort(); // 80
+		String contextPath = request.getContextPath(); // mywebapp
+		String srvroot = scheme + "://" + serverName + ":" + serverPort + contextPath;
+		String trayThumbnailLogId = null;
+
+		// ensure datasetid or logid is not null, empty or missing
+		if ( !Utility.isAlphanumericOrHyphen(datasetId)) {
+
+			String errMsg = "a datasetid must be specified and be a valid database identifier.";
+			return new ModelAndView("displayStackedTrayThumbnailsusage", "errmsg", errMsg);
+		}
+
+		ImageLogCollectionVo imglogList = nvclDataSvc.getImageLogCollection(datasetId);
+		for (Iterator<ImageLogVo> it2 = imglogList.getimageLogCollection().iterator(); it2.hasNext();) {
+			ImageLogVo logCollectionMosaicVo = it2.next();
+			if (logCollectionMosaicVo.getLogName().equals("Tray Thumbnail Images"))
+				trayThumbnailLogId = logCollectionMosaicVo.getLogID();
+
+		}
+		if (!Utility.isAlphanumericOrHyphen(trayThumbnailLogId)) {
+			String errMsg = "tray image thumbnails could not be found for this datasetid";
+			return new ModelAndView("displayStackedTrayThumbnailsusage", "errmsg", errMsg);
+		}
+		String domainlogId = nvclDataSvc.getImageDomainlogId(trayThumbnailLogId);
+
+		int endSampleNo = nvclDataSvc.getLastsampleNumber(domainlogId, 0,999999999);
+
+		StringBuffer imageURL = new StringBuffer("<div class=\"NVCLMosaicContainer\" >");
+
+		DomainLogCollectionVo domains = nvclDataSvc.getDomainLogCollectionWithData(datasetId);
+
+		DomainLogVo traydomain = null;
+		for (DomainLogVo domain : domains.getdomainLogCollection()) {
+			if (domain.getLogName().equals("Tray Domain")) {
+				traydomain = domain;
+				break;
+			}
+		}
+		DomainLogVo sectiondomain = null;
+		for (DomainLogVo domain : domains.getdomainLogCollection()) {
+			if (domain.getLogName().equals("Section Domain")) {
+				sectiondomain = domain;
+				break;
+			}
+		}
+
+		for (int j= 0; j<=endSampleNo;j++) {
+
+			imageURL.append("<div style=\"clear:both;\"></div>");
+
+
+			imageURL.append("<div class=\"NVCLMosaicCell\" style=\"max-width: 100%;\">");
+
+			imageURL.append("<div class=\"NVCLMosaicCellImg\" style=\"position:relative; display:block;\" >");
+
+			DomainDataVo traydetails = traydomain.getdomaindata().get(j);
+			int sectioncount=0;
+			ArrayList<DomainDataVo> sectiondetailslist = new ArrayList<>();
+
+			for (DomainDataVo sectiondetails : sectiondomain.getdomaindata()) {
+				if (sectiondetails.getstartIndex() >= traydetails.getstartIndex() && sectiondetails.getendIndex() <= traydetails.getendIndex()) {
+					sectioncount++;
+					sectiondetailslist.add(sectiondetails);
+				}
+			}
+
+			imageURL.append("<img title=\"Tray Thumbnail\" class=\"NVCLMosaicImage\" " + "src=\"" + srvroot
+					+ "/getImage.html?datasetid=" + datasetId + "&logid=" + trayThumbnailLogId + "&sampleno=" + j
+					+ "\" alt=\"Core Image\" >");
+			for(int i=0;i<sectioncount;i++) {
+				imageURL.append("<a href=\"" + srvroot + "/getImageSection.html?datasetid=" + datasetId + "&sectionno=" + sectiondetailslist.get(i).getSampleNo() +"&horizontal=yes\" style=\"position:absolute; top:" + (i * (100/sectioncount)) + "%; left:0; width:100%; height:" + (100/sectioncount) + "%; display:block;\"></a>");
+			}
+			
+			imageURL.append("</div>");
+			
+			imageURL.append("</div>");
+
+		}
+
+		return new ModelAndView("displayStackedTrayThumbnails", "imageURL", imageURL);
 	}
 
 	/**
@@ -2134,14 +2231,15 @@ public class MenuController {
 		if (imgheight == null || imgheight < 0)
 			imgheight = 0;
 
-		Integer sampleno = nvclDataSvc.getSampleNumberfromTrayPictureXY(imglogId, SampleNo, pixelx, pixely, imgwidth,
+		SampAndSecNumber sampleandsecno = nvclDataSvc.getSampleNumberfromTrayPictureXY(imglogId, SampleNo, pixelx, pixely, imgwidth,
 				imgheight);
-		if (sampleno != null) {
+		if (sampleandsecno != null) {
 			response.setContentType("application/json");
 			response.setCharacterEncoding("UTF-8");
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode jo = mapper.createObjectNode();
-			jo.put("sampleno", sampleno);
+			jo.put("sampleno", sampleandsecno.samplenumber());
+			jo.put("sectionno", sampleandsecno.sectionnumber());
 			mapper.writeValue(response.getOutputStream(),jo);
 		}
 		return null;
@@ -2625,24 +2723,7 @@ public class MenuController {
 			return new ModelAndView("getDatasetDepthRangeusage", "errmsg", errMsg);
 		}
 
-		DomainLogCollectionVo domains = nvclDataSvc.getDomainLogCollection(datasetid);
-
-		for(DomainLogVo domain : domains.getdomainLogCollection()) {
-			if ( Utility.isAlphanumericOrHyphen(domain.getSubdomainoflogid())) {
-				DomainDataCollectionVo domdata = nvclDataSvc.getDomainDataRelativetoBaseDomain(domain.getLogID());
-				DomainDataCollectionVo domdatadepths = nvclDataSvc.getDomainData(domain.getLogID());
-				for (DomainDataVo singledomsegment :domdata.getDomainDataCollection()){
-					for (DomainDataVo singledomdepthsegment :domdatadepths.getDomainDataCollection()){
-						if (singledomsegment.getSampleNo() == singledomdepthsegment.getSampleNo()){
-							singledomsegment.setStartValue(singledomdepthsegment.getStartValue());
-							singledomsegment.setEndValue(singledomdepthsegment.getEndValue());
-							break;
-						}
-					}
-				}
-				domain.setdomaindata(domdata.getDomainDataCollection());
-			}
-		}
+		DomainLogCollectionVo domains = nvclDataSvc.getDomainLogCollectionWithData(datasetid);
 
 		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 		if(outputformat != null && outputformat.equals("json")){
