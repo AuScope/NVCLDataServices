@@ -95,6 +95,11 @@ public class Application extends SpringBootServletInitializer  {
         if (this.ds==null) {
             this.ds = new BasicDataSource();
             this.ds.addConnectionProperty("defaultRowPrefetch","1000");
+            ConfigVo configVo = createConfig();
+            if (configVo != null && configVo.getJdbcDbType() != null
+                    && configVo.getJdbcDbType().equalsIgnoreCase("sqlserver")) {
+                this.ds.addConnectionProperty("sendStringParametersAsUnicode","false");
+            }
             return this.ds;
         }
         else return this.ds;

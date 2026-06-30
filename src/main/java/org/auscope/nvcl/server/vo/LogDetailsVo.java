@@ -7,6 +7,7 @@ public class LogDetailsVo {
     private String logName;
     private int logType;
     private String domainlogId;
+    private int algorithmOutputId;
 
     public String getLogId() {
         return this.logId;
@@ -48,4 +49,11 @@ public class LogDetailsVo {
 		this.datasetID = datasetID;
 	}
 
+	public int getAlgorithmOutputId() {
+		return algorithmOutputId;
+	}
+
+	public void setAlgorithmOutputId(int algorithmOutputId) {
+		this.algorithmOutputId = algorithmOutputId;
+	}
 }

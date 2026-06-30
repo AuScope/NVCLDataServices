@@ -5,12 +5,14 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.sql.Blob;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.sql.DataSource;
 
@@ -18,6 +20,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.vo.AlgorithmCollectionVo;
+import org.auscope.nvcl.server.vo.AlgorithmOutputVersionVo;
 import org.auscope.nvcl.server.vo.ClassDataVo;
 import org.auscope.nvcl.server.vo.ClassificationVo;
 import org.auscope.nvcl.server.vo.ClassificationsCollectionVo;
@@ -50,6 +53,7 @@ import org.auscope.nvcl.server.vo.TraySectionsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.RowMapper;
 
 /**
@@ -77,6 +81,42 @@ public class NVCLDataSvcDao {
     @Autowired
     public void setDataSource(DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+    }
+
+    private boolean isSqlServer() {
+        if (this.jdbcTemplate == null || this.jdbcTemplate.getDataSource() == null) return false;
+        DataSource ds = this.jdbcTemplate.getDataSource();
+        try {
+            // Common case: Apache BasicDataSource
+            if (ds instanceof org.apache.commons.dbcp2.BasicDataSource) {
+                org.apache.commons.dbcp2.BasicDataSource bds = (org.apache.commons.dbcp2.BasicDataSource) ds;
+                String driver = bds.getDriverClassName();
+                if (driver != null && driver.toLowerCase().contains("sqlserver")) return true;
+                String url = bds.getUrl();
+                if (url != null && url.toLowerCase().contains("jdbc:sqlserver")) return true;
+            }
+        } catch (Exception e) {
+            // ignore and fall through to other checks
+        }
+
+        // Fallback: inspect DataSource implementation class name
+        try {
+            String cls = ds.getClass().getName();
+            if (cls != null && cls.toLowerCase().contains("sqlserver")) return true;
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // Try reflective getUrl() if available
+        try {
+            java.lang.reflect.Method m = ds.getClass().getMethod("getUrl");
+            Object url = m.invoke(ds);
+            if (url != null && url.toString().toLowerCase().contains("jdbc:sqlserver")) return true;
+        } catch (Exception e) {
+            // ignore
+        }
+
+        return false;
     }
 
     /**
@@ -192,7 +232,7 @@ public class NVCLDataSvcDao {
     public LogDetailsVo getLogDetails(String logID) throws SQLException,
             DataAccessException {
 
-        String sql = "select dataset_id,logname, logtype,domainlog_id from logs where log_id = ?";
+        String sql = "select dataset_id,logname, logtype,domainlog_id, algorithmoutput_id from logs where log_id = ?";
         RowMapper<LogDetailsVo> mapper = new RowMapper<LogDetailsVo>() {
             public LogDetailsVo mapRow(ResultSet rs, int rowNum)
                     throws SQLException, DataAccessException {
@@ -202,6 +242,7 @@ public class NVCLDataSvcDao {
                 logDetails.setLogName(rs.getString("logname"));
                 logDetails.setLogType(rs.getInt("logtype"));
                 logDetails.setDomainlogId(rs.getString("domainlog_id"));
+                logDetails.setAlgorithmOutputId(rs.getInt("algorithmoutput_id"));
                 return logDetails;
             }
         };
@@ -217,7 +258,7 @@ public class NVCLDataSvcDao {
      * @return List<LogDetailsVo>   return a list of LogDetailsVo
      */
     public List<LogDetailsVo> getLogDetails(String[] logIdList) {
-        String sql = "select dataset_id,log_id, logname, logtype, domainlog_id from logs where log_id in (?";
+        String sql = "select dataset_id,log_id, logname, logtype, domainlog_id, algorithmoutput_id from logs where log_id in (?";
         for (int i = 1; i < logIdList.length; i++) {
                sql = sql + ",?";
         }
@@ -231,6 +272,7 @@ public class NVCLDataSvcDao {
                 logDetailsVo.setLogType(rs.getInt("logtype"));
                 logDetailsVo.setDomainlogId(rs.getString("domainlog_id"));
                 logDetailsVo.setDatasetID(rs.getString("dataset_id"));
+                logDetailsVo.setAlgorithmOutputId(rs.getInt("algorithmoutput_id"));
                 return logDetailsVo;
             }
         };
@@ -544,6 +586,146 @@ public class NVCLDataSvcDao {
 
         List<Map<String, Object>> scalarMaps = jdbcTemplate.queryForList(sql,params);
         return scalarMaps;
+    }
+
+    public void streamScalarData(List<LogDetailsVo> logDetailsVoList, Float startdepth, Float enddepth,RowCallbackHandler handler) {
+
+        List<Object> params = new ArrayList<>();
+
+        StringBuilder select = new StringBuilder(
+            "SELECT DOMAINLOGDATA.STARTVALUE AS StartDepth, DOMAINLOGDATA.ENDVALUE AS EndDepth"
+        );
+        StringBuilder from = new StringBuilder(" FROM DOMAINLOGDATA ");
+        StringBuilder where = new StringBuilder(" WHERE DOMAINLOGDATA.LOG_ID = ? ");
+
+        List<String> strKeysArr = new ArrayList<>();
+        strKeysArr.add("StartDepth");
+        strKeysArr.add("EndDepth");
+
+        String domainlogId = null;
+        int i = 0;
+
+        AlgorithmCollectionVo algs = this.getAlgorithmsCollection();
+
+        for (LogDetailsVo logDetailsVo : logDetailsVoList) {
+
+            i++;
+
+            String logId = logDetailsVo.getLogId();
+            String logName = logDetailsVo.getLogName();
+            int logType = logDetailsVo.getLogType();
+
+            if (i == 1) {
+                domainlogId = logDetailsVo.getDomainlogId();
+                params.add(domainlogId);
+            }
+
+            String safeName = logName.replaceAll("[^a-zA-Z0-9]", "_");
+            Optional<AlgorithmOutputVersionVo> algorithmOutput = findByOutputId(algs, logDetailsVo.getAlgorithmOutputId());
+
+            if (algorithmOutput.isPresent() && algorithmOutput.get().getVersion() != 0) {
+                safeName = safeName + "_v" + algorithmOutput.get().getVersion();
+            }
+            strKeysArr.add(safeName);
+
+            if (logType != 1 && logType != 2 && logType != 5 && logType != 6) {
+                throw new RuntimeException("Invalid logType: " + logType);
+            }
+
+            switch (logType) {
+
+                case 1:
+                    select.append(", COALESCE(classspec").append(i)
+                        .append(".CLASSTEXT, class").append(i)
+                        .append(".CLASSTEXT) AS ").append(safeName);
+
+                    from.append(" INNER JOIN CLASSLOGDATA result").append(i)
+                        .append(" ON result").append(i).append(".SAMPLENUMBER = DOMAINLOGDATA.SAMPLENUMBER")
+
+                        .append(" LEFT JOIN CLASSSPECIFICCLASSIFICATIONS classspec").append(i)
+                        .append(" ON result").append(i).append(".CLASSLOGVALUE = classspec").append(i).append(".INTINDEX")
+                        .append(" AND classspec").append(i).append(".LOG_ID = result").append(i).append(".LOG_ID")
+
+                        .append(" LEFT JOIN LOGS log").append(i)
+                        .append(" ON result").append(i).append(".LOG_ID = log").append(i).append(".LOG_ID")
+
+                        .append(" LEFT JOIN CLASSIFICATIONS class").append(i)
+                        .append(" ON result").append(i).append(".CLASSLOGVALUE = class").append(i).append(".INTINDEX")
+                        .append(" AND class").append(i).append(".ALGORITHMOUTPUT_ID = log").append(i).append(".ALGORITHMOUTPUT_ID");
+
+                    break;
+
+                case 2:
+                    select.append(", result").append(i).append(".DECIMALVALUE AS ").append(safeName);
+
+                    from.append(" INNER JOIN DECIMALLOGDATA result").append(i)
+                        .append(" ON result").append(i).append(".SAMPLENUMBER = DOMAINLOGDATA.SAMPLENUMBER");
+
+                    break;
+
+                case 5:
+                    select.append(", result").append(i).append(".SPECTRALVALUES AS ").append(safeName);
+
+                    from.append(" INNER JOIN SPECTRALLOGDATA result").append(i)
+                        .append(" ON result").append(i).append(".SAMPLENUMBER = DOMAINLOGDATA.SAMPLENUMBER");
+
+                    break;
+
+                case 6:
+                    select.append(", result").append(i).append(".MASKVALUE AS ").append(safeName);
+
+                    from.append(" INNER JOIN MASKLOGDATA result").append(i)
+                        .append(" ON result").append(i).append(".SAMPLENUMBER = DOMAINLOGDATA.SAMPLENUMBER");
+
+                    break;
+            }
+
+            // ✅ IMPORTANT: keep filter in WHERE (not JOIN)
+            where.append(" AND result").append(i).append(".LOG_ID = ?");
+            params.add(logId);
+        }
+
+        // depth filters (correctly typed)
+        if (startdepth != null && enddepth != null) {
+            where.append(" AND DOMAINLOGDATA.STARTVALUE > ?");
+            where.append(" AND DOMAINLOGDATA.ENDVALUE < ?");
+
+            params.add(startdepth);
+            params.add(enddepth);
+        }
+
+        // final SQL
+        String sql = select.toString() + from.toString() + where.toString() + " ORDER BY DOMAINLOGDATA.SAMPLENUMBER";
+        if (isSqlServer()) {
+            sql += " OPTION (OPTIMIZE FOR UNKNOWN)";
+        }
+        final String finalSql = sql;
+        
+        jdbcTemplate.query(con -> {
+            PreparedStatement ps = con.prepareStatement(finalSql);
+
+            for (int j = 0; j < params.size(); j++) {
+                Object param = params.get(j);
+                if (param instanceof String) {
+                    ps.setString(j+ 1, (String) param);
+                } else if (param instanceof Integer) {
+                    ps.setInt(j + 1, (Integer) param);
+                } else if (param instanceof Long) {
+                    ps.setLong(j + 1, (Long) param);
+                } else if (param instanceof Float) {
+                    ps.setFloat(j + 1, (Float) param);
+                } else if (param instanceof Double) {
+                    ps.setDouble(j + 1, (Double) param);
+                } else if (param instanceof Boolean) {
+                    ps.setBoolean(j + 1, (Boolean) param);
+                } else {
+                    ps.setObject(j + 1, param);
+                }
+            }
+
+            return ps;
+
+        }, handler);
     }
 
 
@@ -1000,4 +1182,26 @@ public class NVCLDataSvcDao {
         };
         return this.jdbcTemplate.queryForObject(sql,mapper, logId);
     }
+
+    public Optional<AlgorithmOutputVersionVo> findByNameAndVersion(AlgorithmCollectionVo algs, int algorithmId,String outputName,int version) {
+
+        return algs.getAlgorithms().stream()
+            .filter(a -> a.getAlgorithmID() == algorithmId)
+            .findFirst()
+            .flatMap(a -> a.getOutputs().stream()
+                .filter(o -> outputName.equals(o.getName()))
+                .findFirst())
+            .flatMap(o -> o.getVersions().stream()
+                .filter(v -> v.getVersion() == version)
+                .findFirst());
+    }
+
+    public Optional<AlgorithmOutputVersionVo> findByOutputId(AlgorithmCollectionVo algs, int algorithmOutputId) {
+        return algs.getAlgorithms().stream()
+            .flatMap(a -> a.getOutputs().stream())
+            .flatMap(o -> o.getVersions().stream()
+                .filter(v -> v.getAlgorithmoutputID() == algorithmOutputId))
+            .findFirst();
+
+       }
 }

@@ -46,6 +46,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import com.drew.imaging.ImageProcessingException;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
@@ -1198,107 +1199,10 @@ public class MenuController {
 				return new ModelAndView("downloadscalarsusage", "errmsg", errMsg);
 			}
 
-			// Retrieve log details and generate dynamic sql query for chosen
-			// scalar(s)
 			List<LogDetailsVo> logDetailsVoList = nvclDataSvc.getLogDetails(logIdList);
-			Object[] params = new Object[logDetailsVoList.size() + 1 + (startdepth != null && enddepth != null ? 2 : 0)];
-			String logId = null;
-			String logName = null;
-			String domainlogId = null;
-			int logType = 0;
-			int i = 0;
-			String sqlSelectPart = "select DOMAINLOGDATA.STARTVALUE AS StartDepth, DOMAINLOGDATA.ENDVALUE as EndDepth";
-			String sqlFromPart = "from DOMAINLOGDATA ";
-			String sqlWherePart = "where DOMAINLOGDATA.LOG_ID=?";
-			String finalSql = null;
-			ArrayList<String> strKeysArr = new ArrayList<String>();
 
-			strKeysArr.add("StartDepth");
-			strKeysArr.add("EndDepth");
-
-			for (Iterator it1 = logDetailsVoList.iterator(); it1.hasNext();) {
-				i = i + 1;
-				LogDetailsVo logDetailsVo = (LogDetailsVo) it1.next();
-				logId = logDetailsVo.getLogId();
-				logName = logDetailsVo.getLogName();
-				domainlogId = logDetailsVo.getDomainlogId();
-				logType = logDetailsVo.getLogType();
-				if (logType == 5) {
-					SpectralLogCollectionVo speclogs = nvclDataSvc
-							.getSpectralLogCollection(logDetailsVo.getDatasetID());
-					for (Iterator<SpectralLogVo> it2 = speclogs.getSpectralLogCollection().iterator(); it2.hasNext();) {
-						SpectralLogVo speclog = it2.next();
-						if (speclog.getLogID().equals(logId)) {
-							for (int j = 0; j < speclog.getWavelengths().length; j++)
-								strKeysArr.add(logName + speclog.getWavelengths()[j]);
-						}
-					}
-				} else
-					strKeysArr.add(logName.replaceAll("\\W", "_"));
-				// c) check that the log id(s) will have only log type 1 or 2
-				if (logType != 1 && logType != 2 && logType != 5 && logType != 6) {
-					// throw new
-					// Exception("Not all log id having logtype 1 or 2 !!");
-					String errMsg = "All logids must have logtype 1, 2, 5 or 6 for this service to function.";
-					return new ModelAndView("downloadscalarsusage", "errmsg", errMsg);
-				}
-				// initialize the variables
-				if (i == 1) {
-					params[0] = domainlogId;
-				}
-
-				switch (logDetailsVo.getLogType()) {
-				case 1:
-					sqlSelectPart += ", coalesce (classspec" + i + ".CLASSTEXT, class" + i + ".CLASSTEXT) as Scal" + i
-							+ " ";
-					sqlFromPart += " inner join CLASSLOGDATA result"
-							+ i
-							+ " on result"
-							+ i
-							+ ".SAMPLENUMBER=DOMAINLOGDATA.SAMPLENUMBER LEFT OUTER JOIN CLASSSPECIFICCLASSIFICATIONS classspec"
-							+ i + " on result" + i + ".CLASSLOGVALUE = classspec" + i + ".INTINDEX and classspec" + i
-							+ ".LOG_ID=result" + i + ".LOG_ID LEFT OUTER JOIN LOGS log" + i + " on result" + i
-							+ ".log_id=log" + i + ".log_id LEFT OUTER JOIN CLASSIFICATIONS class" + i + " ON result"
-							+ i + ".CLASSLOGVALUE = class" + i + ".INTINDEX and class" + i + ".ALGORITHMOUTPUT_ID=log"
-							+ i + ".algorithmoutput_id";
-					break;
-
-				case 2:
-					sqlSelectPart += ", result" + i + ".DECIMALVALUE as Scal" + i + " ";
-					sqlFromPart += " inner join DECIMALLOGDATA result" + i + " on result" + i
-							+ ".SAMPLENUMBER=DOMAINLOGDATA.SAMPLENUMBER";
-					break;
-				case 5:
-					sqlSelectPart += ", result" + i + ".SPECTRALVALUES as Spec" + i + " ";
-					sqlFromPart += " inner join SPECTRALLOGDATA result" + i + " on result" + i
-							+ ".SAMPLENUMBER=DOMAINLOGDATA.SAMPLENUMBER";
-					break;
-				case 6:
-					sqlSelectPart += ", result" + i + ".MASKVALUE as Scal" + i + " ";
-					sqlFromPart += " inner join MASKLOGDATA result" + i + " on result" + i
-							+ ".SAMPLENUMBER=DOMAINLOGDATA.SAMPLENUMBER";
-					break;
-				default:
-					String errMsg = "Error !!  Logtype does not equal 1 or 2 !!";
-					return new ModelAndView("error", "errmsg", errMsg);
-
-				}
-
-				sqlWherePart += " AND result" + i + ".LOG_ID = ?";
-				params[i] = logId;
-
-			}
-			if (startdepth != null && enddepth != null) {
-				sqlWherePart += " AND DOMAINLOGDATA.STARTVALUE > ? AND DOMAINLOGDATA.ENDVALUE < ?";
-				params[logDetailsVoList.size() + 1] = startdepth;
-				params[logDetailsVoList.size() + 2] = enddepth;
-			}
-			finalSql = sqlSelectPart + " " + sqlFromPart + " " + sqlWherePart + " order by DOMAINLOGDATA.samplenumber";
-
-			// submit the sql to get the scalar details
-			List<Map<String, Object>> scalarDetailList = nvclDataSvc.getScalarDetails(finalSql, params);
-
-			if (outputformat.equals("csv")) {
+			
+			if (outputformat == null || !outputformat.equals("json")) {
 				// set response as csv attachement
 				response.setContentType("text/csv");
 				response.setHeader("Content-Disposition", "attachment; filename=\"scalar.csv\"");
@@ -1310,45 +1214,84 @@ public class MenuController {
 				CSVWriter writer = new CSVWriter(out, ',', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER,
 						"\n");
 
-				String[] strarray = new String[strKeysArr.size()];
-				strKeysArr.toArray(strarray);
-				writer.writeNext(strarray);
+				// Defer writing CSV header until we have ResultSet metadata
+				final boolean[] headerWritten = new boolean[] { false };
+                
+			 	nvclDataSvc.streamScalarData(logDetailsVoList,startdepth,enddepth, rs -> {
 
-				for (Iterator it1 = scalarDetailList.iterator(); it1.hasNext();) {
-					Map<String, Object> scalarDetailMap = (Map<String, Object>) it1.next();
+					int columnCount = rs.getMetaData().getColumnCount();
+					if (!headerWritten[0]) {
+						String[] header = new String[columnCount];
+						for (int h = 1; h <= columnCount; h++) {
+							header[h - 1] = rs.getMetaData().getColumnLabel(h);
+						}
+						writer.writeNext(header);
+						headerWritten[0] = true;
+					}
+					String[] row = new String[columnCount];
 
-					// get values object array and convert to string array
-					Object[] objValuesArr = scalarDetailMap.values().toArray();
-					String[] strValuesArr = new String[objValuesArr.length];
-					for (int j = 0; j < strValuesArr.length; j++) {
-						if (objValuesArr[j] != null) {
-							if (objValuesArr[j] instanceof byte[]) {
-								FloatBuffer fwhmfloatbuf = ByteBuffer.wrap((byte[]) objValuesArr[j])
-										.order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
-								float[] fwhmfloatArray = new float[fwhmfloatbuf.limit()];
-								fwhmfloatbuf.get(fwhmfloatArray);
-								strValuesArr[j] = Utility.floatArrayToString(fwhmfloatArray);
-							} else
-								strValuesArr[j] = objValuesArr[j].toString();
+					for (int j = 1; j <= columnCount; j++) {
+						Object val = rs.getObject(j);
+
+						if (val instanceof byte[]) {
+							ByteBuffer buf = ByteBuffer.wrap((byte[]) val)
+													.order(ByteOrder.LITTLE_ENDIAN);
+							FloatBuffer fb = buf.asFloatBuffer();
+							float[] arr = new float[fb.limit()];
+							fb.get(arr);
+							row[j - 1] = Utility.floatArrayToString(arr);
 						} else {
-							strValuesArr[j] = "null";
+							row[j - 1] = (val != null ? val.toString() : "null");
 						}
 					}
 
-					writer.writeNext(strValuesArr);
+					writer.writeNext(row);
+				});
 
-				}
 
 				writer.close();
 			} else {
 				response.setContentType("application/json");
 				response.setCharacterEncoding("UTF-8");
 				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
-				new ObjectMapper().writeValue(response.getOutputStream(),scalarDetailList);
+				ObjectMapper mapper = new ObjectMapper();
+				try (JsonGenerator generator = mapper.getFactory().createGenerator(response.getOutputStream())) {
+					generator.writeStartArray();
+					nvclDataSvc.streamScalarData(logDetailsVoList,startdepth,enddepth, rs -> {
+						try {
+							generator.writeStartObject();
+							int columnCount = rs.getMetaData().getColumnCount();
+							for (int j = 1; j <= columnCount; j++) {
+								String fieldName = rs.getMetaData().getColumnLabel(j);
+								Object val = rs.getObject(j);
+								if (val instanceof byte[]) {
+									ByteBuffer buf = ByteBuffer.wrap((byte[]) val)
+										.order(ByteOrder.LITTLE_ENDIAN);
+									FloatBuffer fb = buf.asFloatBuffer();
+									float[] arr = new float[fb.limit()];
+									fb.get(arr);
+									generator.writeStringField(fieldName, Utility.floatArrayToString(arr));
+								} else if (val == null) {
+									generator.writeNullField(fieldName);
+								} else if (val instanceof Number) {
+									generator.writeNumberField(fieldName, ((Number) val).doubleValue());
+								} else if (val instanceof Boolean) {
+									generator.writeBooleanField(fieldName, (Boolean) val);
+								} else {
+									generator.writeStringField(fieldName, val.toString());
+								}
+							}
+							generator.writeEndObject();
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						}
+					});
+					generator.writeEndArray();
+				}
 			}
 			return null;
-
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			logger.error("Exception occurred in DownloadScalarHandler : " + e);
 			String errMsg = "Exception occurred : " + e;
 			return new ModelAndView("error", "errmsg", errMsg);

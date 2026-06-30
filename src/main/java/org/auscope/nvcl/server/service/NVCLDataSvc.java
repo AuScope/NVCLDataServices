@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
@@ -36,6 +37,7 @@ import org.auscope.nvcl.server.dao.LogExtentsDao;
 import org.auscope.nvcl.server.dao.NVCLDataSvcDao;
 import org.auscope.nvcl.server.util.Utility;
 import org.auscope.nvcl.server.vo.AlgorithmCollectionVo;
+import org.auscope.nvcl.server.vo.AlgorithmOutputVersionVo;
 import org.auscope.nvcl.server.vo.AveragedFloatDataVo;
 import org.auscope.nvcl.server.vo.BinnedClassDataVo;
 import org.auscope.nvcl.server.vo.ClassDataVo;
@@ -80,6 +82,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.RowCallbackHandler;
 
 /**
  * Service class that provide action call to Data Access Object (DAO) methods,
@@ -941,6 +944,12 @@ public class NVCLDataSvc {
         return nvclDataSvcDao.getScalarDetails(sql,params);
     }
 
+    public void streamScalarData(List<LogDetailsVo> logDetailsVoList, Float startdepth, Float enddepth, RowCallbackHandler rch) {
+        nvclDataSvcDao.streamScalarData(logDetailsVoList, startdepth, enddepth,rch);
+    }
+
+
+
     /**
      * Get the domainlog_id for a specified iamge log based on the
      * image log id
@@ -1220,6 +1229,15 @@ public class NVCLDataSvc {
 			}
 		}
         return domains;
+    }
+
+    public Optional<AlgorithmOutputVersionVo> findByNameAndVersion(AlgorithmCollectionVo algs, int algorithmId,String outputName,int version) {
+
+        return nvclDataSvcDao.findByNameAndVersion(algs, algorithmId, outputName, version);
+    }
+
+    public Optional<AlgorithmOutputVersionVo> findByOutputId(AlgorithmCollectionVo algs, int algorithmOutputId) {
+        return nvclDataSvcDao.findByOutputId(algs, algorithmOutputId);
     }
 
 }
