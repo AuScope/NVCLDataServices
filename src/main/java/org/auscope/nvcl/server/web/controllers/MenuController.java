@@ -33,7 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.jms.Destination;
@@ -2684,5 +2684,209 @@ public class MenuController {
 
 	}
 
+	@RequestMapping(value = "/getBestTSAResults.html" ,method = { RequestMethod.GET, RequestMethod.POST })
+	public ModelAndView getBestTSAHandler(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam(required = false, value = "holeidentifier") String holeIdentifier,
+			@RequestParam(required = false, value = "datasetid") String datasetid,
+			@RequestParam(required = false, value = "outputformat") String outputformat)
+			throws ServletException, Exception {
+
+		// mandatory field : holeIdentifier - validate if holeIdentifier is null
+		if (Utility.stringIsBlankorNull(holeIdentifier) && Utility.stringIsBlankorNull(datasetid)) {
+			String errMsg = "holeidentifier or datasetid must be provided.";
+			return new ModelAndView("getBestTSAResultsUsage", "errmsg", errMsg);
+
+		}
+		DatasetCollectionVo datasetList = null;
+		if (!Utility.stringIsBlankorNull(holeIdentifier)) datasetList = nvclDataSvc.getDatasetCollection(holeIdentifier);
+		else datasetList =nvclDataSvc.getDatasetCollectionbyDatasetId(datasetid);
+
+		if (datasetList.getDatasetCollection().size() == 0) {
+			String errMsg = "No dataset found for the provided hole identifier or datasetid.";
+			return new ModelAndView("getBestTSAResultsUsage", "errmsg", errMsg);
+		}
+		else if (datasetList.getDatasetCollection().size() > 1) {
+			String errMsg = "Multiple datasets found for the provided hole identifier. Please provide a dataset identifier.";
+			return new ModelAndView("getBestTSAResultsUsage", "errmsg", errMsg);
+		}
+
+		LogCollectionVo logs = nvclDataSvc.getLogCollection(datasetList.getDatasetCollection().get(0).getDatasetID());
+
+		AlgorithmCollectionVo algs = nvclDataSvc.getAlgorithmsCollection();
+
+		Optional<AlgorithmOutputVo> valg = algs.getAlgorithms().stream()
+           .filter(p -> 1 == p.getAlgorithmID())
+           .findFirst().get().getOutputs().stream().filter(p -> "VNIR Mineral".equals(p.getName()) ).findFirst();
+
+		Optional<AlgorithmOutputVo> salg = algs.getAlgorithms().stream()
+           .filter(p -> 2 == p.getAlgorithmID())
+           .findFirst().get().getOutputs().stream().filter(p -> "SWIR Mineral".equals(p.getName()) ).findFirst();
+
+		Optional<AlgorithmOutputVo> talg = algs.getAlgorithms().stream()
+           .filter(p -> 3 == p.getAlgorithmID())
+           .findFirst().get().getOutputs().stream().filter(p -> "TIR Mineral".equals(p.getName()) ).findFirst();
+
+		if (!valg.isPresent() || !salg.isPresent() || !talg.isPresent()) {
+			String errMsg = "Required algorithms not found.";
+			return new ModelAndView("getBestTSAResultsUsage", "errmsg", errMsg);
+		}
+
+		ArrayList<AlgorithmOutputVersionVo> valgoutputs = valg.get().getVersions();
+		valgoutputs.sort(Comparator.comparing(AlgorithmOutputVersionVo::getVersion).reversed());
+		ArrayList<AlgorithmOutputVersionVo> salgoutputs = salg.get().getVersions();
+		salgoutputs.sort(Comparator.comparing(AlgorithmOutputVersionVo::getVersion).reversed());
+		ArrayList<AlgorithmOutputVersionVo> talgoutputs = talg.get().getVersions();
+		talgoutputs.sort(Comparator.comparing(AlgorithmOutputVersionVo::getVersion).reversed());
+
+		// find vnir TSA version
+		int vnirminalgoutputid=0;
+		int vnirversion=0;
+		for (AlgorithmOutputVersionVo algout : valgoutputs) {
+			for (LogVo log : logs.getLogCollection()) {
+				if (algout.getAlgorithmoutputID() == log.getAlgorithmoutID()) {
+					vnirminalgoutputid=algout.getAlgorithmoutputID();
+					vnirversion=algout.getVersion();
+					break;
+				}
+			}
+			if (vnirminalgoutputid>0 && vnirversion>0) break;
+		}
+
+		List<AlgorithmOutputVo> vnirAllalgoutids;
+		if (vnirversion > 0) {
+			final int nonsense=vnirversion;
+			ArrayList<AlgorithmOutputVo> tmp = algs.getAlgorithms().stream()
+		   .filter(p -> 1 == p.getAlgorithmID())
+		   .findFirst().get().getOutputs();
+
+			vnirAllalgoutids = tmp.stream().filter(p -> p.getVersions().stream().anyMatch(v -> nonsense==v.getVersion())).collect(Collectors.toList());
+
+
+		} else {
+			vnirAllalgoutids = new ArrayList<>();
+		}
+
+		// find swir TSA version
+		int swirminalgoutputid=0;
+		int swirversion=0;
+		for (AlgorithmOutputVersionVo algout : salgoutputs) {
+			for (LogVo log : logs.getLogCollection()) {
+				if (algout.getAlgorithmoutputID() == log.getAlgorithmoutID()) {
+					swirminalgoutputid=algout.getAlgorithmoutputID();
+					swirversion=algout.getVersion();
+					break;
+				}
+			}
+			if (swirminalgoutputid>0 && swirversion>0) break;
+		}
+		// find tir TSA version
+		int tirMinalgoutputid=0;
+		int tirVersion=0;
+		for (AlgorithmOutputVersionVo algout : talgoutputs) {
+			for (LogVo log : logs.getLogCollection()) {
+				if (algout.getAlgorithmoutputID() == log.getAlgorithmoutID()) {
+					tirMinalgoutputid=algout.getAlgorithmoutputID();
+					tirVersion=algout.getVersion();
+					break;
+				}
+			}
+			if (tirMinalgoutputid>0 && tirVersion>0) break;
+		}
+
+		String stsalevel = "";
+
+		if (swirminalgoutputid>0 && swirversion>0) {
+			for (LogVo log : logs.getLogCollection())
+				if (log.getAlgorithmoutID() == swirminalgoutputid) {
+					if (log.getLogName().contains("dTSA")) stsalevel = "dTSA";
+					else if (log.getLogName().contains("uTSA") && stsalevel!="dTSA") stsalevel = "uTSA";
+					else if (log.getLogName().contains("sTSA") && stsalevel!="dTSA" && stsalevel!="uTSA") stsalevel = "sTSA"; 
+				}
+		}
+
+		String vnstalevel = "";
+
+		if (vnirminalgoutputid>0 && vnirversion>0) {
+			for (LogVo log : logs.getLogCollection())
+				if (log.getAlgorithmoutID() == vnirminalgoutputid) {
+					if (log.getLogName().contains("dTSA")) vnstalevel = "dTSA";
+					else if (log.getLogName().contains("uTSA") && vnstalevel!="dTSA") vnstalevel = "uTSA";
+					else if (log.getLogName().contains("sTSA") && vnstalevel!="dTSA" && vnstalevel!="uTSA") vnstalevel = "sTSA"; 
+				}
+		}
+		
+		String tirstalevel = "";
+
+		if (tirMinalgoutputid>0 && tirVersion>0) {
+			for (LogVo log : logs.getLogCollection())
+				if (log.getAlgorithmoutID() == tirMinalgoutputid) {
+					if (log.getLogName().contains("djCLST")) tirstalevel = "djCLST";
+					else if( log.getLogName().contains("dTSA") && tirstalevel!="djCLST") tirstalevel = "dTSA";
+					else if (log.getLogName().contains("ujCLST") && tirstalevel!= "djCLST" && tirstalevel!="dTSA") tirstalevel = "ujCLST";
+					else if (log.getLogName().contains("uTSA") && tirstalevel!= "djCLST" && tirstalevel!="dTSA" && tirstalevel!="ujCLST") tirstalevel = "uTSA";
+					else if (log.getLogName().contains("sjCLST") && tirstalevel!= "djCLST" && tirstalevel!="dTSA" && tirstalevel!="ujCLST" && tirstalevel!="uTSA") tirstalevel = "sjCLST";
+					else if (log.getLogName().contains("sTSA") && tirstalevel!= "djCLST" && tirstalevel!="dTSA" && tirstalevel!="ujCLST" && tirstalevel!="uTSA" && tirstalevel!="sjCLST") tirstalevel = "sTSA"; 
+				}
+		}
+
+		// VNIR
+		Optional<AlgorithmOutputVersionVo> vnirGroup =
+			nvclDataSvc.findByNameAndVersion(algs, 1, "VNIR Group", vnirversion);
+
+		Optional<AlgorithmOutputVersionVo> vnirWeight =
+			nvclDataSvc.findByNameAndVersion(algs, 1, "VNIR Weight", vnirversion);
+
+
+		// SWIR
+		Optional<AlgorithmOutputVersionVo> swirGroup =
+			nvclDataSvc.findByNameAndVersion(algs, 2, "SWIR Group", swirversion);
+
+		Optional<AlgorithmOutputVersionVo> swirWeight =
+			nvclDataSvc.findByNameAndVersion(algs, 2, "SWIR Weight", swirversion);
+
+
+		// TIR
+		Optional<AlgorithmOutputVersionVo> tirGroup =
+			nvclDataSvc.findByNameAndVersion(algs, 3, "TIR Group", tirVersion);
+
+		Optional<AlgorithmOutputVersionVo> tirWeight =
+			nvclDataSvc.findByNameAndVersion(algs, 3, "TIR Weight", tirVersion);
+		
+		List<String> logIdList = new ArrayList<String>();
+
+		for (LogVo log : logs.getLogCollection()) {
+			if (swirminalgoutputid>0 && log.getAlgorithmoutID() == swirminalgoutputid && log.getLogName().contains(stsalevel) ) {
+				logIdList.add(log.getLogID());
+			}
+			else if (vnirminalgoutputid>0 && log.getAlgorithmoutID() == vnirminalgoutputid && log.getLogName().contains(vnstalevel) ) {
+				logIdList.add(log.getLogID());
+			}
+			else if (tirMinalgoutputid>0 &&log.getAlgorithmoutID() == tirMinalgoutputid && log.getLogName().contains(tirstalevel) ) {
+				logIdList.add(log.getLogID());
+			}
+			else if (swirGroup.isPresent() && swirGroup.get().getAlgorithmoutputID()>0 && log.getAlgorithmoutID() == swirGroup.get().getAlgorithmoutputID() && log.getLogName().contains(stsalevel) ) {
+				logIdList.add(log.getLogID());
+			}
+			else if (vnirGroup.isPresent() && vnirGroup.get().getAlgorithmoutputID()>0 && log.getAlgorithmoutID() == vnirGroup.get().getAlgorithmoutputID() && log.getLogName().contains(vnstalevel) ) {
+				logIdList.add(log.getLogID());
+			}
+			else if (tirGroup.isPresent() && tirGroup.get().getAlgorithmoutputID()>0 && log.getAlgorithmoutID() == tirGroup.get().getAlgorithmoutputID() && log.getLogName().contains(tirstalevel) ) {
+				logIdList.add(log.getLogID());
+			}
+			else if (swirWeight.isPresent() && swirWeight.get().getAlgorithmoutputID()>0 && log.getAlgorithmoutID() == swirWeight.get().getAlgorithmoutputID() && log.getLogName().contains(stsalevel) ) {
+				logIdList.add(log.getLogID());
+			}
+			else if (vnirWeight.isPresent() && vnirWeight.get().getAlgorithmoutputID()>0 && log.getAlgorithmoutID() == vnirWeight.get().getAlgorithmoutputID() && log.getLogName().contains(vnstalevel) ) {
+				logIdList.add(log.getLogID());
+			}
+			else if (tirWeight.isPresent() && tirWeight.get().getAlgorithmoutputID()>0 && log.getAlgorithmoutID() == tirWeight.get().getAlgorithmoutputID() && log.getLogName().contains(tirstalevel) ) {
+				logIdList.add(log.getLogID());
+			}
+
+		}
+		logger.info("Log IDs: " + String.join(", ", logIdList));
+		return DownloadScalarHandler(request, response, logIdList.toArray(new String[0]),0.0f,9999999.0f,outputformat);
+
+	}
 }
 

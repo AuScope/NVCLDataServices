@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>NVCL Data Services :: get Best TSA Results</title>
+    <link rel="stylesheet" href="style/style.css" type="text/css"/>
+  </head>
+  <body  class="NVCLDSBody">
+  <h2 class="NVCLDSh2">NVCL Data Services : Get Best TSA Results</h2>
+  <h2 style="color:red" th:text="${errmsg}">Error</h2>
+  <p>getBestTSAResults service will generate a table of best TSA results in csv or json format. It requires a holeidentifier or a datasetid as the mandatory URL parameter. The holeidentifier can be obtained from gml:id of either gsml:Borehole or gsmlp:BoreholeView WFS output (e.g. gsml.borehole.WTB5, take the WTB5 only).</p>
+  <p>Usage: getBestTSAResults.html?parameter1=value</p>
+
+  <table class="usageTable"><tr><th>Parameter</th><th>Description</th><th>Required</th><th>Example values</th></tr>
+  <tr><td>holeidentifier</td><td>same as borehole id which can be obtained through the GeoServer WFS ouput</td><td>yes</td><td>WTB5</td></tr>
+  <tr><td>datasetid</td><td>alternatively you can use the dataset's own ID to look up a dataset</td><td>no</td><td>6dd70215-fe38-457c-be42-3b165fd98c7</td></tr>
+  <tr><td>outputformat</td><td>output format. options are csv and json. default is csv</td><td>no</td><td>json</td></tr>
+  </table>
+  <h3>Example Queries:</h3>
+  <p>A standard query : getBestTSAResults.html?holeidentifier=WTB5</p>
+  </body>
+</html>

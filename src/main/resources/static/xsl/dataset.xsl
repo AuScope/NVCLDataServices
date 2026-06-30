@@ -178,6 +178,10 @@
 										</xsl:otherwise>
 										</xsl:choose>
 									</dd>
+									<dt class="col-sm-4">TSA Results</dt>
+									<dd class="col-sm-8">
+										<a><xsl:attribute name="href">./getBestTSAResults.html?datasetid=<xsl:value-of select="DatasetID" /></xsl:attribute>Download Best TSA result</a>
+									</dd>
 								</dl>
 								</div>
 
