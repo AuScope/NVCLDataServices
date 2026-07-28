@@ -3,6 +3,10 @@ The National Virtual Core Library Data Services (NVCLDataServices) is a Java web
 
 ## Prerequisites
 
+### Java 17
+
+To build and run this app a JVM version 17 is required.
+
 ### A NVCL Database
 
 Use the build scripts in the sql folder to create a NVCL database and create a user account with the provided scripts with WebService permissions.
@@ -33,13 +37,13 @@ If you want to use an Oracle database as your data source you will need to regis
 ## Building the package
 Gradle is used for building. To clean and build the .jar file run:
 
-    gradlew build 
+    gradlew clean bootWar 
 
 ## Running
 
 For debug purposes you can call the "Debug NVCLDataServices" launch configuration from VSCode.  Or directly call:
 
-    java -jar ./build/libs/NVCLDataServices.war
+    gradlew bootRun
 
 ## License
 
