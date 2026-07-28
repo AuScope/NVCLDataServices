@@ -1,14 +1,13 @@
-name: Build Boot WAR and Upload to Release
+name: Build Boot WAR
 
 on:
   push:
     branches:
       - master
-    tags:
-      - '*'        # Triggers workflow on any tag (e.g., v1.0.0)
+  pull_request:
 
 jobs:
-  build-and-upload:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,17 +32,3 @@ jobs:
 
       - name: Build Boot WAR
         run: ./gradlew clean bootWar
-
-      - name: Prepare Artifact
-        run: |
-          mkdir artifacts
-          cp build/libs/*.war artifacts/
-
-      # Only run the release upload when the event is a tag
-      - name: Upload WAR to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: artifacts/*.war
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
