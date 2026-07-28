@@ -5,7 +5,8 @@ plugins {
 }
 
 group = 'org.auscope'
-version = '2.3.3.4'
+// Use release version from CI, otherwise use a local snapshot version
+version = System.getenv('RELEASE_VERSION') ?: '2.3.3-SNAPSHOT'
 
 
 apply plugin: 'io.spring.dependency-management'
