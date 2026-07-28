@@ -7,6 +7,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -1238,6 +1240,94 @@ public class NVCLDataSvc {
 
     public Optional<AlgorithmOutputVersionVo> findByOutputId(AlgorithmCollectionVo algs, int algorithmOutputId) {
         return nvclDataSvcDao.findByOutputId(algs, algorithmOutputId);
+    }
+
+    public InputStream findImageSectioninCache(String datasetid, Integer sectionNo, String cachefolderpath,
+            Boolean applycorrection, Boolean horizontal, Boolean highresolution) {
+
+        if (Utility.stringIsBlankorNull(datasetid) || sectionNo == null || sectionNo < 0 ||
+                Utility.stringIsBlankorNull(cachefolderpath)) {
+            return null;
+        }
+
+        File cacheFolder = new File(cachefolderpath);
+        File sectionImageCache = new File(cacheFolder, "sectionimagecache");
+
+        if (!sectionImageCache.exists() || !sectionImageCache.isDirectory()) {
+            try {
+                Files.createDirectories(sectionImageCache.toPath());
+            } catch (IOException e) {
+                logger.error("Unable to create section image cache directory", e);
+                return null;
+            }
+            return null;
+        }
+
+        String orientationSuffix = "";
+        if (Boolean.TRUE.equals(horizontal)) {
+            orientationSuffix += "_horizontal";
+        }
+        else {
+            orientationSuffix += "_vertical";
+        }
+
+        String resolutionSuffix = Boolean.TRUE.equals(highresolution) ? "_highresolution" : "";
+        String suffix = (applycorrection == null || applycorrection) ? "corrected" : "uncorrected";
+        String fileName = datasetid + sectionNo + suffix + orientationSuffix + resolutionSuffix + ".jpg";
+
+        try {
+            File targetFile = new File(sectionImageCache, fileName);
+            if (targetFile.exists() && targetFile.isFile()) {
+                return Files.newInputStream(targetFile.toPath());
+            }
+
+        } catch (IOException ex) {
+            logger.error("Unable to open section image cache file", ex);
+            return null;
+
+        }
+        logger.debug("Image section cache file not found for datasetid=" + datasetid + ", sectionNo=" + sectionNo
+                + ", applycorrection=" + applycorrection + ", horizontal=" + horizontal);
+        return null;
+    }
+
+    public boolean saveImageSectionToCache(String datasetid, Integer sectionNo, String cachefolderpath,
+            Boolean applycorrection, Boolean horizontal, Boolean highresolution, byte[] imageData) {
+
+        if (Utility.stringIsBlankorNull(datasetid) || sectionNo == null || sectionNo < 0 ||
+                Utility.stringIsBlankorNull(cachefolderpath) || imageData == null || imageData.length == 0) {
+            return false;
+        }
+
+        File cacheFolder = new File(cachefolderpath);
+        File sectionImageCache = new File(cacheFolder, "sectionimagecache");
+
+        try {
+            Files.createDirectories(sectionImageCache.toPath());
+        } catch (IOException e) {
+            logger.error("Unable to create section image cache directory", e);
+            return false;
+        }
+
+        String orientationSuffix = "";
+        if (Boolean.TRUE.equals(horizontal)) {
+            orientationSuffix += "_horizontal";
+        }
+        else {
+            orientationSuffix += "_vertical";
+        }
+
+        String resolutionSuffix = Boolean.TRUE.equals(highresolution) ? "_highresolution" : "";
+        String suffix = (applycorrection == null || applycorrection) ? "corrected" : "uncorrected";
+        File targetFile = new File(sectionImageCache, datasetid + sectionNo + suffix + orientationSuffix + resolutionSuffix + ".jpg");
+
+        try {
+            Files.write(targetFile.toPath(), imageData);
+            return true;
+        } catch (IOException ex) {
+            logger.error("Unable to write section image cache file", ex);
+            return false;
+        }
     }
 
 }

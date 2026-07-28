@@ -9,7 +9,10 @@ import java.awt.Menu;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -2503,11 +2506,12 @@ public class MenuController {
 	}
 
 
-	@RequestMapping(value = "/getImageSection.html" ,method = { RequestMethod.GET, RequestMethod.POST })
+	@RequestMapping(value = "/getImageSection.html", method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView getImageSectionHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "logid") String logId,
 			@RequestParam(required = false, value = "datasetid") String datasetid,
 			@RequestParam(required = false, value = "horizontal", defaultValue = "no") String horiz,
+			@RequestParam(required = false, value = "highresolution", defaultValue = "no") String highresolutionParam,
 			@RequestParam(required = false, value = "uncorrected") String uncorrected,
 			@RequestParam(required = false, value = "sectionno", defaultValue = "0") Integer sectionNo)
 			throws ServletException, IOException, SQLException {
@@ -2521,6 +2525,8 @@ public class MenuController {
 		if (!Utility.stringIsBlankorNull(uncorrected) && uncorrected.equals("yes")){
 			applycorrection=false;
 		}
+		Boolean horizontal = "yes".equalsIgnoreCase(horiz);
+		Boolean highresolution = "yes".equalsIgnoreCase(highresolutionParam);
 
 		DomainLogCollectionVo domains = nvclDataSvc.getDomainLogCollection(datasetid);
 
@@ -2528,10 +2534,21 @@ public class MenuController {
 		
 		ImageLogVo foundImagery = null;
 
-		for(ImageLogVo imglog : imglogs.getimageLogCollection()) {
-			if ( imglog.getLogName().equals("Imagery")) {
-				foundImagery = imglog;
-				break;
+		if (highresolution) {  // try to get the hi res imagery if asked for it, otherwise fall back to the standard imagery
+			for(ImageLogVo imglog : imglogs.getimageLogCollection()) {
+				if ( imglog.getLogName().equals("HiRes Imagery")) {
+					foundImagery = imglog;
+					break;
+				}
+			}
+		}
+
+		if (foundImagery==null) {
+			for(ImageLogVo imglog : imglogs.getimageLogCollection()) {
+				if ( imglog.getLogName().equals("Imagery")) {
+					foundImagery = imglog;
+					break;
+				}
 			}
 		}
 
@@ -2563,6 +2580,22 @@ public class MenuController {
 
 			final ImageLogVo finalfoundImagery = foundImagery;
 			final Boolean finalapplycorrection = applycorrection;
+
+			try (InputStream cachedSectionImage = nvclDataSvc.findImageSectioninCache(datasetid, sectionNo,
+				configVo.getDownloadCachePath(), applycorrection, horizontal, highresolution)) {
+				if (cachedSectionImage != null) {
+					response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
+					response.setContentType("image/jpeg");
+					byte[] buffer = new byte[8192];
+					int bytesRead;
+					while ((bytesRead = cachedSectionImage.read(buffer)) != -1) {
+						response.getOutputStream().write(buffer, 0, bytesRead);
+					}
+					return null;
+				}
+			} catch (IOException e) {
+				logger.debug("Unable to read cached image, generating fresh image", e);
+			}
 
 			//List<ImageDataVo> imglist = new CopyOnWriteArrayList<ImageDataVo>();
 			Map<Integer,ImageDataVo> concurrentMap = new ConcurrentHashMap<>();
@@ -2599,7 +2632,6 @@ public class MenuController {
 
 			}
 
-
 			try {
 				// Acquire a permit
 				sectionImageGenerator.acquire();
@@ -2631,13 +2663,21 @@ public class MenuController {
 
 					});
 					g2d.dispose();
-					if (horiz.equals("yes")){
-						BufferedImage rotatedImg = NVCLDataSvc.rotateImageBy90DegreesAnticlockwise(combinedImage);
-						ImageIO.write(rotatedImg, "jpg", response.getOutputStream());
+					BufferedImage outputImage = combinedImage;
+					if (horizontal) {
+						outputImage = NVCLDataSvc.rotateImageBy90DegreesAnticlockwise(combinedImage);
 					}
-					else {
-						ImageIO.write(combinedImage, "jpg", response.getOutputStream());
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					ImageIO.write(outputImage, "jpg", baos);
+					byte[] imageBytes = baos.toByteArray();
+					boolean cached = nvclDataSvc.saveImageSectionToCache(datasetid, sectionNo,
+						configVo.getDownloadCachePath(), applycorrection, horizontal, highresolution, imageBytes);
+					if (!cached) {
+						logger.debug("Failed to cache generated section image for datasetid=" + datasetid + ", sectionNo=" + sectionNo);
 					}
+					response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
+					response.setContentType("image/jpeg");
+					response.getOutputStream().write(imageBytes);
 				}
 			} 
 			catch (InterruptedException e) {

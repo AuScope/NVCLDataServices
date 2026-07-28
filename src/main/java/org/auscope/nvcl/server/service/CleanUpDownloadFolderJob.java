@@ -90,8 +90,11 @@ public class CleanUpDownloadFolderJob {
 			Arrays.sort(CachelistFiles, Comparator.comparingLong(File::lastModified));
 
 			// clean all but the most recent folder and file incase its still being processed
-			for (int i=0; i <CachelistFiles.length-2;i++) {
-				File CachelistFile =CachelistFiles[i];
+			for (int i = 0; i < CachelistFiles.length - 2; i++) {
+				File CachelistFile = CachelistFiles[i];
+				if (CachelistFile.isDirectory() && "sectionimagecache".equalsIgnoreCase(CachelistFile.getName())) {
+					continue;
+				}
 				if (CachelistFile.isDirectory()) {
 					try {
 						FileUtils.deleteDirectory(CachelistFile);
@@ -104,6 +107,30 @@ public class CleanUpDownloadFolderJob {
 				else {
 					CachelistFile.delete();
 					cachefolderscleaned++;
+				}
+			}
+
+			long minDiskspaceinBytes = ((long)this.config.getMinDiskspace()) * 1000000000L;
+			long cacheUsableSpace = cacheFolder.getUsableSpace();
+			if (cacheUsableSpace < minDiskspaceinBytes) {
+				File sectionImageCache = new File(cacheFolder, "sectionimagecache");
+				if (sectionImageCache.exists() && sectionImageCache.isDirectory()) {
+					File[] sectionFiles = sectionImageCache.listFiles();
+					if (sectionFiles != null) {
+						Arrays.sort(sectionFiles, Comparator.comparingLong(File::lastModified));
+						for (File sectionFile : sectionFiles) {
+							if (sectionFile.isFile()) {
+								logger.debug("deleting oldest sectionimagecache file: " + sectionFile.getName());
+								if (sectionFile.delete()) {
+									cachefolderscleaned++;
+								}
+							}
+							cacheUsableSpace = cacheFolder.getUsableSpace();
+							if (cacheUsableSpace >= minDiskspaceinBytes) {
+								break;
+							}
+						}
+					}
 				}
 			}
 		}
