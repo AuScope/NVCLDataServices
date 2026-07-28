@@ -16,6 +16,19 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Verify version matches release tag
+        run: |
+          TAG_VERSION="${{ github.event.release.tag_name }}"
+          GRADLE_VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
+      
+          echo "Tag version: $TAG_VERSION"
+          echo "Gradle version: $GRADLE_VERSION"
+      
+          if [ "$TAG_VERSION" != "$GRADLE_VERSION" ]; then
+            echo "ERROR: Release tag does not match project version.  Update build.gradle version and try again."
+            exit 1
+          fi
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
