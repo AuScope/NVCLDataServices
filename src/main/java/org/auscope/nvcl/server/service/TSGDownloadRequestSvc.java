@@ -70,9 +70,11 @@ public class TSGDownloadRequestSvc {
 
 			}
 		}
-		if(!skipcaches && !messageVo.getStatus().equals("Success") && config.getWritePrepedDSstoAzureBlobStore() && nvclDataSvc.blobExists(fileName + ".zip", config.getPrepedDSsAzureBlobStoreContainerName(),0)) {
+		String path=config.getPrepedDSsAzureBlobStoreContainerName_PathOnly();
+		String prefix = path.endsWith("/") ? path + fileName + ".zip": path + "/" +fileName + ".zip";
+		if(!skipcaches && !messageVo.getStatus().equals("Success") && config.getWritePrepedDSstoAzureBlobStore() && nvclDataSvc.blobExists(prefix, config.getPrepedDSsAzureBlobStoreContainerName_NoPath(), 0)) {
 			logger.debug("File exists in Azure blob store cache. set reply message....");
-			nvclDataSvc.touchBlob(fileName + ".zip", config.getPrepedDSsAzureBlobStoreContainerName());
+			nvclDataSvc.touchBlob(prefix, config.getPrepedDSsAzureBlobStoreContainerName_NoPath());
 			messageVo.setStatus("Success");
 			messageVo.setDescription(donwloadURL + fileName + ".zip");
 			messageVo.setResultfromcache(true);
@@ -162,7 +164,9 @@ public class TSGDownloadRequestSvc {
 
 				try {
 					if (config.getWritePrepedDSstoAzureBlobStore()) {
-						nvclDataSvc.UploadTSGFileBundletoAzureBlobContainer(fileName+".zip",config.getPrepedDSsAzureBlobStoreContainerName(),preparedzip);
+						String path=config.getPrepedDSsAzureBlobStoreContainerName_PathOnly();
+						String prefix = path.endsWith("/") ? path + fileName + ".zip": path + "/" +fileName + ".zip";
+						nvclDataSvc.UploadTSGFileBundletoAzureBlobContainer(prefix,config.getPrepedDSsAzureBlobStoreContainerName_NoPath(),preparedzip);
 						Files.delete(preparedzip.toPath());
 					}
 					else {

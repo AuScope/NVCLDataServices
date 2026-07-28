@@ -21,6 +21,7 @@ import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.DeleteSnapshotsOptionType;
+import com.azure.storage.blob.models.ListBlobsOptions;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.azure.identity.EnvironmentCredentialBuilder;
@@ -174,8 +175,14 @@ public class NVCLBlobStoreAccessSvc {
         }
     }
 
-    public int cleanupoldestblobsinAzureContainer(int daysToKeep, String containerName, int maxGBstoRetain){
+    public int cleanupoldestblobsinAzureContainer(int daysToKeep, String containerName, String path, int maxGBstoRetain){
         OffsetDateTime cutoffDate = OffsetDateTime.now().minusDays(daysToKeep); 
+
+        ListBlobsOptions options = new ListBlobsOptions();
+
+        if (path != null && !path.isBlank()) {
+            options.setPrefix(path.endsWith("/") ? path : path + "/");
+        }
 
         BlobContainerClient containerClient = this.blobServiceClient.getBlobContainerClient(containerName);
 
@@ -183,7 +190,7 @@ public class NVCLBlobStoreAccessSvc {
         long totalSize = 0;
         long maxSizeinBytes = (long)maxGBstoRetain*1024L*1024L*1024L;
 
-        for (BlobItem blobItem : containerClient.listBlobs()) {
+        for (BlobItem blobItem : containerClient.listBlobs(options, null)) {
             BlobClient blobClient = containerClient.getBlobClient(blobItem.getName());
             BlobProperties properties = blobClient.getProperties();
             totalSize += properties.getBlobSize();
@@ -192,9 +199,9 @@ public class NVCLBlobStoreAccessSvc {
         int blobscleaned=0;
 
         if (totalSize>maxSizeinBytes) {
-            logger.warn("Blob storage size "+ (totalSize/(1024L*1024L*1024L)) +"GB has exceeded the maximum "+maxGBstoRetain+"GB.  The oldest files will now be removed until the total size falls bellow the limit");
+            logger.warn("Blob storage size for container '" + containerName + "', path '" + path + "' is " + (totalSize/(1024L*1024L*1024L)) + "GB and exceeds the maximum " + maxGBstoRetain + "GB.");
             List<BlobItem> blobList = new ArrayList<>();
-            containerClient.listBlobs().forEach(blobList::add);
+            containerClient.listBlobs(options, null).forEach(blobList::add);
 
             // Sort blobs by LastModified date (oldest to newest)
             blobList.sort(Comparator.comparing(blob -> blob.getProperties().getLastModified()));

@@ -38,7 +38,7 @@ public class CleanUpDownloadFolderJob {
 		String cachefolderpath = this.config.getDownloadCachePath();
 		if (config.getWritePrepedDSstoAzureBlobStore())
 		{
-			filescleaned = this.nvclDataSvc.cleanupoldestblobsinAzureContainer(this.config.getMsgTimetoLiveDays(),this.config.getPrepedDSsAzureBlobStoreContainerName(),config.getMaxSpacetoUseinGB());
+			filescleaned = this.nvclDataSvc.cleanupoldestblobsinAzureContainer(this.config.getMsgTimetoLiveDays(),this.config.getPrepedDSsAzureBlobStoreContainerName_NoPath(),this.config.getPrepedDSsAzureBlobStoreContainerName_PathOnly(),config.getMaxSpacetoUseinGB());
 		}
 		else {
 			String downloadsfolderpath=this.config.getDownloadRootPath();

@@ -1206,8 +1206,8 @@ public class NVCLDataSvc {
         nvclBlobStoreAccessSvc.touchBlob(blobName, containerName);
     }
 
-    public int cleanupoldestblobsinAzureContainer(int daysToKeep, String containerName, int maxGBstoRetain){
-        return nvclBlobStoreAccessSvc.cleanupoldestblobsinAzureContainer(daysToKeep, containerName, maxGBstoRetain);
+    public int cleanupoldestblobsinAzureContainer(int daysToKeep, String containerName,String path, int maxGBstoRetain){
+        return nvclBlobStoreAccessSvc.cleanupoldestblobsinAzureContainer(daysToKeep, containerName, path, maxGBstoRetain);
     }
 
     public DomainLogCollectionVo getDomainLogCollectionWithData(String datasetid) {

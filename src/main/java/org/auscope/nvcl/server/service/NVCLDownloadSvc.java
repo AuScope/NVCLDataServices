@@ -490,7 +490,9 @@ public class NVCLDownloadSvc {
 		// try azure storage
 		if (config.getWritePrepedDSstoAzureBlobStore())
 		{
-			if (this.nvclDataSvc.blobExists(datasetID+".zip",config.getPrepedDSsAzureBlobStoreContainerName(),modifiedDate)){
+			String path=config.getPrepedDSsAzureBlobStoreContainerName_PathOnly();
+			String prefix = path.endsWith("/") ? path + datasetID+".zip": path + "/" +datasetID+".zip";
+			if (this.nvclDataSvc.blobExists(prefix,config.getPrepedDSsAzureBlobStoreContainerName_NoPath(),modifiedDate)){
 				String dlurl = config.getDownloadURL()+datasetID+".zip";
 				cacheurls.put(datasetID, dlurl);
 				return dlurl;

@@ -333,4 +333,11 @@ public class ConfigVo {
 			this.prepedDSsAzureBlobStoreContainerName = prepedDSsAzureBlobStoreContainerName;
 		}
 
+		public String getPrepedDSsAzureBlobStoreContainerName_NoPath() {
+			return prepedDSsAzureBlobStoreContainerName.contains("/")  ? prepedDSsAzureBlobStoreContainerName.substring(0, prepedDSsAzureBlobStoreContainerName.indexOf('/')) : prepedDSsAzureBlobStoreContainerName;
+		}
+
+		public String getPrepedDSsAzureBlobStoreContainerName_PathOnly() {
+			return prepedDSsAzureBlobStoreContainerName.contains("/")  ? prepedDSsAzureBlobStoreContainerName.substring(prepedDSsAzureBlobStoreContainerName.indexOf('/') + 1) : "";
+		}
 }
