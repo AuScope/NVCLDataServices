@@ -52,6 +52,7 @@ import org.auscope.nvcl.server.vo.SpectralLogVo;
 import org.auscope.nvcl.server.vo.TraySectionsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.RowMapper;
@@ -246,8 +247,11 @@ public class NVCLDataSvcDao {
                 return logDetails;
             }
         };
-
-        return this.jdbcTemplate.queryForObject(sql, mapper, logID);
+        try {
+            return this.jdbcTemplate.queryForObject(sql, mapper, logID);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 
 
@@ -736,12 +740,16 @@ public class NVCLDataSvcDao {
      * @return String   domainlog_id
      */
 
-    public String getImageDomainlogId(String imagelogId) throws SQLException,
-    DataAccessException {
+    public String getImageDomainlogId(String imagelogId) {
         String sql = "select domainlog_id from logs where log_id=?";
-        String domainlogId  = (String) this.jdbcTemplate.queryForObject(sql, String.class,imagelogId );
-        return domainlogId;
+
+        try {
+            return jdbcTemplate.queryForObject(sql, String.class, imagelogId);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
+
 
     
 

@@ -959,8 +959,7 @@ public class NVCLDataSvc {
      * @param imagelogId   image log's log_id
      * @return String domainlog_id of the mosaic tray
      */
-    public String getImageDomainlogId(String imagelogId) throws SQLException,
-    DataAccessException {
+    public String getImageDomainlogId(String imagelogId) {
         return nvclDataSvcDao.getImageDomainlogId(imagelogId);
     }
 

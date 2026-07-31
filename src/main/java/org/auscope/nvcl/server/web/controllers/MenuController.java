@@ -489,7 +489,16 @@ public class MenuController {
 			logId = trayThumbnailLogId;
 			domainlogId = nvclDataSvc.getImageDomainlogId(logId);
 		} else {
-			if (!Utility.isAlphanumericOrHyphen(datasetId)) datasetId = nvclDataSvc.getLogDetails(logId).getDatasetID();
+			LogDetailsVo logDetail = nvclDataSvc.getLogDetails(logId);
+			if (logDetail == null) {
+				String errMsg = "Invalid logid";
+				return new ModelAndView("mosaicusage", "errmsg", errMsg);
+			}
+			if (!Utility.isAlphanumericOrHyphen(datasetId)) datasetId = logDetail.getDatasetID();
+			if (!Utility.isAlphanumericOrHyphen(datasetId)) {
+				String errMsg = "datasetid could not be found for this logid";
+				return new ModelAndView("mosaicusage", "errmsg", errMsg);
+			}
 			domainlogId = nvclDataSvc.getImageDomainlogId(logId);
 			// check this is a tray domain based image log. Scalar try maps
 			// cannot be generated on other domains.
@@ -508,6 +517,11 @@ public class MenuController {
 		}
 
 		StringBuffer imageURL = new StringBuffer("<div class=\"NVCLMosaicContainer\" >");
+
+		if (domainlogId== null || !Utility.isAlphanumericOrHyphen(domainlogId)) {
+			String errMsg = "datasetid or logid invalid. No domain log found for this image log.";
+			return new ModelAndView("mosaicusage", "errmsg", errMsg);
+		}
 
 		endSampleNo = min(endSampleNo, nvclDataSvc.getLastsampleNumber(domainlogId, startSampleNo,endSampleNo));
 		startSampleNo = min(startSampleNo,endSampleNo);
@@ -628,6 +642,11 @@ public class MenuController {
 			return new ModelAndView("displayStackedTrayThumbnailsusage", "errmsg", errMsg);
 		}
 		String domainlogId = nvclDataSvc.getImageDomainlogId(trayThumbnailLogId);
+
+		if (domainlogId== null || !Utility.isAlphanumericOrHyphen(domainlogId)) {
+			String errMsg = "tray image thumbnails could not be found for this datasetid";
+			return new ModelAndView("displayStackedTrayThumbnailsusage", "errmsg", errMsg);
+		}
 
 		int endSampleNo = nvclDataSvc.getLastsampleNumber(domainlogId, 0,999999999);
 
@@ -838,16 +857,12 @@ public class MenuController {
 			return new ModelAndView("getImageTrayDepthUsage", "errmsg", errMsg);
 		}
 
-		String domainlogId = null;
-
-		// get domainlog_id based on the image tray log id
-		try {
-			domainlogId = nvclDataSvc.getImageDomainlogId(logId);
-		} catch (DataAccessException e) {
-			logger.error("DataAccessException : " + e);
+		String domainlogId = nvclDataSvc.getImageDomainlogId(logId);
+		if (domainlogId== null || !Utility.isAlphanumericOrHyphen(domainlogId)) {
 			String errMsg = "A valid image tray logid must be provided for this service to function.";
 			return new ModelAndView("getImageTrayDepthUsage", "errmsg", errMsg);
 		}
+
 
 		// get start and end depth for all trays based on the tray image domain
 		// log id
@@ -922,6 +937,11 @@ public class MenuController {
 			float endRange = min(domainChartDepthRange[1], endDepth);
 
 			LogDetailsVo logDetail = nvclDataSvc.getLogDetails(logId);
+
+			if (logDetail==null) {
+				String errMsg = "Invalid logid";
+				return new ModelAndView("mosaicusage", "errmsg", errMsg);
+			}
 
 			OutputStream bufferStream = response.getOutputStream();
 			JFreeChart chart = null;
@@ -1727,7 +1747,10 @@ public class MenuController {
 		// then
 
 		String domainlogid = nvclDataSvc.getImageDomainlogId(imglogId);
-
+		if (domainlogid== null || !Utility.isAlphanumericOrHyphen(domainlogid)) {
+			String errMsg = "A valid image logid must be provided for this service to function.";
+			return new ModelAndView("imageCarouselusage", "errmsg", errMsg);
+		}
 		String datasetId = nvclDataSvc.getDatasetIdfromLogId(imglogId);
 
 		DomainDataCollectionVo sampleNoList = nvclDataSvc.getDomainData(domainlogid);
@@ -1910,6 +1933,11 @@ public class MenuController {
 
 		LogDetailsVo logdetails = nvclDataSvc.getLogDetails(logid);
 
+		if (logdetails == null) {
+			String errMsg = "logid is not valid.";
+			return new ModelAndView("gettraymapusage", "errmsg", errMsg);
+		}
+
 		TraySectionsVo sections = nvclDataSvc.getTraySections(logdetails.getDatasetID(), trayindex);
 		int sectioncount = sections.getSections().size();
 		if (sectioncount <= 0) {
@@ -2077,6 +2105,11 @@ public class MenuController {
 		}
 		LogDetailsVo logDetail = nvclDataSvc.getLogDetails(logId);
 
+		if (logDetail == null) {
+			String errMsg = "Invalid logid.";
+			return new ModelAndView("getdownsampleddatausage", "errmsg", errMsg);
+		}
+
 		if (logDetail.getLogType() != 2 && logDetail.getLogType() != 1) {
 			String errMsg = "only class and decimal type logs can be requested through this service.";
 			return new ModelAndView("getdownsampleddatausage", "errmsg", errMsg);
@@ -2230,7 +2263,12 @@ public class MenuController {
 			return new ModelAndView("getDatasetIDusage", "errmsg", errMsg);
 		}
 
-		String datasetid = nvclDataSvc.getLogDetails(logId).getDatasetID();
+		LogDetailsVo logDetails = nvclDataSvc.getLogDetails(logId);
+		if (logDetails == null) {
+			String errMsg = "Invalid logid.";
+			return new ModelAndView("getDatasetIDusage", "errmsg", errMsg);
+		}
+		String datasetid = logDetails.getDatasetID();
 		if (datasetid != null) {
 			response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
 			response.setContentType("application/json");
@@ -2261,7 +2299,12 @@ public class MenuController {
 		String wavelengths = new String();
 		for (Iterator<String> it = speclogIds.iterator(); it.hasNext();) {
 			String speclogid = it.next();
-			SpectralLogCollectionVo speclogdetails = nvclDataSvc.getSpectralLogCollection(nvclDataSvc.getLogDetails(speclogid).getDatasetID());
+			LogDetailsVo logdetails = nvclDataSvc.getLogDetails(speclogid);
+			if (logdetails == null) {
+				String errMsg = "Invalid speclogid.";
+				return new ModelAndView("getSpectralLogSamplingPointsusage", "errmsg", errMsg);
+			}
+			SpectralLogCollectionVo speclogdetails = nvclDataSvc.getSpectralLogCollection(logdetails.getDatasetID());
 			
 			for (Iterator<SpectralLogVo> it1 = speclogdetails.getSpectralLogCollection().iterator(); it1.hasNext();) {
 				SpectralLogVo speclog = it1.next();
