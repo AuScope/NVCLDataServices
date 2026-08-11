@@ -2114,7 +2114,13 @@ public class MenuController {
 			String errMsg = "only class and decimal type logs can be requested through this service.";
 			return new ModelAndView("getdownsampleddatausage", "errmsg", errMsg);
 		}
-		LogExtentsVo logExtents = nvclDataSvc.getLogExtents(logId);
+		String domlogid = logDetail.getDomainlogId();
+		if (domlogid == null || !Utility.isAlphanumericOrHyphen(domlogid)) {
+			String errMsg = "Invalid logid.";
+			return new ModelAndView("getdownsampleddatausage", "errmsg", errMsg);
+		}
+
+		LogExtentsVo logExtents = nvclDataSvc.getLogExtents(domlogid);
 		interval = Math.min(interval,logExtents.getMaxvalue()-logExtents.getMinvalue());
 		interval = Math.max(interval, 0.01f);
 		
