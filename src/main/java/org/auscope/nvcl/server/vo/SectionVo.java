@@ -1,6 +1,6 @@
 package org.auscope.nvcl.server.vo;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "Section")
 public class SectionVo {

@@ -1,7 +1,7 @@
 package org.auscope.nvcl.server.service;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 import org.springframework.jms.core.MessagePostProcessor;
 
 public class SpringFrameworkJmsSender {

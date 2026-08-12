@@ -2,7 +2,7 @@ package org.auscope.nvcl.server;
 
 import java.sql.SQLException;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 
 import org.apache.activemq.command.ActiveMQQueue;
 import org.auscope.nvcl.server.dao.DomainDataDao;

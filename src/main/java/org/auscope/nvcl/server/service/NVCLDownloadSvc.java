@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.jms.Destination;
+import jakarta.jms.Destination;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;

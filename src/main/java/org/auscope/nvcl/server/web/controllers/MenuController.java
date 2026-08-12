@@ -39,12 +39,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
-import javax.jms.Destination;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
+import jakarta.jms.Destination;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
@@ -328,14 +328,14 @@ public class MenuController {
 				// dont use the default marshaller property as it is static for all requests
 				JAXBContext ctx = JAXBContext.newInstance(DatasetCollectionVo.class);
 
-				javax.xml.bind.Marshaller m = ctx.createMarshaller();
-    			m.setProperty(javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+				jakarta.xml.bind.Marshaller m = ctx.createMarshaller();
+    			m.setProperty(jakarta.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
 				if (datasetList.getDatasetCollection().size() ==1 && !Objects.equals(headersonly, "yes")) {
-					m.setProperty("com.sun.xml.bind.xmlHeaders",
+					m.setProperty("org.glassfish.jaxb.xmlHeaders",
 								"<?xml-stylesheet type='text/xsl' href='./xsl/dataset.xsl' ?>");
 				} else {
-						m.setProperty("com.sun.xml.bind.xmlHeaders",
+						m.setProperty("org.glassfish.jaxb.xmlHeaders",
 								"<?xml-stylesheet type='text/xsl' href='./xsl/alldatasets.xsl' ?>");
 				}
 

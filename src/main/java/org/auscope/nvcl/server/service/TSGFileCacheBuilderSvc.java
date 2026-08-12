@@ -2,7 +2,7 @@ package org.auscope.nvcl.server.service;
 
 import java.io.File;
 
-import javax.jms.Destination;
+import jakarta.jms.Destination;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

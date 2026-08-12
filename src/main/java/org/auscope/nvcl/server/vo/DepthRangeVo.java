@@ -1,7 +1,7 @@
 package org.auscope.nvcl.server.vo;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "depthRange")
 @XmlType(propOrder={"start", "end"})

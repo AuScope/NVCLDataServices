@@ -2,7 +2,7 @@ package org.auscope.nvcl.server.vo;
 
 import java.util.ArrayList;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "ClassificationsCollection")
 public class ClassificationsCollectionVo {

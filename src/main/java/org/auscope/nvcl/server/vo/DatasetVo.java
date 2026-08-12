@@ -3,9 +3,9 @@ package org.auscope.nvcl.server.vo;
 import java.net.URI;
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "Dataset")
 @XmlType(propOrder={"datasetID","boreholeURI", "datasetName","description","createdDate","modifiedDate","trayID","sectionID","domainID","depthRange","spectralLogCollection","imageLogCollection","logCollection","profLogCollection","domainLogCollection","downloadLink"})

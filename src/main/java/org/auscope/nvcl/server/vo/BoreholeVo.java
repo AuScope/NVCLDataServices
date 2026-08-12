@@ -1,7 +1,7 @@
 package org.auscope.nvcl.server.vo;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(namespace = "urn:cgi:xmlns:CGI:GeoSciML:2.0",name = "Borehole")
 public class BoreholeVo {
