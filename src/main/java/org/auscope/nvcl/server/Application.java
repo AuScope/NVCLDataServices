@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.dbcp2.BasicDataSource;
 import org.auscope.nvcl.server.dao.DomainDataDao;
 import org.auscope.nvcl.server.dao.DownSampledClassDataDao;
 import org.auscope.nvcl.server.dao.DownSampledFloatDataDao;
@@ -30,6 +29,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.SimpleMessageListenerContainer;
 import org.springframework.jms.listener.adapter.MessageListenerAdapter;
@@ -40,11 +40,12 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.xslt.XsltViewResolver;
 
+import com.zaxxer.hikari.HikariDataSource;
+
 @SpringBootApplication
 @Configuration
 public class Application extends SpringBootServletInitializer  {
 
-    private BasicDataSource ds = null;
     private ConfigVo config = null;
     private JmsTemplate jmsTemplate = null;
     private NVCLDownloadMessageConverter nvclDownloadMessageConverter = null;
@@ -91,38 +92,41 @@ public class Application extends SpringBootServletInitializer  {
 
     @Bean
     @ConfigurationProperties(prefix = "jdbc")
-	public BasicDataSource dataSource() {
-        if (this.ds==null) {
-            this.ds = new BasicDataSource();
-            this.ds.addConnectionProperty("defaultRowPrefetch","1000");
-            ConfigVo configVo = createConfig();
-            if (configVo != null && configVo.getJdbcDbType() != null
-                    && configVo.getJdbcDbType().equalsIgnoreCase("sqlserver")) {
-                this.ds.addConnectionProperty("sendStringParametersAsUnicode","false");
-            }
-            return this.ds;
+    public HikariDataSource dataSource(Environment env) {
+
+        HikariDataSource ds = new HikariDataSource();
+
+        ds.addDataSourceProperty("defaultRowPrefetch", "1000");
+
+        String jdbcUrl = env.getProperty("jdbc.jdbcUrl");
+
+        if (jdbcUrl == null || jdbcUrl.isBlank()) {
+            jdbcUrl = env.getProperty("jdbc.url");
         }
-        else return this.ds;
-    }
 
-	@Bean
-	public DownSampledClassDataDao downSampledClassDataDao() throws SQLException {
-		return new DownSampledClassDataDao(this.dataSource());
-    }
-    
-	@Bean
-	public DownSampledFloatDataDao downSampledFloatDataDao() {
-		return new DownSampledFloatDataDao(this.dataSource());
-    }
+        ds.setJdbcUrl(jdbcUrl);
 
-    @Bean
-	public DomainDataDao domainDataDao() {
-		return new DomainDataDao(this.dataSource());
-    }
+        ds.setDriverClassName(
+                env.getProperty("jdbc.driverClassName"));
 
-    @Bean
-	public LogExtentsDao logExtentsDao() {
-		return new LogExtentsDao(this.dataSource());
+        ds.setUsername(
+                env.getProperty("jdbc.username"));
+
+        ds.setPassword(
+                env.getProperty("jdbc.password"));
+
+
+        ConfigVo configVo = createConfig();
+
+        if (configVo != null
+                && "sqlserver".equalsIgnoreCase(configVo.getJdbcDbType())) {
+
+            ds.addDataSourceProperty(
+                    "sendStringParametersAsUnicode",
+                    "false");
+        }
+
+        return ds;
     }
 
     @Bean

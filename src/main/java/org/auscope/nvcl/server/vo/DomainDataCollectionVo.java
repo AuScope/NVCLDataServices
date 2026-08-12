@@ -1,6 +1,6 @@
 package org.auscope.nvcl.server.vo;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -8,21 +8,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "ImageTrayCollection")
 public class DomainDataCollectionVo {
 
-	private ArrayList<DomainDataVo> DomainDataCollection;
+	private List<DomainDataVo> DomainDataCollection;
 
 	protected DomainDataCollectionVo() {
 	}
 
-	public DomainDataCollectionVo(ArrayList<DomainDataVo> domainDataCollection) {
+	public DomainDataCollectionVo(List<DomainDataVo> domainDataCollection) {
 		this.setDomainDataCollection(domainDataCollection);
 	}
 
 	@XmlElement(name = "ImageTray")
-	public ArrayList<DomainDataVo> getDomainDataCollection() {
+	public List<DomainDataVo> getDomainDataCollection() {
 		return DomainDataCollection;
 	}
 
-	public void setDomainDataCollection(ArrayList<DomainDataVo> domainDataCollection) {
+	public void setDomainDataCollection(List<DomainDataVo> domainDataCollection) {
 		DomainDataCollection = domainDataCollection;
 	}
 

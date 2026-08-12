@@ -1,16 +1,19 @@
 package org.auscope.nvcl.server.dao;
 
 import java.sql.Types;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
+import javax.sql.DataSource;
 
-import org.apache.commons.dbcp2.BasicDataSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.springframework.stereotype.Repository;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.vo.LogExtentsVo;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
-import org.springframework.jdbc.object.StoredProcedure;
+
 
 /**
  * This Data Access Object (DAO) extends <code>StoredProcedure</code> for
@@ -29,51 +32,68 @@ import org.springframework.jdbc.object.StoredProcedure;
  * @author Peter Warren
  */
 
-public class LogExtentsDao extends StoredProcedure {
+@Repository
+public class LogExtentsDao {
 
-	private static final Logger logger = LogManager
-			.getLogger(LogExtentsDao.class);
+    private static final Logger logger =
+            LogManager.getLogger(LogExtentsDao.class);
 
-	private static final String SQL = "GETLOGEXTENTS";
-	private static final String LOGID = "v_logid";
-	private static final String MINVALUE = "v_minval";
-	private static final String MAXVALUE = "v_maxval";
+    private static final String SQL = "GETLOGEXTENTS";
 
-	/**
-	 * This method define the input parameters and output parameter for calling
-	 * either the oracle function or stored procedure with name GETDOMAINDATA.
-	 *
-	 * @param dataSource
-	 */
-	public LogExtentsDao(BasicDataSource dataSource) {
-		super(dataSource, SQL);
+    private static final String LOGID = "v_logid";
+    private static final String MINVALUE = "v_minval";
+    private static final String MAXVALUE = "v_maxval";
 
-		declareParameter(new SqlParameter(LOGID, Types.VARCHAR));
-		declareParameter(new SqlOutParameter(MINVALUE, Types.FLOAT));
-		declareParameter(new SqlOutParameter(MAXVALUE, Types.FLOAT));
+    private final SimpleJdbcCall call;
 
-	}
+    public LogExtentsDao(DataSource dataSource) {
 
-	/**
-	 * Execute the function calling with the specified required input parameters
-	 * and getting the oracle REF Cursor as output.
-	 *
-	 * @param domainlogId
-	 *            domainlog id as string
-	 */
-	public LogExtentsVo execute(String logId) {
-		float minval = 0, maxval = 0;
-		try {
+        this.call =
+                new SimpleJdbcCall(dataSource)
+                        .withProcedureName(SQL)
+						.withoutProcedureColumnMetaDataAccess()
+                        .declareParameters(
+                                new SqlParameter(
+                                        LOGID,
+                                        Types.VARCHAR),
 
-			Map<String, Object> inputs = new HashMap<String, Object>();
-			inputs.put(LOGID, logId);
-			Map<?, ?> outParameters = super.execute(inputs);
-			minval = ((Number) outParameters.get(MINVALUE)).floatValue();
-			maxval = ((Number) outParameters.get(MAXVALUE)).floatValue();
-		} catch (Exception e) {
-			logger.error("Exception : " + e);
-		}
-		return new LogExtentsVo(minval, maxval);
-	}
+                                new SqlOutParameter(
+                                        MINVALUE,
+                                        Types.FLOAT),
 
+                                new SqlOutParameter(
+                                        MAXVALUE,
+                                        Types.FLOAT));
+    }
+
+    public LogExtentsVo execute(String logId) {
+
+        try {
+
+            Map<String, Object> inputs =
+                    Collections.singletonMap(
+                            LOGID,
+                            logId);
+
+            Map<String, Object> result =
+                    call.execute(inputs);
+
+            Number min = (Number) result.get(MINVALUE);
+
+			Number max = (Number) result.get(MAXVALUE);
+
+			return new LogExtentsVo(min == null ? 0f : min.floatValue(),max == null ? 0f : max.floatValue());
+
+        } catch (Exception ex) {
+
+            logger.error(
+                    "Failed executing {}",
+                    SQL,
+                    ex);
+
+            return new LogExtentsVo(
+                    0f,
+                    0f);
+        }
+    }
 }

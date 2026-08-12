@@ -2126,7 +2126,7 @@ public class MenuController {
 		
 		switch (logDetail.getLogType()) {
 		case 1:
-			ArrayList<BinnedClassDataVo> ds = nvclDataSvc.getdownSampledClassData(logId, startDepth, endDepth,
+			List<BinnedClassDataVo> ds = nvclDataSvc.getdownSampledClassData(logId, startDepth, endDepth,
 					interval, minThreshold);
 			if (outputformat.equals("csv")) {
 				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
@@ -2156,7 +2156,7 @@ public class MenuController {
 
 		case 2:
 
-			ArrayList<AveragedFloatDataVo> ds2 = nvclDataSvc.getdownSampledFloatDataDao(logId, startDepth, endDepth,
+			List<AveragedFloatDataVo> ds2 = nvclDataSvc.getdownSampledFloatDataDao(logId, startDepth, endDepth,
 					interval);
 			if (outputformat.equals("csv")) {
 				response.setHeader("Cache-Control", "no-transform, public, max-age=86400");

@@ -1,6 +1,6 @@
 package org.auscope.nvcl.server.vo;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -15,7 +15,7 @@ public class DomainLogVo {
     private String subdomainoflogid;
     private int sampleCount;
 
-    private ArrayList<DomainDataVo> domaindata;
+    private List<DomainDataVo> domaindata;
 
 	public DomainLogVo() {
 	}
@@ -62,12 +62,12 @@ public class DomainLogVo {
         this.sampleCount = sampleCount;
     }
 
-    public void setdomaindata(ArrayList<DomainDataVo> domaindata) {
+    public void setdomaindata(List<DomainDataVo> domaindata) {
 		this.domaindata = domaindata;
 	}
 
 	@XmlElement(name = "DomainData")
-	public ArrayList<DomainDataVo> getdomaindata() {
+	public List<DomainDataVo> getdomaindata() {
 		return domaindata;
 	}
 

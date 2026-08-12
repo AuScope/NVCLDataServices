@@ -16,7 +16,7 @@ import java.util.Optional;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp2.BasicDataSource;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.vo.AlgorithmCollectionVo;
@@ -51,6 +51,7 @@ import org.auscope.nvcl.server.vo.SpectralLogCollectionVo;
 import org.auscope.nvcl.server.vo.SpectralLogVo;
 import org.auscope.nvcl.server.vo.TraySectionsVo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -84,40 +85,11 @@ public class NVCLDataSvcDao {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
+    @Value("${jdbc.dbType}")
+    private String dbType;
+
     private boolean isSqlServer() {
-        if (this.jdbcTemplate == null || this.jdbcTemplate.getDataSource() == null) return false;
-        DataSource ds = this.jdbcTemplate.getDataSource();
-        try {
-            // Common case: Apache BasicDataSource
-            if (ds instanceof org.apache.commons.dbcp2.BasicDataSource) {
-                org.apache.commons.dbcp2.BasicDataSource bds = (org.apache.commons.dbcp2.BasicDataSource) ds;
-                String driver = bds.getDriverClassName();
-                if (driver != null && driver.toLowerCase().contains("sqlserver")) return true;
-                String url = bds.getUrl();
-                if (url != null && url.toLowerCase().contains("jdbc:sqlserver")) return true;
-            }
-        } catch (Exception e) {
-            // ignore and fall through to other checks
-        }
-
-        // Fallback: inspect DataSource implementation class name
-        try {
-            String cls = ds.getClass().getName();
-            if (cls != null && cls.toLowerCase().contains("sqlserver")) return true;
-        } catch (Exception e) {
-            // ignore
-        }
-
-        // Try reflective getUrl() if available
-        try {
-            java.lang.reflect.Method m = ds.getClass().getMethod("getUrl");
-            Object url = m.invoke(ds);
-            if (url != null && url.toString().toLowerCase().contains("jdbc:sqlserver")) return true;
-        } catch (Exception e) {
-            // ignore
-        }
-
-        return false;
+        return "sqlserver".equalsIgnoreCase(dbType);
     }
 
     /**
@@ -166,7 +138,7 @@ public class NVCLDataSvcDao {
      */
 
     public ImageLogCollectionVo getImageLogCollection(String datasetId) {
-        String sql = "select log_id, logname, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.DOMAINLOG_ID) as samplecount from logs where dataset_id=? and logtype=3 "
+        String sql = "select log_id, logname, "+ (isSqlServer() ? "dbo.":"" )+"GETDATAPOINTS(logs.DOMAINLOG_ID) as samplecount from logs where dataset_id=? and logtype=3 "
                 + "order by case logname when 'Mosaic' then 1 when 'Tray Thumbnail Images' "
                 + "then 2 when 'Tray Images' then 3 when 'Imagery' then 4 when 'holeimg' "
                 + "then 5 else 6 end, logname";
@@ -203,7 +175,7 @@ public class NVCLDataSvcDao {
      */
 
      public DomainLogCollectionVo getDomainLogCollection(String datasetId) {
-        String sql = "select logs.log_id, logs.logname, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, domainlogs.ISSUBDOMAINOFLOG_ID from logs inner join DOMAINLOGS on logs.LOG_ID=domainlogs.LOG_ID where logs.dataset_id=? and logs.logtype=0";
+        String sql = "select logs.log_id, logs.logname, "+ (isSqlServer() ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, domainlogs.ISSUBDOMAINOFLOG_ID from logs inner join DOMAINLOGS on logs.LOG_ID=domainlogs.LOG_ID where logs.dataset_id=? and logs.logtype=0";
 
         RowMapper<DomainLogVo> mapper = new RowMapper<DomainLogVo>() {
             public DomainLogVo mapRow(ResultSet rs, int rowNum)
@@ -782,7 +754,7 @@ public class NVCLDataSvcDao {
 	}
 
 	public SpectralLogCollectionVo getSpectralLogs(String datasetId) {
-		String sql = "select logs.LOG_ID,logs.LOGNAME, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
+		String sql = "select logs.LOG_ID,logs.LOGNAME, "+ (isSqlServer() ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
 		RowMapper<SpectralLogVo> mapper = new RowMapper<SpectralLogVo>(){
 			public SpectralLogVo mapRow(ResultSet rs, int rowNum)
 			throws SQLException {
@@ -823,7 +795,7 @@ public class NVCLDataSvcDao {
 	}
 
     public SpectralLogCollectionVo getSpectralLogsDatainBlobStore(String datasetId) {
-		String sql = "select logs.LOG_ID,logs.LOGNAME, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.DOMAINLOG_ID) as samplecount, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
+		String sql = "select logs.LOG_ID,logs.LOGNAME, "+ (isSqlServer() ? "dbo.":"" )+"GETDATAPOINTS(logs.DOMAINLOG_ID) as samplecount, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
 		RowMapper<SpectralLogVo> mapper = new RowMapper<SpectralLogVo>(){
 			public SpectralLogVo mapRow(ResultSet rs, int rowNum)
 			throws SQLException {
@@ -906,7 +878,7 @@ public class NVCLDataSvcDao {
 
 
 	public ProfLogCollectionVo getProfLogs(String datasetId) {
-		String sql = "select logs.LOG_ID, logs.LOGNAME, "+ (((BasicDataSource) jdbcTemplate.getDataSource()).getDriverClassName().toLowerCase().contains("sqlserver") ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, PROFLOGS.FLOATSPERSAMPLE, PROFLOGS.MINVAL, PROFLOGS.MAXVAL from logs inner join PROFLOGS on logs.log_id=PROFLOGS.LOG_ID where logs.dataset_id=? and logtype =4";
+		String sql = "select logs.LOG_ID, logs.LOGNAME, "+ (isSqlServer() ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, PROFLOGS.FLOATSPERSAMPLE, PROFLOGS.MINVAL, PROFLOGS.MAXVAL from logs inner join PROFLOGS on logs.log_id=PROFLOGS.LOG_ID where logs.dataset_id=? and logtype =4";
 		RowMapper<ProfLogVo> mapper = new RowMapper<ProfLogVo>(){
 			public ProfLogVo mapRow(ResultSet rs, int rowNum)
 			throws SQLException {

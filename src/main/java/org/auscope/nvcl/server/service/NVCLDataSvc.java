@@ -413,7 +413,7 @@ public class NVCLDataSvc {
          * Calling downSampledClassDataDao.execute(parameters) will return an ArrayList
          * of LogTypeOneVo type records.
          */
-        ArrayList<BinnedClassDataVo> logTypeOneArr = downSampledClassDataDao.execute(logId, startDepth, endDepth,
+        List<BinnedClassDataVo> logTypeOneArr = downSampledClassDataDao.execute(logId, startDepth, endDepth,
                 samplingInterval,5);
         ArrayList<Object> arrOutput = null;
         if (logTypeOneArr != null) {
@@ -497,7 +497,7 @@ public class NVCLDataSvc {
 
     }
 
-    public ArrayList<BinnedClassDataVo> getdownSampledClassData(String logId, float startDepth, float endDepth, float samplingInterval,float minthreshold){
+    public List<BinnedClassDataVo> getdownSampledClassData(String logId, float startDepth, float endDepth, float samplingInterval,float minthreshold){
     	return  downSampledClassDataDao.execute(logId, startDepth, endDepth,samplingInterval,minthreshold);
     }
     /**
@@ -535,8 +535,8 @@ public class NVCLDataSvc {
          * Calling DownSampledFloatDataDao.execute(parameters) will return an ArrayList
          * of LogTypeTwoVo type records.
          */
-        ArrayList<AveragedFloatDataVo> logTypeTwoArr = downSampledFloatDataDao.execute(logId, startDepth, endDepth,
-                samplingInterval);
+        List<AveragedFloatDataVo> logTypeTwoArr = downSampledFloatDataDao.execute(logId, startDepth, endDepth,
+                samplingInterval, 0.0f);
         logger.debug("logTypeTwoArr : " + logTypeTwoArr);
 
         logger.debug("depth down hole (size) : " + logTypeTwoArr.size());
@@ -571,8 +571,8 @@ public class NVCLDataSvc {
         return arrOutput;
     }
     
-    public ArrayList<AveragedFloatDataVo> getdownSampledFloatDataDao(String logId, float startDepth, float endDepth, float samplingInterval) {
-    	return downSampledFloatDataDao.execute(logId, startDepth, endDepth, samplingInterval);
+    public List<AveragedFloatDataVo> getdownSampledFloatDataDao(String logId, float startDepth, float endDepth, float samplingInterval) {
+    	return downSampledFloatDataDao.execute(logId, startDepth, endDepth, samplingInterval,0.0f);
     	
     }
 
