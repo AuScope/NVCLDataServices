@@ -490,7 +490,7 @@ public class MenuController {
 			domainlogId = nvclDataSvc.getImageDomainlogId(logId);
 		} else {
 			LogDetailsVo logDetail = nvclDataSvc.getLogDetails(logId);
-			if (logDetail == null) {
+			if (logDetail == null || logDetail.getLogType() != 3) {
 				String errMsg = "Invalid logid";
 				return new ModelAndView("mosaicusage", "errmsg", errMsg);
 			}
