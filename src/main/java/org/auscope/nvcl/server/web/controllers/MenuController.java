@@ -371,6 +371,7 @@ public class MenuController {
 	@RequestMapping(value = "/getLogCollection.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView logCollectionHandler(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(required = false, value = "datasetid") String datasetId,
+			@RequestParam(value = "outputformat", required = false) String outputformat,
 			@RequestParam(required = false, value = "mosaicsvc", defaultValue = "no") String mosaicSvc)
 			throws ServletException, IOException, SQLException {
 
@@ -399,15 +400,32 @@ public class MenuController {
 		if (mosaicSvc.equals("yes")) {
 			ImageLogCollectionVo imglogList = nvclDataSvc.getImageLogCollection(datasetId);
 
-			response.setContentType("text/xml");
+			if(outputformat != null && outputformat.equals("json")){
+				response.setContentType("application/json");
+				response.setCharacterEncoding("UTF-8");
+				new ObjectMapper().writeValue(response.getOutputStream(),imglogList);
+				response.getOutputStream().flush();
+				return null;
+			}
+			else {
+				response.setContentType("text/xml");
 
-			this.marshaller.marshal(imglogList, new StreamResult(response.getOutputStream()));
+				this.marshaller.marshal(imglogList, new StreamResult(response.getOutputStream()));
+			}
 		} else {
 			LogCollectionVo logList = nvclDataSvc.getLogCollection(datasetId);
+			if(outputformat != null && outputformat.equals("json")){
+				response.setContentType("application/json");
+				response.setCharacterEncoding("UTF-8");
+				new ObjectMapper().writeValue(response.getOutputStream(),logList);
+				response.getOutputStream().flush();
+				return null;
+			}
+			else {
+				response.setContentType("text/xml");
 
-			response.setContentType("text/xml");
-
-			this.marshaller.marshal(logList, new StreamResult(response.getOutputStream()));
+				this.marshaller.marshal(logList, new StreamResult(response.getOutputStream()));
+			}
 		}
 
 		return null;
@@ -847,7 +865,8 @@ public class MenuController {
 	 */
 	@RequestMapping(value = "/getImageTrayDepth.html" ,method = { RequestMethod.GET, RequestMethod.POST })
 	public ModelAndView imageTrayDepthHandler(HttpServletRequest request, HttpServletResponse response,
-			@RequestParam(required = false, value = "logid") String logId) throws ServletException, IOException,
+			@RequestParam(required = false, value = "logid") String logId,
+			@RequestParam(value = "outputformat", required = false) String outputformat) throws ServletException, IOException,
 			SQLException {
 
 		// mandatory field : logid
@@ -868,10 +887,19 @@ public class MenuController {
 		// log id
 		DomainDataCollectionVo domainDataList = nvclDataSvc.getDomainData(domainlogId);
 
-		response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
-		response.setContentType("text/xml");
-		this.marshaller.marshal(domainDataList, new StreamResult(response.getOutputStream()));
+		if(outputformat != null && outputformat.equals("json")){
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+			new ObjectMapper().writeValue(response.getOutputStream(),domainDataList);
+			response.getOutputStream().flush();
+			return null;
+		}
+		else {
 
+			response.setHeader("Cache-Control", "no-transform, public, max-age=86400");
+			response.setContentType("text/xml");
+			this.marshaller.marshal(domainDataList, new StreamResult(response.getOutputStream()));
+		}
 		return null;
 
 	}
@@ -2121,7 +2149,7 @@ public class MenuController {
 		}
 
 		LogExtentsVo logExtents = nvclDataSvc.getLogExtents(domlogid);
-		interval = Math.min(interval,logExtents.getMaxvalue()-logExtents.getMinvalue());
+		interval = Math.min(interval,(float)Math.ceil(logExtents.getMaxvalue()));
 		interval = Math.max(interval, 0.01f);
 		
 		switch (logDetail.getLogType()) {
