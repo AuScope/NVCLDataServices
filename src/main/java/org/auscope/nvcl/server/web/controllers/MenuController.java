@@ -204,12 +204,6 @@ public class MenuController {
 		return new ModelAndView("error", "errmsg", errMsg);
 	}
 
-	@RequestMapping("/testlinks.html")
-	public String testlinks(HttpServletRequest request, HttpServletResponse response) {
-
-		return "testlinks";
-	}
-
 	/**
 	 * Handling request when getDatasetCollection.html is called. Validate the URL
 	 * parameter, get the list of dataset id and dataset name from DATASETS table
