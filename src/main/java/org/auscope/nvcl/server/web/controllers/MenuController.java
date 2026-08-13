@@ -756,9 +756,10 @@ public class MenuController {
 			return new ModelAndView("displaytraythumbusage", "errmsg", errMsg);
 		}
 
-		Boolean applycorrection = true;
-		if (!Utility.stringIsBlankorNull(uncorrected) && uncorrected.equals("yes")){
-			applycorrection=false;
+		// correcting the image is expensive for bulk loading of images.  turned it off by default.  If the user wants to see the corrected image, they can specify it in the URL.
+		Boolean applycorrection = false;
+		if (!Utility.stringIsBlankorNull(uncorrected) && uncorrected.equals("no")){
+			applycorrection=true;
 		}
 
 		ImageDataVo imagedata = null;
