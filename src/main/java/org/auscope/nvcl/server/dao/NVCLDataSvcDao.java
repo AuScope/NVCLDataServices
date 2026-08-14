@@ -613,7 +613,7 @@ public class NVCLDataSvcDao {
                 case 1:
                     select.append(", COALESCE(classspec").append(i)
                         .append(".CLASSTEXT, class").append(i)
-                        .append(".CLASSTEXT) AS ").append(safeName);
+                        .append(".CLASSTEXT) AS \"").append(safeName).append("\"");
 
                     from.append(" INNER JOIN CLASSLOGDATA result").append(i)
                         .append(" ON result").append(i).append(".SAMPLENUMBER = DOMAINLOGDATA.SAMPLENUMBER")
@@ -632,7 +632,7 @@ public class NVCLDataSvcDao {
                     break;
 
                 case 2:
-                    select.append(", result").append(i).append(".DECIMALVALUE AS ").append(safeName);
+                    select.append(", result").append(i).append(".DECIMALVALUE AS \"").append(safeName).append("\"");
 
                     from.append(" INNER JOIN DECIMALLOGDATA result").append(i)
                         .append(" ON result").append(i).append(".SAMPLENUMBER = DOMAINLOGDATA.SAMPLENUMBER");
@@ -640,7 +640,7 @@ public class NVCLDataSvcDao {
                     break;
 
                 case 5:
-                    select.append(", result").append(i).append(".SPECTRALVALUES AS ").append(safeName);
+                    select.append(", result").append(i).append(".SPECTRALVALUES AS \"").append(safeName).append("\"");
 
                     from.append(" INNER JOIN SPECTRALLOGDATA result").append(i)
                         .append(" ON result").append(i).append(".SAMPLENUMBER = DOMAINLOGDATA.SAMPLENUMBER");
@@ -648,7 +648,7 @@ public class NVCLDataSvcDao {
                     break;
 
                 case 6:
-                    select.append(", result").append(i).append(".MASKVALUE AS ").append(safeName);
+                    select.append(", result").append(i).append(".MASKVALUE AS \"").append(safeName).append("\"");
 
                     from.append(" INNER JOIN MASKLOGDATA result").append(i)
                         .append(" ON result").append(i).append(".SAMPLENUMBER = DOMAINLOGDATA.SAMPLENUMBER");
