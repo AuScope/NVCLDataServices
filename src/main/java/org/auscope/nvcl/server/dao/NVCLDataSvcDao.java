@@ -175,7 +175,7 @@ public class NVCLDataSvcDao {
      */
 
      public DomainLogCollectionVo getDomainLogCollection(String datasetId) {
-        String sql = "select logs.log_id, logs.logname, "+ (isSqlServer() ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, domainlogs.ISSUBDOMAINOFLOG_ID from logs inner join DOMAINLOGS on logs.LOG_ID=domainlogs.LOG_ID where logs.dataset_id=? and logs.logtype=0";
+        String sql = "select logs.log_id, logs.logname, "+ (isSqlServer() ? "dbo.":"" )+"GETDATAPOINTS(logs.LOG_ID) as samplecount, domainlogs.ISSUBDOMAINOFLOG_ID from logs inner join DOMAINLOGS on logs.LOG_ID=domainlogs.LOG_ID where logs.dataset_id=? and logs.logtype=0 order by logs.LOG_ID";
 
         RowMapper<DomainLogVo> mapper = new RowMapper<DomainLogVo>() {
             public DomainLogVo mapRow(ResultSet rs, int rowNum)
@@ -795,13 +795,20 @@ public class NVCLDataSvcDao {
 	}
 
     public SpectralLogCollectionVo getSpectralLogsDatainBlobStore(String datasetId) {
-		String sql = "select logs.LOG_ID,logs.LOGNAME, "+ (isSqlServer() ? "dbo.":"" )+"GETDATAPOINTS(logs.DOMAINLOG_ID) as samplecount, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
-		RowMapper<SpectralLogVo> mapper = new RowMapper<SpectralLogVo>(){
+		String sql = "select logs.LOG_ID,logs.LOGNAME, "+ (isSqlServer() ? "dbo.":"" )+"GETDATAPOINTS(logs.DOMAINLOG_ID) as samplecount, logs.customscript, spectrallogs.SPECTRALSAMPLINGPOINTS,spectrallogs.SPECTRALUNITS,spectrallogs.fwhm,spectrallogs.tirq, LOGDEPENDENCIES.DEPENDSON from logs inner join spectrallogs on logs.log_id=spectrallogs.log_id left join LOGDEPENDENCIES on logs.log_id=LOGDEPENDENCIES.LOG_ID where logs.dataset_id=? and logtype =5 order by spectrallogs.LAYERORDER";
+        RowMapper<SpectralLogVo> mapper = new RowMapper<SpectralLogVo>(){
 			public SpectralLogVo mapRow(ResultSet rs, int rowNum)
 			throws SQLException {
 				SpectralLogVo spectralLog = new SpectralLogVo();
 				spectralLog.setLogID(rs.getString("LOG_ID"));
 				spectralLog.setLogName(rs.getString("LOGNAME"));
+                if (rs.getObject("DEPENDSON") == null) {
+                    spectralLog.setSampleCount(rs.getInt("samplecount"));
+                }
+                else {
+                    spectralLog.setSampleCount(0); // only base spectral layers have sample count, derived layers will be 0. base layers dont depend on any other layer.
+                }
+
 				spectralLog.setSampleCount(rs.getInt("samplecount"));
 				spectralLog.setScript(rs.getString("customscript"));
 				
