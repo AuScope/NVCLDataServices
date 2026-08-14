@@ -569,7 +569,7 @@ public class NVCLDataSvcDao {
         List<Object> params = new ArrayList<>();
 
         StringBuilder select = new StringBuilder(
-            "SELECT DOMAINLOGDATA.STARTVALUE AS StartDepth, DOMAINLOGDATA.ENDVALUE AS EndDepth"
+            "SELECT DOMAINLOGDATA.STARTVALUE AS \"StartDepth\", DOMAINLOGDATA.ENDVALUE AS \"EndDepth\""
         );
         StringBuilder from = new StringBuilder(" FROM DOMAINLOGDATA ");
         StringBuilder where = new StringBuilder(" WHERE DOMAINLOGDATA.LOG_ID = ? ");
