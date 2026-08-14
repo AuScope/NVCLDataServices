@@ -1247,6 +1247,13 @@ public class MenuController {
 
 			List<LogDetailsVo> logDetailsVoList = nvclDataSvc.getLogDetails(logIdList);
 
+			Map<String, Integer> order = new HashMap<>();
+
+			for (int i = 0; i < logIdList.length; i++) {
+				order.put(logIdList[i], i);
+			}
+
+			logDetailsVoList.sort(Comparator.comparingInt(l -> order.get(l.getLogId())));
 			
 			if (outputformat == null || !outputformat.equals("json")) {
 				// set response as csv attachement
