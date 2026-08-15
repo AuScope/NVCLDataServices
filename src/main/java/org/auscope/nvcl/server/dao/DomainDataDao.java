@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.auscope.nvcl.server.vo.DomainDataCollectionVo;
 import org.auscope.nvcl.server.vo.DomainDataVo;
+import oracle.jdbc.OracleTypes;
 
 /**
  * This Data Access Object (DAO) extends <code>StoredProcedure</code> for
@@ -49,16 +50,17 @@ public class DomainDataDao {
         if ("oracle".equalsIgnoreCase(dbType)) {
 
             this.call =
-                new SimpleJdbcCall(dataSource)
-                    .withFunctionName(SQL)
-                    .declareParameters(
-                        new SqlOutParameter(
-                            "DomainData",
-                            Types.REF_CURSOR,
-                            new DomainDataRowMapper()),
-                        new SqlParameter(
-                            "v_domainlog_id",
-                            Types.VARCHAR));
+            new SimpleJdbcCall(dataSource)
+                .withFunctionName(SQL)
+                .withoutProcedureColumnMetaDataAccess()
+                .declareParameters(
+                    new SqlOutParameter(
+                        "RETURN_VALUE",
+                        OracleTypes.CURSOR,
+                        new DomainDataRowMapper()),
+                    new SqlParameter(
+                        "v_domainlog_id",
+                        Types.VARCHAR));
 
         } else {
 
@@ -98,7 +100,7 @@ public class DomainDataDao {
 
         try {
 
-            Map<String, Object> result =
+            Map<String,Object> result =
                     call.execute(
                         Collections.singletonMap(
                             "v_domainlog_id",
@@ -106,7 +108,7 @@ public class DomainDataDao {
 
             List<DomainDataVo> data =
                     (List<DomainDataVo>)
-                    result.get("DomainData");
+                    result.get("RETURN_VALUE");
 
             return new DomainDataCollectionVo(data);
 
