@@ -69,7 +69,7 @@ public class DomainDataDao {
                     .withProcedureName(SQL)
                     .declareParameters(
                         new SqlReturnResultSet(
-                            "DomainData",
+                            "RETURN_VALUE",
                             new DomainDataRowMapper()),
                         new SqlParameter(
                             "v_domainlog_id",
