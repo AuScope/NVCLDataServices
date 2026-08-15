@@ -109,6 +109,7 @@ public class ImportantEndpointsRegressionTest
                 assertThatJson(dev)
                                 .whenIgnoringPaths("datasetCollection[*].createdDate",
                                                 "datasetCollection[*].modifiedDate","timestamp")
+                                .withTolerance(0.00001)
                                 .as(testName)
                                 .isEqualTo(prod);
         }

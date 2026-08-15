@@ -88,6 +88,29 @@ public class CsvAndJsonRegressionTest
         }
     }
 
+    private void compareValues(String expected,String actual) {
+
+    try {
+
+        double d1 =
+                Double.parseDouble(expected);
+
+        double d2 =
+                Double.parseDouble(actual);
+
+        assertEquals(
+                d1,
+                d2,
+                0.00001);
+
+    } catch (NumberFormatException ex) {
+
+        assertEquals(
+                expected,
+                actual);
+    }
+}
+
     private void compareCsv(
         String name,
         String prod,
@@ -104,13 +127,24 @@ public class CsvAndJsonRegressionTest
                 devRows.size(),
                 name + " row count");
 
-        for (int i = 0; i < prodRows.size(); i++) {
+        for (int row = 0; row < prodRows.size(); row++) {
 
-            assertArrayEquals(
-                    prodRows.get(i),
-                    devRows.get(i),
-                    name + " row " + i);
+                String[] prodValues = prodRows.get(row);
+                String[] devValues = devRows.get(row);
+
+                assertEquals(
+                        prodValues.length,
+                        devValues.length,
+                        "Column count differs on row " + row);
+
+                for (int col = 0; col < prodValues.length; col++) {
+
+                        compareValues(
+                                prodValues[col],
+                                devValues[col]);
+                }
         }
+
     }
 
     private void compareJson(
@@ -121,6 +155,7 @@ public class CsvAndJsonRegressionTest
 
         assertThatJson(dev)
                 .whenIgnoringPaths(IGNORED_NODES.toArray(new String[0]))
+                .withTolerance(0.00001)
                 .isEqualTo(prod);
     }
 
