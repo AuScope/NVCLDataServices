@@ -102,7 +102,7 @@ public class NVCLDataSvcDao {
      *
      */
     public LogCollectionVo getLogCollection(String datasetId) {
-        String sql = "select log_id, logname, ispublic, logtype, ALGORITHMOUTPUT_ID, masklog_id from logs where dataset_id = ? and logtype in (1,2,6)";
+        String sql = "select log_id, logname, ispublic, logtype, ALGORITHMOUTPUT_ID, masklog_id from logs where dataset_id = ? and logtype in (1,2,6) order by log_id";
         RowMapper<LogVo> mapper = new RowMapper<LogVo>() {
             public LogVo mapRow(ResultSet rs, int rowNum)
                     throws SQLException {
