@@ -809,7 +809,6 @@ public class NVCLDataSvcDao {
                     spectralLog.setSampleCount(0); // only base spectral layers have sample count, derived layers will be 0. base layers dont depend on any other layer.
                 }
 
-				spectralLog.setSampleCount(rs.getInt("samplecount"));
 				spectralLog.setScript(rs.getString("customscript"));
 				
 				Blob specblob = rs.getBlob("SPECTRALSAMPLINGPOINTS");
